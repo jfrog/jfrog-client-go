@@ -47,7 +47,7 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	if err != nil {
 		return -1, errorutils.CheckError(err)
 	}
-	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
+	httpDetails := ss.CreateHttpClientDetails()
 	headers := map[string]string{
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
@@ -55,7 +55,7 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	utils.MergeMaps(httpDetails.Headers, headers)
 	httpDetails.Headers = headers
 
-	resp, body, err := ss.client.SendPost(ss.ServiceDetails.GetUrl()+SourcesRestApi, content, &httpDetails)
+	resp, body, err := ss.client.SendPost(ss.GetUrl()+SourcesRestApi, content, &httpDetails)
 	if err != nil {
 		return -1, err
 	}
@@ -72,8 +72,8 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 }
 
 func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
-	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	url := ss.ServiceDetails.GetUrl() + SourcesRestApi + strconv.Itoa(sourceId)
+	httpDetails := ss.CreateHttpClientDetails()
+	url := ss.GetUrl() + SourcesRestApi + strconv.Itoa(sourceId)
 	resp, body, _, err := ss.client.SendGet(url, true, &httpDetails)
 	if err != nil {
 		return nil, err
@@ -87,8 +87,8 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 }
 
 func (ss *SourcesService) GetSourceByFilter(queryParams map[string]string) ([]Source, error) {
-	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	pipelineSourcesURL, err := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), SourcesRestApi)
+	httpDetails := ss.CreateHttpClientDetails()
+	pipelineSourcesURL, err := constructPipelinesURL(queryParams, ss.GetUrl(), SourcesRestApi)
 	if err != nil {
 		return nil, err
 	}
@@ -110,8 +110,8 @@ func (ss *SourcesService) sendRequestAndParseResponse(url string, httpDetails ht
 }
 
 func (ss *SourcesService) DeleteSource(sourceId int) error {
-	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	resp, body, err := ss.client.SendDelete(ss.ServiceDetails.GetUrl()+SourcesRestApi+strconv.Itoa(sourceId), nil, &httpDetails)
+	httpDetails := ss.CreateHttpClientDetails()
+	resp, body, err := ss.client.SendDelete(ss.GetUrl()+SourcesRestApi+strconv.Itoa(sourceId), nil, &httpDetails)
 	if err != nil {
 		return err
 	}

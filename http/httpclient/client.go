@@ -135,7 +135,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			if err != nil {
 				if strings.Contains(err.Error(), "unsupported protocol scheme") {
 					// Wrong URL, so no need to retry
-					return false, fmt.Errorf("%w\nThe recieved error indicats an invalid URL: %q, Please ensure the URL includes a valid scheme like 'http://' or 'https://'.", err, url)
+					return false, fmt.Errorf("%w\nThe received error indicates an invalid URL: %q, Please ensure the URL includes a valid scheme like 'http://' or 'https://'", err, url)
 				}
 				return true, err
 			}
@@ -196,7 +196,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		}
 	}
 
-	resp, err = client.Do(req)
+	resp, err = client.Do(req) // #nosec G704 -- CLI/library; URL from user/config, runs in user environment
 	if err != nil && redirectUrl != "" {
 		if !followRedirect {
 			log.Debug("Blocking HTTP redirect to", redirectUrl)
@@ -345,7 +345,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	addUserAgentHeader(req)
 
 	client := jc.client
-	resp, err = client.Do(req)
+	resp, err = client.Do(req) // #nosec G704 -- CLI/library; URL from user/config, runs in user environment
 	if errorutils.CheckError(err) != nil || resp == nil {
 		return
 	}
@@ -704,7 +704,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) (err error) {
 	actualShaString := hex.EncodeToString(actualSha.Sum(nil))
 	if actualShaString != expectedSha {
-		err = errorutils.CheckErrorf("checksum mismatch for  " + fileName + ", expected: " + expectedSha + ", actual: " + actualShaString)
+		err = errorutils.CheckErrorf("checksum mismatch for %s, expected: %s, actual: %s", fileName, expectedSha, actualShaString)
 	}
 	return
 }
@@ -712,7 +712,7 @@ func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) 
 func handleExpectedSha(expectedSha1, expectedSha256 string) (expectedSha string, actualSha hash.Hash) {
 	if len(expectedSha1) > 0 {
 		expectedSha = expectedSha1
-		//#nosec G401 -- Sha1 is supported by Artifactory.
+		//#nosec G401 jfrog-ignore -- Sha1 is supported by Artifactory.
 		actualSha = sha1.New()
 	} else if len(expectedSha256) > 0 {
 		expectedSha = expectedSha256

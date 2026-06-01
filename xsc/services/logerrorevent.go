@@ -18,9 +18,10 @@ const (
 )
 
 type LogErrorEventService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XscDetails  auth.ServiceDetails
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XscDetails      auth.ServiceDetails
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 type ExternalErrorLog struct {
@@ -37,13 +38,13 @@ func (les *LogErrorEventService) sendLogErrorRequest(requestContent []byte) (url
 	if les.XrayDetails != nil {
 		httpClientDetails := les.XrayDetails.CreateHttpClientDetails()
 		url = utils.AddTrailingSlashIfNeeded(les.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + xscLogErrorApiSuffix
-		resp, body, err = les.client.SendPost(url, requestContent, &httpClientDetails)
+		resp, body, err = les.client.SendPost(utils.AppendScopedProjectKeyParam(url, les.ScopeProjectKey), requestContent, &httpClientDetails)
 		return
 	}
 	// Backward compatibility
 	httpClientDetails := les.XscDetails.CreateHttpClientDetails()
 	url = utils.AddTrailingSlashIfNeeded(les.XscDetails.GetUrl()) + xscDeprecatedLogErrorApiSuffix
-	resp, body, err = les.client.SendPost(url, requestContent, &httpClientDetails)
+	resp, body, err = les.client.SendPost(utils.AppendScopedProjectKeyParam(url, les.ScopeProjectKey), requestContent, &httpClientDetails)
 	return
 }
 

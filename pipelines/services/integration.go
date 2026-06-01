@@ -151,7 +151,7 @@ func (is *IntegrationsService) createIntegration(integration IntegrationCreation
 	if err != nil {
 		return -1, errorutils.CheckError(err)
 	}
-	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
+	httpDetails := is.CreateHttpClientDetails()
 	headers := map[string]string{
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
@@ -159,7 +159,7 @@ func (is *IntegrationsService) createIntegration(integration IntegrationCreation
 	utils.MergeMaps(httpDetails.Headers, headers)
 	httpDetails.Headers = headers
 
-	resp, body, err := is.client.SendPost(is.ServiceDetails.GetUrl()+integrationsRestApi, content, &httpDetails)
+	resp, body, err := is.client.SendPost(is.GetUrl()+integrationsRestApi, content, &httpDetails)
 	if err != nil {
 		return -1, err
 	}
@@ -201,8 +201,8 @@ type jsonValues struct {
 
 func (is *IntegrationsService) DeleteIntegration(integrationId int) error {
 	log.Debug("Deleting integration by id '" + strconv.Itoa(integrationId) + "'...")
-	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
-	resp, body, err := is.client.SendDelete(is.ServiceDetails.GetUrl()+integrationsRestApi+strconv.Itoa(integrationId), nil, &httpDetails)
+	httpDetails := is.CreateHttpClientDetails()
+	resp, body, err := is.client.SendDelete(is.GetUrl()+integrationsRestApi+strconv.Itoa(integrationId), nil, &httpDetails)
 	if err != nil {
 		return err
 	}
@@ -211,8 +211,8 @@ func (is *IntegrationsService) DeleteIntegration(integrationId int) error {
 
 func (is *IntegrationsService) GetIntegrationById(integrationId int) (*Integration, error) {
 	log.Debug("Getting integration by id '" + strconv.Itoa(integrationId) + "'...")
-	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
-	url := is.ServiceDetails.GetUrl() + integrationsRestApi + strconv.Itoa(integrationId)
+	httpDetails := is.CreateHttpClientDetails()
+	url := is.GetUrl() + integrationsRestApi + strconv.Itoa(integrationId)
 	resp, body, _, err := is.client.SendGet(url, true, &httpDetails)
 	if err != nil {
 		return nil, err
@@ -253,8 +253,8 @@ func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
 // into Integration struct.
 func (is *IntegrationsService) GetAllRawIntegrations() ([]byte, error) {
 	log.Debug("Fetching all integrations...")
-	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
-	url := is.ServiceDetails.GetUrl() + integrationsRestApi
+	httpDetails := is.CreateHttpClientDetails()
+	url := is.GetUrl() + integrationsRestApi
 	resp, body, _, err := is.client.SendGet(url, true, &httpDetails)
 	if err != nil {
 		return nil, err

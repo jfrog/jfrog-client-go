@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
@@ -103,7 +104,7 @@ func (dr *DistributeReleaseBundleV1Service) waitForDistribution(distributeParams
 				if err != nil {
 					return false, errorutils.CheckError(err)
 				}
-				return false, errorutils.CheckErrorf("Distribution failed: " + clientUtils.IndentJson(bytes))
+				return false, errorutils.CheckErrorf("Distribution failed: %s", clientUtils.IndentJson(bytes))
 			}
 			if (*response)[0].Status == distribution.Completed {
 				log.Info("Distribution Completed!")

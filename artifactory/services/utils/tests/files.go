@@ -25,7 +25,7 @@ func CreateFileWithContent(fileName, relativePath string) (string, string, error
 	if err != nil {
 		return tempDirPath, "", err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	_, err = file.Write([]byte(fullPath))
 	return tempDirPath, fullPath, err
 }

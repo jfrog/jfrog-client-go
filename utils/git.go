@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	ioutils "github.com/jfrog/gofrog/io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	ioutils "github.com/jfrog/gofrog/io"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -91,7 +92,7 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + resolvedGitPath + "'")
+		m.err = errorutils.CheckErrorf("path found in .git file '%s' does not exist: '%s'", m.path, resolvedGitPath)
 		return
 	}
 	m.path = resolvedGitPath
@@ -118,6 +119,19 @@ func (m *GitManager) readUrl() {
 		return
 	}
 	dotGitPath := filepath.Join(m.path, "config")
+
+	// Check if config file exists before trying to open it.
+	// This handles cases where .git directory exists but is empty/uninitialized.
+	exists, err := fileutils.IsFileExists(dotGitPath, false)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if !exists {
+		log.Debug("Git config file not found at: " + dotGitPath + ". Skipping URL collection.")
+		return
+	}
+
 	file, err := os.Open(dotGitPath)
 	if err != nil {
 		m.err = err
@@ -163,6 +177,18 @@ func (m *GitManager) readUrl() {
 
 func (m *GitManager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
+
+	// Check if HEAD file exists before trying to open it.
+	// This handles cases where .git directory exists but is empty/uninitialized.
+	exists, err := fileutils.IsFileExists(dotGitPath, false)
+	if err != nil {
+		return "", "", err
+	}
+	if !exists {
+		log.Warn("Git HEAD file not found at: " + dotGitPath + ". The repository may be uninitialized or corrupt. Skipping VCS info collection.")
+		return "", "", nil
+	}
+
 	file, err := os.Open(dotGitPath)
 	if errorutils.CheckError(err) != nil {
 		return
@@ -271,7 +297,7 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				if len(split) == 2 {
 					m.revision = split[0]
 				} else {
-					m.err = errors.Join(err, errorutils.CheckErrorf("failed fetching revision for ref :"+ref+" - Unexpected line structure in packed-refs file"))
+					m.err = errors.Join(err, errorutils.CheckErrorf("failed fetching revision for ref: %s - Unexpected line structure in packed-refs file", ref))
 				}
 				return
 			}

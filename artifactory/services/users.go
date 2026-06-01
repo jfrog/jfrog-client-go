@@ -25,7 +25,7 @@ func NewUserParams() UserParams {
 type User struct {
 	Name                     string    `json:"name,omitempty" csv:"username,omitempty"`
 	Email                    string    `json:"email,omitempty" csv:"email,omitempty"`
-	Password                 string    `json:"password,omitempty" csv:"password,omitempty"`
+	Password                 string    `json:"password,omitempty" csv:"password,omitempty"` // #nosec G117 -- API struct for user create/update
 	Admin                    *bool     `json:"admin,omitempty" csv:"admin,omitempty"`
 	ProfileUpdatable         *bool     `json:"profileUpdatable,omitempty" csv:"profileUpdatable,omitempty"`
 	DisableUIAccess          *bool     `json:"disableUIAccess,omitempty" csv:"disableUIAccess,omitempty"`
@@ -131,6 +131,7 @@ func (us *UserService) UpdateUser(params UserParams) error {
 
 func (us *UserService) createOrUpdateUserRequest(user User) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
 	httpDetails = us.ArtDetails.CreateHttpClientDetails()
+	// #nosec G117 -- Intentional marshaling of user data with password field required by Artifactory API
 	requestContent, err = json.Marshal(user)
 	if errorutils.CheckError(err) != nil {
 		return

@@ -67,7 +67,7 @@ func (ad *ArtifactDetails) ToBuildInfoArtifact() (buildinfo.Artifact, error) {
 		artifact.Path = ad.ArtifactoryPath[i+1:]
 		artifact.OriginalDeploymentRepo = ad.ArtifactoryPath[0:i]
 	} else {
-		return artifact, errorutils.CheckErrorf("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name")
+		return artifact, errorutils.CheckErrorf("artifact path: '%s' lacks repository name", ad.ArtifactoryPath)
 	}
 	return artifact, nil
 }

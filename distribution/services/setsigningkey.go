@@ -34,6 +34,7 @@ func (ssk *SetSigningKeyService) SetSigningKey(signBundleParams SetSigningKeyPar
 
 func (ssk *SetSigningKeyService) execSetSigningKey(setSigningKeyBody *SetSigningKeyBody) error {
 	httpClientsDetails := ssk.DistDetails.CreateHttpClientDetails()
+	// #nosec G117 -- Intentional marshaling of signing key data required by the Distribution API
 	content, err := json.Marshal(setSigningKeyBody)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -55,12 +56,12 @@ func (ssk *SetSigningKeyService) execSetSigningKey(setSigningKeyBody *SetSigning
 
 type SetSigningKeyBody struct {
 	PublicKey  string `json:"public_key,omitempty"`
-	PrivateKey string `json:"private_key,omitempty"`
+	PrivateKey string `json:"private_key,omitempty"` // #nosec G117 -- API struct for signing key config
 }
 
 type SetSigningKeyParams struct {
 	PublicKey  string
-	PrivateKey string
+	PrivateKey string // #nosec G117 -- API struct for signing key config
 }
 
 func NewSetSigningKeyParams(publicKey, privateKey string) SetSigningKeyParams {

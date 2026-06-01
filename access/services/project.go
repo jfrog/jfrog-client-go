@@ -3,12 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"net/http"
 )
 
 const projectsApi = "api/v1/projects"
@@ -22,12 +21,12 @@ func NewProjectParams() ProjectParams {
 }
 
 type Project struct {
-	DisplayName       string           `json:"display_name,omitempty"`
+	DisplayName       string           `json:"display_name,omitempty" display:"Name"`
 	Description       string           `json:"description,omitempty"`
 	AdminPrivileges   *AdminPrivileges `json:"admin_privileges,omitempty"`
 	SoftLimit         *bool            `json:"soft_limit,omitempty"`
 	StorageQuotaBytes float64          `json:"storage_quota_bytes,omitempty"`
-	ProjectKey        string           `json:"project_key,omitempty"`
+	ProjectKey        string           `json:"project_key,omitempty" display:"ProjectKey"`
 }
 
 type AdminPrivileges struct {
@@ -90,7 +89,7 @@ func (ps *ProjectService) GetAll() ([]Project, error) {
 	var projects []Project
 	err = json.Unmarshal(body, &projects)
 	if err != nil {
-		return nil, errorutils.CheckErrorf("failed extracting projects list from payload: " + err.Error())
+		return nil, errorutils.CheckErrorf("failed extracting projects list from payload: %s", err.Error())
 	}
 	return projects, nil
 }

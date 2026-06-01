@@ -45,7 +45,7 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 	}
 
 	// URL Construction
-	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), runStatus)
+	uri, err := constructPipelinesURL(queryParams, rs.GetUrl(), runStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 }
 
 func (rs *RunService) getHttpDetails() httputils.HttpClientDetails {
-	return rs.ServiceDetails.CreateHttpClientDetails()
+	return rs.CreateHttpClientDetails()
 }
 
 func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) error {
@@ -93,7 +93,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 
 	// URL Construction
 	httpDetails.SetContentTypeApplicationJson()
-	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
+	uri, err := constructPipelinesURL(queryParams, rs.GetUrl(), triggerpipeline)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (rs *RunService) CancelRun(runID int) error {
 
 	// URL Construction
 	httpDetails.SetContentTypeApplicationJson()
-	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), cancelRun)
+	uri, err := constructPipelinesURL(queryParams, rs.GetUrl(), cancelRun)
 	if err != nil {
 		return err
 	}

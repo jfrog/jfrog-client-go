@@ -2,16 +2,21 @@ package content
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"fmt"
 	"io"
 	"os"
 	"reflect"
+	"runtime"
 	"sort"
 	"sync"
+
+	"github.com/jfrog/gofrog/http/retryexecutor"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
@@ -28,6 +33,16 @@ type ContentReader struct {
 	dataChannel chan map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
 	once        *sync.Once
+	// mu guards reads/writes of dataChannel, once, and done across
+	// NextRecord/Reset, so a receiver and the producer goroutine always
+	// agree on which channel is in play, even if Reset is racing with
+	// NextRecord.
+	mu sync.Mutex
+	// done is closed by the current producer goroutine when it exits.
+	// Reset blocks on it to ensure the old producer finishes before the
+	// channel/once fields are swapped. A new done is created per cycle to
+	// avoid sync.WaitGroup reuse-during-Wait panics.
+	done chan struct{}
 	// Number of elements in the array (cache)
 	length int
 	empty  bool
@@ -66,14 +81,25 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	if cr.empty {
 		return errorutils.CheckErrorf("Empty")
 	}
+	// Pair the once.Do (which spawns the producer and captures the active
+	// channel) with a snapshot of dataChannel under cr.mu, so the receiver
+	// on this call reads from the same channel the producer writes to even
+	// if Reset() races to swap dataChannel.
+	cr.mu.Lock()
 	cr.once.Do(func() {
+		ch := cr.dataChannel
+		done := make(chan struct{})
+		cr.done = done
 		go func() {
-			defer close(cr.dataChannel)
+			defer close(done)
+			defer close(ch)
 			cr.length = 0
-			cr.run()
+			cr.run(ch)
 		}()
 	})
-	record, ok := <-cr.dataChannel
+	ch := cr.dataChannel
+	cr.mu.Unlock()
+	record, ok := <-ch
 	if !ok {
 		return io.EOF
 	}
@@ -87,20 +113,72 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	return err
 }
 
-// Prepare the reader to read the file all over again (not thread-safe).
+// Prepare the reader to read the file all over again.
+// Waits for any in-flight producer goroutine started by a previous NextRecord
+// cycle to finish (via the per-cycle done channel), then swaps the channel/once
+// under cr.mu so concurrent NextRecord receivers do not observe a half-swapped
+// state.
 func (cr *ContentReader) Reset() {
+	cr.mu.Lock()
+	done := cr.done
+	cr.mu.Unlock()
+	if done != nil {
+		<-done
+	}
+	cr.mu.Lock()
 	cr.dataChannel = make(chan map[string]interface{}, utils.MaxBufferSize)
 	cr.once = new(sync.Once)
+	cr.done = nil
+	cr.mu.Unlock()
+}
+
+func removeFile(filePath string) error {
+	// Check if file exists before attempting to remove
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		log.Debug("File does not exist: %s", filePath)
+		return nil
+	}
+	log.Debug(fmt.Sprintf("Attempting to remove file: %s", filePath))
+	err := os.Remove(filePath)
+	if err == nil || runtime.GOOS != "windows" {
+		// Success, or non-Windows: return immediately
+		return errorutils.CheckError(err)
+	}
+	// On Windows, retry to handle antivirus/file locks
+	executor := retryexecutor.RetryExecutor{
+		Context:                  context.Background(),
+		MaxRetries:               10,
+		RetriesIntervalMilliSecs: 500,
+		ErrorMessage:             "Failed to remove temp file",
+		LogMsgPrefix:             "Removing temp file",
+		ExecutionHandler: func() (bool, error) {
+			err := os.Remove(filePath)
+			if err != nil {
+				// Retry on error
+				return true, errorutils.CheckError(err)
+			}
+			// Success
+			return false, nil
+		},
+	}
+	return executor.Execute()
 }
 
 // Cleanup the reader data.
+// On Windows, retries file removal to handle antivirus/indexing locks.
+// If removal still fails on Windows after retries, logs a warning instead of failing.
 func (cr *ContentReader) Close() error {
 	for _, filePath := range cr.filesPaths {
 		if filePath == "" {
 			continue
 		}
-		if err := errorutils.CheckError(os.Remove(filePath)); err != nil {
-			return errors.New("Failed to close reader: " + err.Error())
+		if err := removeFile(filePath); err != nil {
+			if runtime.GOOS != "windows" {
+				// Non-Windows: preserve existing behavior (return error)
+				return fmt.Errorf("failed to close reader: %w", err)
+			}
+			// Windows: log warning but don't fail (temp file cleanup is non-critical)
+			log.Warn(fmt.Sprintf("Failed to remove temp file (will be cleaned up later): %s. Error: %s", filePath, err.Error()))
 		}
 	}
 	cr.filesPaths = nil
@@ -129,13 +207,15 @@ func (cr *ContentReader) Length() (int, error) {
 
 // Open and read the files one by one. Push each array element into the channel.
 // The channel may block the thread, therefore should run async.
-func (cr *ContentReader) run() {
+// ch is captured at goroutine spawn time so concurrent Reset() does not affect
+// where this producer writes.
+func (cr *ContentReader) run(ch chan<- map[string]interface{}) {
 	for _, filePath := range cr.filesPaths {
-		cr.readSingleFile(filePath)
+		cr.readSingleFile(filePath, ch)
 	}
 }
 
-func (cr *ContentReader) readSingleFile(filePath string) {
+func (cr *ContentReader) readSingleFile(filePath string, ch chan<- map[string]interface{}) {
 	fd, err := os.Open(filePath)
 	if err != nil {
 		log.Error(err.Error())
@@ -154,7 +234,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			cr.errorsQueue.AddError(errorutils.CheckErrorf(cr.arrayKey + " not found"))
+			cr.errorsQueue.AddError(errorutils.CheckErrorf("%s not found", cr.arrayKey))
 			return
 		}
 		cr.errorsQueue.AddError(err)
@@ -169,7 +249,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 			cr.errorsQueue.AddError(errorutils.CheckError(err))
 			return
 		}
-		cr.dataChannel <- ResultItem
+		ch <- ResultItem
 	}
 }
 

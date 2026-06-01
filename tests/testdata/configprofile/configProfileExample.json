@@ -1,49 +1,52 @@
 {
   "profile_name": "default-profile",
-    "frogbot_config": {
-    "email_author": "my-user@jfrog.com",
+  "project_key": "default-project",
+  "general_config": {
+    "scanners_download_path": "https://repo.example.com/releases",
+    "fail_upon_any_scanner_error": true
+  },
+  "frogbot_config": {
     "aggregate_fixes": true,
-    "avoid_previous_pr_comments_deletion": true,
+    "hide_success_banner_for_no_issues": false,
     "branch_name_template": "frogbot-${IMPACTED_PACKAGE}-${BRANCH_NAME_HASH}",
     "pr_title_template": "[🐸 Frogbot] Upgrade {IMPACTED_PACKAGE} to {FIX_VERSION}",
-    "pr_comment_title": "Frogbot notes:",
     "commit_message_template": "Upgrade {IMPACTED_PACKAGE} to {FIX_VERSION}",
-    "show_secrets_as_pr_comment": false
+    "show_secrets_as_pr_comment": false,
+    "create_auto_fix_pr": true,
+    "include_vulnerabilities_and_violations": false
   },
   "modules": [
     {
       "module_name": "default-module",
       "path_from_root": ".",
-      "releases_repo": "nuget-remote",
-      "analyzer_manager_version": "1.8.1",
-      "additional_paths_for_module": ["lib1", "utils/lib2"],
-      "exclude_paths": ["**/.git/**", "**/*test*/**", "**/*venv*/**", "**/*node_modules*/**", "**/target/**"],
+      "exclude_patterns": ["*.log*", "*.tmp*"],
+      "include_patterns": ["*.go"],
       "scan_config": {
-        "scan_timeout": 600,
-        "exclude_pattern": "*.md",
-        "enable_sca_scan": true,
-        "enable_contextual_analysis_scan": true,
+        "sca_scanner_config": {
+          "enable_sca_scan": true,
+          "enable_snippet_detection": false,
+          "exclude_patterns": ["**/build/**"]
+        },
+        "contextual_analysis_scanner_config": {
+          "enable_ca_scan": true,
+          "exclude_patterns": ["**/docs/**"]
+        },
         "sast_scanner_config": {
-          "enable_sast_scan": true
+          "enable_sast_scan": true,
+          "exclude_patterns": ["**/_test.go/**"],
+          "exclude_rules": ["xss-injection"]
         },
         "secrets_scanner_config": {
-          "enable_secrets_scan": true
+          "enable_secrets_scan": true,
+          "validate_secrets": true,
+          "exclude_patterns": ["**/_test.go/**"],
+          "enable_custom_secrets": true
         },
         "iac_scanner_config": {
-          "enable_iac_scan": true
-        },
-        "applications_scanner_config": {
-          "enable_applications_scan": true
-        },
-        "services_scanner_config": {
-          "enable_services_scan": false
+          "enable_iac_scan": true,
+          "exclude_patterns": ["*.tfstate"]
         }
-      },
-      "protected_branches": ["main", "master"],
-      "include_exclude_mode": 0,
-      "include_exclude_pattern": "*test*",
-      "report_analytics": true
+      }
     }
-  ],
-  "is_default": true
+  ]
 }

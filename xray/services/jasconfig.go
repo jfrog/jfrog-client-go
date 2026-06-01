@@ -3,10 +3,11 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
 )
 
 const (
@@ -41,7 +42,7 @@ func (jcs *JasConfigService) GetJasConfigTokenValidation() (bool, error) {
 	}
 	var jasConfig JasConfig
 	if err = json.Unmarshal(body, &jasConfig); err != nil {
-		return false, errorutils.CheckErrorf("couldn't parse JFrog Xray server Jas Configuration response: " + err.Error())
+		return false, errorutils.CheckErrorf("couldn't parse JFrog Xray server Jas Configuration response: %s", err.Error())
 	}
 	return *jasConfig.TokenValidationToggle, nil
 }

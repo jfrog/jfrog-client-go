@@ -9,70 +9,97 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/xray/services"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 )
 
 const (
 	AnalyticsMetricsMinXscVersion = "1.7.1"
 	xscEventApi                   = "event"
+	gitIntegrationEventApi        = "git_integration_event"
 	xscDeprecatedEventApiSuffix   = "api/v1/" + xscEventApi
 )
 
 type AnalyticsEventService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XscDetails  auth.ServiceDetails
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XscDetails      auth.ServiceDetails
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 func NewAnalyticsEventService(client *jfroghttpclient.JfrogHttpClient) *AnalyticsEventService {
 	return &AnalyticsEventService{client: client}
 }
 
-func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+func (vs *AnalyticsEventService) getAnalyticsEndPoint() string {
 	if vs.XrayDetails != nil {
-		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, err = vs.client.SendPost(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+xscEventApi, requestContent, &httpClientDetails)
-		return
+		return utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + xscEventApi
 	}
 	// Backward compatibility
-	httpClientDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, err = vs.client.SendPost(utils.AddTrailingSlashIfNeeded(vs.XscDetails.GetUrl())+xscDeprecatedEventApiSuffix, requestContent, &httpClientDetails)
+	return utils.AddTrailingSlashIfNeeded(vs.XscDetails.GetUrl()) + xscDeprecatedEventApiSuffix
+}
+
+func (vs *AnalyticsEventService) getGitEventEndPoint() string {
+	return utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + gitIntegrationEventApi
+}
+
+func (vs *AnalyticsEventService) sendAddGeneralEventPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails httputils.HttpClientDetails
+	if vs.XrayDetails != nil {
+		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	} else {
+		// Backward compatibility
+		httpClientDetails = vs.XscDetails.CreateHttpClientDetails()
+	}
+	resp, body, err = vs.client.SendPost(utils.AppendScopedProjectKeyParam(vs.getAnalyticsEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
+	return
+}
+
+func (vs *AnalyticsEventService) sendGitIntegrationPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	resp, body, err = vs.client.SendPost(utils.AppendScopedProjectKeyParam(vs.getGitEventEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
 	return
 }
 
 func (vs *AnalyticsEventService) sendPutRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails httputils.HttpClientDetails
 	if vs.XrayDetails != nil {
-		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, err = vs.client.SendPut(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+xscEventApi, requestContent, &httpClientDetails)
-		return
+		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	} else {
+		// Backward compatibility
+		httpClientDetails = vs.XscDetails.CreateHttpClientDetails()
 	}
-	// Backward compatibility
-	httpClientDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, err = vs.client.SendPut(utils.AddTrailingSlashIfNeeded(vs.XscDetails.GetUrl())+xscDeprecatedEventApiSuffix, requestContent, &httpClientDetails)
+	resp, body, err = vs.client.SendPut(utils.AppendScopedProjectKeyParam(vs.getAnalyticsEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
 	return
 }
 
 func (vs *AnalyticsEventService) sendGetRequest(msi string) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails httputils.HttpClientDetails
 	if vs.XrayDetails != nil {
-		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, _, err = vs.client.SendGet(fmt.Sprintf("%s%s%s/%s", vs.XrayDetails.GetUrl(), xscutils.XscInXraySuffix, xscEventApi, msi), true, &httpClientDetails)
-		return
+		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	} else {
+		// Backward compatibility
+		httpClientDetails = vs.XscDetails.CreateHttpClientDetails()
 	}
-	// Backward compatibility
-	httpClientDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, _, err = vs.client.SendGet(fmt.Sprintf("%s%s/%s", vs.XscDetails.GetUrl(), xscDeprecatedEventApiSuffix, msi), true, &httpClientDetails)
+	resp, body, _, err = vs.client.SendGet(utils.AppendScopedProjectKeyParam(fmt.Sprintf("%s/%s", vs.getAnalyticsEndPoint(), msi), vs.ScopeProjectKey), true, &httpClientDetails)
 	return
 
 }
 
 // AddGeneralEvent add general event in Xsc and returns msi generated by Xsc.
-func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent) (string, error) {
-	requestContent, err := json.Marshal(event)
-	if err != nil {
-		return "", errorutils.CheckError(err)
+func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent, xrayVersion string) (string, error) {
+	var requestContent []byte
+	if err := utils.ValidateMinimumVersion(utils.Xray, xrayVersion, xscutils.MinXrayVersionNewGitInfoContext); err != nil {
+		// use deprecated event struct
+		if requestContent, err = json.Marshal(convertToDeprecatedEventStruct(event)); err != nil {
+			return "", errorutils.CheckError(err)
+		}
+	} else {
+		if requestContent, err = json.Marshal(event); err != nil {
+			return "", errorutils.CheckError(err)
+		}
 	}
-	resp, body, err := vs.sendPostRequest(requestContent)
+	resp, body, err := vs.sendAddGeneralEventPostRequest(requestContent)
 	if err != nil {
 		return "", err
 	}
@@ -82,6 +109,25 @@ func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent)
 	var response XscAnalyticsGeneralEventResponse
 	err = json.Unmarshal(body, &response)
 	return response.MultiScanId, errorutils.CheckError(err)
+}
+
+// SendGitIntegrationEvent sends a POST request to the /git_integration_event endpoint
+func (vs *AnalyticsEventService) SendGitIntegrationEvent(event GitIntegrationEvent, xrayVersion string) error {
+	if err := utils.ValidateMinimumVersion(utils.Xray, xrayVersion, xscutils.MinXrayVersionGitIntegrationEvent); err != nil {
+		return fmt.Errorf("git integration event version error %s: %w", xscutils.MinXrayVersionGitIntegrationEvent, err)
+	}
+	requestBody, err := json.Marshal(event)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	resp, body, err := vs.sendGitIntegrationPostRequest(requestBody)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	}
+	return nil
 }
 
 // UpdateGeneralEvent update finalized analytics metrics info of an existing event.
@@ -94,7 +140,7 @@ func (vs *AnalyticsEventService) UpdateGeneralEvent(event XscAnalyticsGeneralEve
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	return nil
@@ -114,16 +160,97 @@ func (vs *AnalyticsEventService) GetGeneralEvent(msi string) (*XscAnalyticsGener
 	return &response, errorutils.CheckError(err)
 }
 
+func convertToDeprecatedEventStruct(event XscAnalyticsGeneralEvent) XscAnalyticsGeneralEventDeprecated {
+	var deprecatedGitInfo XscGitInfoContextDeprecated
+	if event.GitInfo != nil {
+		deprecatedGitInfo = XscGitInfoContextDeprecated{
+			GitRepoUrl:    event.GitInfo.Source.GitRepoHttpsCloneUrl,
+			GitRepoName:   event.GitInfo.Source.GitRepoName,
+			GitProject:    event.GitInfo.Source.GitProject,
+			BranchName:    event.GitInfo.Source.BranchName,
+			CommitHash:    event.GitInfo.Source.CommitHash,
+			CommitMessage: event.GitInfo.Source.CommitMessage,
+			CommitAuthor:  event.GitInfo.Source.CommitAuthor,
+			GitProvider:   event.GitInfo.GitProvider,
+			Technologies:  event.GitInfo.Technologies,
+		}
+	}
+	return XscAnalyticsGeneralEventDeprecated{
+		XscAnalyticsBasicGeneralEvent: event.XscAnalyticsBasicGeneralEvent,
+		GitInfo:                       &deprecatedGitInfo,
+		IsGitInfoFlow:                 event.IsGitInfoFlow,
+	}
+}
+
 // XscAnalyticsGeneralEvent extend the basic struct with Frogbot related info.
+type XscAnalyticsGeneralEventDeprecated struct {
+	XscAnalyticsBasicGeneralEvent
+	GitInfo       *XscGitInfoContextDeprecated `json:"gitinfo,omitempty"`
+	IsGitInfoFlow bool                         `json:"is_gitinfo_flow,omitempty"`
+}
+
+type XscGitInfoContextDeprecated struct {
+	GitRepoUrl    string   `json:"git_repo_url"`
+	GitRepoName   string   `json:"git_repo_name,omitempty"`
+	GitProject    string   `json:"git_project,omitempty"`
+	GitProvider   string   `json:"git_provider,omitempty"`
+	Technologies  []string `json:"technologies,omitempty"`
+	BranchName    string   `json:"branch_name"`
+	LastCommit    string   `json:"last_commit,omitempty"`
+	CommitHash    string   `json:"commit_hash"`
+	CommitMessage string   `json:"commit_message,omitempty"`
+	CommitAuthor  string   `json:"commit_author,omitempty"`
+}
+
 type XscAnalyticsGeneralEvent struct {
 	XscAnalyticsBasicGeneralEvent
-	GitInfo       *services.XscGitInfoContext `json:"gitinfo,omitempty"`
-	IsGitInfoFlow bool                        `json:"is_gitinfo_flow,omitempty"`
+	GitInfo       *XscGitInfoContext `json:"gitinfo,omitempty"`
+	IsGitInfoFlow bool               `json:"is_gitinfo_flow,omitempty"`
+}
+
+type XscGitInfoContext struct {
+	GitDiffContext
+	Source       CommitContext `json:"source"`
+	GitProvider  string        `json:"git_provider,omitempty"`
+	Technologies []string      `json:"technologies,omitempty"`
+}
+
+// Optional fields for git diff context
+type GitDiffContext struct {
+	Target       *CommitContext      `json:"target,omitempty"`
+	PullRequest  *PullRequestContext `json:"pull_request,omitempty"`
+	ChangedFiles []string            `json:"-"`
+}
+
+type CommitContext struct {
+	GitRepoHttpsCloneUrl string `json:"git_repo_url"`
+	GitRepoName          string `json:"git_repo_name,omitempty"`
+	GitProject           string `json:"git_project,omitempty"`
+	BranchName           string `json:"branch_name"`
+	CommitHash           string `json:"commit_hash"`
+	CommitMessage        string `json:"commit_message,omitempty"`
+	CommitAuthor         string `json:"commit_author,omitempty"`
+}
+
+type PullRequestContext struct {
+	PullRequestId    int    `json:"pull_request_id,omitempty"`
+	PullRequestTitle string `json:"pull_request_title,omitempty"`
+}
+
+type GitIntegrationEvent struct {
+	EventType     string `json:"event_type"`
+	GitProvider   string `json:"git_provider"`
+	GitOwner      string `json:"git_owner"`
+	GitRepository string `json:"git_repository"`
+	GitBranch     string `json:"git_branch"`
+	EventStatus   string `json:"event_status"`
+	FailureReason string `json:"failure_reason,omitempty"`
 }
 
 type XscAnalyticsGeneralEventFinalize struct {
 	XscAnalyticsBasicGeneralEvent
 	MultiScanId string `json:"multi_scan_id,omitempty"`
+	GitRepoUrl  string `json:"git_repository,omitempty"`
 }
 
 type XscAnalyticsBasicGeneralEvent struct {
@@ -143,6 +270,7 @@ type XscAnalyticsBasicGeneralEvent struct {
 	TotalScanDuration      string      `json:"total_scan_duration,omitempty"`
 	FrogbotScanType        string      `json:"frogbot_scan_type,omitempty"`
 	FrogbotCiProvider      string      `json:"frogbot_ci_provider,omitempty"`
+	ProjectPath            string      `json:"project_path,omitempty"`
 }
 
 type XscAnalyticsGeneralEventResponse struct {

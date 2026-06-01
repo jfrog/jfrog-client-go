@@ -14,6 +14,8 @@ const (
 	apiV1Suffix                       = "api/v1"
 	XscInXraySuffix                   = apiV1Suffix + xscSuffix
 	MinXrayVersionXscTransitionToXray = "3.107.13"
+	MinXrayVersionNewGitInfoContext   = "3.117.0"
+	MinXrayVersionGitIntegrationEvent = "3.135.0"
 )
 
 // From Xray version 3.107.13, XSC is transitioning to Xray as inner service. This function will return compatible URL.
@@ -31,4 +33,21 @@ func IsXscXrayInnerService(xrayVersion string) bool {
 		return false
 	}
 	return true
+}
+
+// The platform expects the git repo key to be in the format of the https/http clone Git URL without the protocol.
+func GetGitRepoUrlKey(gitRepoHttpUrl string) string {
+	if len(gitRepoHttpUrl) == 0 {
+		// No git context was provided
+		return ""
+	}
+	if !strings.HasSuffix(gitRepoHttpUrl, ".git") {
+		// Append .git to the URL if not included
+		gitRepoHttpUrl += ".git"
+	}
+	// Remove the Http/s protocol from the URL
+	if strings.HasPrefix(gitRepoHttpUrl, "http") {
+		return strings.TrimPrefix(strings.TrimPrefix(gitRepoHttpUrl, "https://"), "http://")
+	}
+	return gitRepoHttpUrl
 }

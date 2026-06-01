@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"path"
+	"time"
+
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
-	"time"
 )
 
 const (
@@ -35,6 +36,8 @@ const (
 	Rejected   RbStatus = "REJECTED"
 	Deleting   RbStatus = "DELETING"
 	Started    RbStatus = "STARTED"
+	Created    RbStatus = "CREATED"
+	Draft      RbStatus = "DRAFT"
 )
 
 func (rbs *ReleaseBundlesService) GetReleaseBundleCreationStatus(rbDetails ReleaseBundleDetails, projectKey string, sync bool) (ReleaseBundleStatusResponse, error) {
@@ -128,10 +131,11 @@ func (rbs *ReleaseBundlesService) waitForRbOperationCompletion(restApi, projectK
 		if err != nil {
 			return true, nil, err
 		}
+		log.Debug(fmt.Sprintf("Release Bundle %s status: '%s'", operation, rbStatusResponse.Status))
 		switch rbStatusResponse.Status {
 		case Pending, Processing, Started:
 			return false, nil, nil
-		case Completed, Rejected, Failed, Deleting:
+		case Completed, Rejected, Failed, Deleting, Draft:
 			return true, responseBody, nil
 		default:
 			return true, nil, errorutils.CheckErrorf("received unexpected status: '%s'", rbStatusResponse.Status)

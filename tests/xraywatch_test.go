@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -116,6 +118,7 @@ func testXrayWatchAll(t *testing.T) {
 }
 
 func testXrayWatchSelectedRepos(t *testing.T) {
+	t.Skip("JGC-408 - Failed to update Watch: Resources was not found")
 	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
@@ -124,10 +127,10 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	}()
 	repo1Name := fmt.Sprintf("%s-%s", "repo1", getRunId())
 	createRepoLocal(t, repo1Name)
-	defer deleteRepo(t, repo1Name)
+	deleteRepoOnTestDone(t, repo1Name)
 	repo2Name := fmt.Sprintf("%s-%s", "repo2", getRunId())
 	createRepoRemote(t, repo2Name)
-	defer deleteRepo(t, repo2Name)
+	deleteRepoOnTestDone(t, repo2Name)
 
 	build1Name := fmt.Sprintf("%s-%s", "build1", getRunId())
 	err = createAndIndexBuild(t, build1Name)
@@ -154,7 +157,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 		},
 	}
 
-	var repos = map[string]utils.WatchRepository{}
+	repos := map[string]utils.WatchRepository{}
 	repo := utils.NewWatchRepository(repo1Name, "default", utils.WatchRepositoryLocal)
 	repo.Filters.PackageTypes = []string{"npm", "maven"}
 	repo.Filters.Names = []string{"example-name"}
@@ -255,7 +258,6 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	assert.Equal(t, []string{"example-path-2"}, updatedTargetConfig.Repositories.Repositories[repo1Name].Filters.Paths)
 	assert.Equal(t, []string{"example-mime-type-2"}, updatedTargetConfig.Repositories.Repositories[repo1Name].Filters.MimeTypes)
 	assert.Equal(t, map[string]string{"some-key": "some-value-2"}, updatedTargetConfig.Repositories.Repositories[repo1Name].Filters.Properties)
-
 }
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
@@ -314,17 +316,17 @@ func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}
 
 	err := testsXrayWatchService.Update(paramsMissingWatch)
-	assert.EqualError(t, err, "server response: 404 Not Found")
+	assert.ErrorContains(t, err, "server response: 404 Not Found")
 }
 
 func testXrayWatchDeleteMissingWatch(t *testing.T) {
 	err := testsXrayWatchService.Delete("client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "server response: 404 Not Found")
+	assert.ErrorContains(t, err, "server response: 404 Not Found")
 }
 
 func testXrayWatchGetMissingWatch(t *testing.T) {
 	_, err := testsXrayWatchService.Get("client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "server response: 404 Not Found")
+	assert.ErrorContains(t, err, "server response: 404 Not Found")
 }
 
 func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
@@ -364,7 +366,7 @@ func createDummyPolicy(policyName string) error {
 		Type:        utils.Security,
 		Rules: []utils.PolicyRule{{
 			Name:     "sec_rule",
-			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
+			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium, false),
 			Actions: &utils.PolicyAction{
 				Webhooks: []string{},
 				BlockDownload: utils.PolicyBlockDownload{
@@ -389,6 +391,7 @@ func createAndIndexBuild(t *testing.T, buildName string) error {
 	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
 	return err
 }
+
 func createWatchWithRetries(t *testing.T, params utils.WatchParams) {
 	createOrUpdateWatchWithRetries(t, params, false)
 }

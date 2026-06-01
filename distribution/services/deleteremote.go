@@ -3,14 +3,15 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"time"
 )
 
 type OnSuccess string
@@ -125,7 +126,7 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return nil
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errorutils.CheckErrorf("error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
+			return errorutils.CheckErrorf("error while waiting to deletion: status code %s.", fmt.Sprint(resp.StatusCode))
 		}
 		time.Sleep(time.Second * DefaultDistributeSyncSleepIntervalSeconds)
 	}

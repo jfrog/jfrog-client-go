@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -25,11 +26,13 @@ var buildAqlSearchQueryDataProvider = []struct {
 	{"repo-local", false,
 		`{"$or":[{"$and":[{"repo":"repo-local","path":".","name":{"$match":"*"}}]}]}`},
 	{"*repo-local", false,
-		`{"$or":[{"$and":[{"repo":{"$match":"*"},"path":".","name":{"$match":"*repo-local"}}]},{"$and":[{"repo":{"$match":"*repo-local"},"path":".","name":{"$match":"*"}}]}]}`},
+		`{"$or":[{"$and":[{"path":".","name":{"$match":"*repo-local"}}]},{"$and":[{"repo":{"$match":"*repo-local"},"path":".","name":{"$match":"*"}}]}]}`},
 	{"repo-local2/a*b*c/dd/", false,
 		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":"repo-local2","path":{"$match":"a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
 	{"*/a*b*c/dd/", false,
-		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":{"$match":"*"},"path":{"$match":"*a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
+		`{"path":{"$ne":"."},"$or":[{"$and":[{"path":{"$match":"*a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
+	{"**/a-.*.tar.gz", false,
+		`{"$or":[{"$and":[{"path":{"$match":"**"},"name":{"$match":"a-.*.tar.gz"}}]},{"$and":[{"path":".","name":{"$match":"*a-.*.tar.gz"}}]}]}`},
 }
 
 func TestBuildAqlSearchQuery(t *testing.T) {
@@ -267,4 +270,288 @@ func TestEncodeForBuildInfoRepository(t *testing.T) {
 			assert.Equal(t, testCase.expectedEncoding, encodeForBuildInfoRepository(testCase.value))
 		})
 	}
+}
+
+func TestBuildAqlSearchQueryWithExclusions(t *testing.T) {
+	params := CommonParams{
+		Pattern:    "repo-local/*",
+		Recursive:  true,
+		Exclusions: []string{"*.json"},
+	}
+	aqlResult, err := CreateAqlBodyForSpecWithPattern(&params)
+	assert.NoError(t, err)
+	assert.Contains(t, aqlResult, `"$nmatch"`)
+	assert.Contains(t, aqlResult, `*.json`)
+}
+
+func TestCreateAqlBodyForBuildArtifactsWithExclusions(t *testing.T) {
+	builds := []Build{{"myBuild", "123"}}
+
+	aqlBodyNoExclusions := createAqlBodyForBuildArtifacts(builds)
+	assert.NotContains(t, aqlBodyNoExclusions, `"$nmatch"`)
+	assert.Contains(t, aqlBodyNoExclusions, `artifact.module.build.name`)
+	assert.Contains(t, aqlBodyNoExclusions, `myBuild`)
+
+	params := &CommonParams{
+		Exclusions: []string{"*.json"},
+		Recursive:  true,
+	}
+	aqlBodyWithExclusions, err := createAqlBodyForBuildArtifactsWithExclusions(builds, params)
+	assert.NoError(t, err)
+
+	assert.Contains(t, aqlBodyWithExclusions, `"$nmatch"`, "FIX VERIFIED: createAqlBodyForBuildArtifactsWithExclusions includes exclusions")
+	assert.Contains(t, aqlBodyWithExclusions, `*.json`)
+	assert.Contains(t, aqlBodyWithExclusions, `artifact.module.build.name`)
+	assert.Contains(t, aqlBodyWithExclusions, `artifact.module.build.number`)
+	assert.Contains(t, aqlBodyWithExclusions, `myBuild`)
+	assert.Contains(t, aqlBodyWithExclusions, `123`)
+}
+
+func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
+	builds := []Build{{"myBuild", "123"}}
+
+	// Test with exclusions
+	params := &CommonParams{
+		Exclusions: []string{"*.xml", "test-*"},
+		Recursive:  true,
+	}
+	aqlBody, err := createAqlBodyForBuildDependenciesWithExclusions(builds, params)
+	assert.NoError(t, err)
+
+	assert.Contains(t, aqlBody, `"$nmatch"`)
+	assert.Contains(t, aqlBody, `*.xml`)
+	assert.Contains(t, aqlBody, `test-*`)
+	assert.Contains(t, aqlBody, `dependency.module.build.name`)
+	assert.Contains(t, aqlBody, `dependency.module.build.number`)
+}
+
+func TestGetSpecType_BuildWithPattern(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   CommonParams
+		expected SpecType
+	}{
+		{
+			name:     "build only routes to BUILD",
+			params:   CommonParams{Build: "my-build/1"},
+			expected: BUILD,
+		},
+		{
+			name:     "build with empty pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: ""},
+			expected: BUILD,
+		},
+		{
+			name:     "build with wildcard-all pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "*"},
+			expected: BUILD,
+		},
+		{
+			name:     "build with specific pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "docker-local-ash/*"},
+			expected: BUILD,
+		},
+		{
+			name:     "build with repo path pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/path/to/*.jar"},
+			expected: BUILD,
+		},
+		{
+			name:     "pattern only routes to WILDCARD",
+			params:   CommonParams{Pattern: "repo-local/*"},
+			expected: WILDCARD,
+		},
+		{
+			name:     "aql routes to AQL",
+			params:   CommonParams{Aql: Aql{ItemsFind: `{"repo":"test"}`}},
+			expected: AQL,
+		},
+		{
+			name:     "aql with build routes to AQL (AQL takes precedence)",
+			params:   CommonParams{Aql: Aql{ItemsFind: `{"repo":"test"}`}, Build: "my-build/1"},
+			expected: AQL,
+		},
+		{
+			name:     "build with IncludeDeps and pattern routes to WILDCARD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/*", IncludeDeps: true},
+			expected: WILDCARD,
+		},
+		{
+			name:     "build with IncludeDeps and no pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", IncludeDeps: true},
+			expected: BUILD,
+		},
+		{
+			name:     "build with IncludeDeps and wildcard pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "*", IncludeDeps: true},
+			expected: BUILD,
+		},
+		{
+			name:     "build with ExcludeArtifacts but no IncludeDeps routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", ExcludeArtifacts: true},
+			expected: BUILD,
+		},
+		{
+			name:     "build with pattern and props routes to WILDCARD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/*", Props: "key=value"},
+			expected: WILDCARD,
+		},
+		{
+			name:     "build with pattern and excludeProps routes to WILDCARD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/*", ExcludeProps: "key=value"},
+			expected: WILDCARD,
+		},
+		{
+			name:     "build with props but no pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Props: "key=value"},
+			expected: BUILD,
+		},
+		{
+			name:     "empty params routes to WILDCARD",
+			params:   CommonParams{},
+			expected: WILDCARD,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.params.GetSpecType()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestCreateAqlBodyForBuildArtifactsWithPattern(t *testing.T) {
+	builds := []Build{{BuildName: "my-build", BuildNumber: "1"}}
+
+	t.Run("no pattern: build-only filter, no $and wrapping", func(t *testing.T) {
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{})
+		assert.NoError(t, err)
+		assert.Contains(t, body, `"artifact.module.build.name":"my-build"`)
+		assert.NotContains(t, body, `"$and":[{"$or"`)
+	})
+
+	t.Run("trivial '*' pattern: treated as no pattern", func(t *testing.T) {
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{Pattern: "*"})
+		assert.NoError(t, err)
+		assert.NotContains(t, body, `"$and":[{"$or"`)
+	})
+
+	t.Run("pattern with virtual repo: server-side match via AQL", func(t *testing.T) {
+		// A client-side string compare on `Repo` cannot translate virtual → backing local,
+		// but AQL can. The pattern must go into the query itself.
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:   "some-virtual-repo/com/jfrog/*/my-artifact-*.tgz",
+			Recursive: true,
+		})
+		assert.NoError(t, err)
+		assert.Contains(t, body, `"artifact.module.build.name":"my-build"`)
+		assert.Contains(t, body, `"repo":"some-virtual-repo"`)
+		assert.Contains(t, body, `"$and":[{"$or"`, "build and pattern filters should be ANDed together")
+	})
+
+	t.Run("invalid pattern surfaces as error", func(t *testing.T) {
+		// Pattern starting with '/' is invalid — must start with a repo name or asterisk.
+		_, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:   "/leading-slash-is-invalid",
+			Recursive: true,
+		})
+		assert.Error(t, err, "invalid patterns must not be silently swallowed")
+	})
+
+	t.Run("transitive + multi-repo pattern is rejected", func(t *testing.T) {
+		// Wildcards before the first slash expand to multiple repos, which transitive mode forbids.
+		_, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:    "repo-*/com/jfrog/*.tgz",
+			Recursive:  true,
+			Transitive: true,
+		})
+		assert.Error(t, err, "transitive search with multi-repo wildcards must be rejected")
+		assert.Contains(t, err.Error(), "transitive", "error should mention transitive")
+	})
+
+	t.Run("transitive + single-repo pattern is accepted", func(t *testing.T) {
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:    "one-repo/com/jfrog/*.tgz",
+			Recursive:  true,
+			Transitive: true,
+		})
+		assert.NoError(t, err)
+		assert.Contains(t, body, `"repo":"one-repo"`)
+	})
+
+	t.Run("exclusions + pattern: both appear in AQL", func(t *testing.T) {
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:    "some-repo/com/jfrog/*.jar",
+			Recursive:  true,
+			Exclusions: []string{"*test*.jar"},
+		})
+		assert.NoError(t, err)
+		assert.Contains(t, body, `"$and":[{"$or"`, "pattern is still present under $and")
+		assert.Contains(t, body, `"$nmatch"`, "exclusion should produce $nmatch filter")
+		assert.Contains(t, body, `"repo":"some-repo"`)
+	})
+
+	t.Run("multi-triple pattern expands into $or", func(t *testing.T) {
+		// A recursive pattern with a wildcard mid-path produces multiple triples; each
+		// triple carries its own "repo" literal, so the count signals fan-out.
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:   "some-repo/com/jfrog/*/files/*-linux-amd64.tgz",
+			Recursive: true,
+		})
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, strings.Count(body, `"repo":"some-repo"`), 2, "recursive pattern should produce multiple triples")
+	})
+
+	t.Run("aggregated builds + pattern: all builds ANDed with pattern", func(t *testing.T) {
+		aggregated := []Build{
+			{BuildName: "my-build", BuildNumber: "1"},
+			{BuildName: "my-build", BuildNumber: "2"},
+			{BuildName: "upstream-build", BuildNumber: "5"},
+		}
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(aggregated, &CommonParams{
+			Pattern:   "some-repo/com/jfrog/*.jar",
+			Recursive: true,
+		})
+		assert.NoError(t, err)
+		assert.Contains(t, body, `"artifact.module.build.name":"my-build","artifact.module.build.number":"1"`)
+		assert.Contains(t, body, `"artifact.module.build.name":"my-build","artifact.module.build.number":"2"`)
+		assert.Contains(t, body, `"artifact.module.build.name":"upstream-build","artifact.module.build.number":"5"`)
+		assert.Contains(t, body, `"$and":[{"$or"`, "aggregated build list must be ANDed with pattern, not replaced")
+	})
+
+	t.Run("'*/path' pattern: repo wildcard not emitted as repo filter", func(t *testing.T) {
+		// buildInnerQueryPart skips the repo condition when the triple's repo is '*' or '**',
+		// so users writing '*/path/...' as a workaround don't get a literal `"repo":"*"` emitted.
+		body, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:   "*/com/jfrog/foo/*.tgz",
+			Recursive: true,
+		})
+		assert.NoError(t, err)
+		assert.Contains(t, body, `"$and":[{"$or"`, "pattern should still be present")
+		assert.NotContains(t, body, `"repo":"*"`, "repo='*' must not be emitted as an AQL filter")
+	})
+
+	t.Run("nil-params wrapper: returns valid JSON with no pattern or exclusions", func(t *testing.T) {
+		// The wrapper at createAqlBodyForBuildArtifacts calls the underlying function with
+		// nil params and swallows the error; verify its output is a well-formed JSON body
+		// containing only the build filter.
+		body := createAqlBodyForBuildArtifacts(builds)
+		var parsed map[string]any
+		assert.NoError(t, json.Unmarshal([]byte(body), &parsed), "body must be valid JSON")
+		assert.Contains(t, body, `"artifact.module.build.name":"my-build"`)
+		assert.NotContains(t, body, `"$and":[{"$or"`, "no pattern → no $and wrapping")
+		assert.NotContains(t, body, `"$nmatch"`, "no exclusions → no $nmatch")
+	})
+
+	t.Run("malformed exclusion propagates as error", func(t *testing.T) {
+		// Guards the behavior change introduced by this fix: a malformed exclusion pattern
+		// used to silently produce a build-only AQL (exclusion dropped); now it aborts.
+		_, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &CommonParams{
+			Pattern:    "some-repo/*",
+			Recursive:  true,
+			Exclusions: []string{"/leading-slash-is-invalid"},
+		})
+		assert.Error(t, err, "malformed exclusion must propagate, not be silently swallowed")
+	})
 }

@@ -778,7 +778,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			checksums := &entities.Checksum{}
 			var uploaded bool
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
-			log.Info(logMsgPrefix+"Uploading:", artifact.Artifact.LocalPath)
+			log.Debug(logMsgPrefix+"Uploading:", artifact.Artifact.LocalPath)
 			if artifact.IsDir {
 				// Upload directory
 				err = us.createFolderInArtifactory(artifact)

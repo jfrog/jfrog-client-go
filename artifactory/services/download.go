@@ -247,7 +247,7 @@ func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.Conten
 
 func breakFileDownloadPathToParts(downloadPath string) (repo, path, name string, err error) {
 	if utils.IsWildcardPattern(downloadPath) {
-		return "", "", "", errorutils.CheckErrorf("downloading without AQL is not supported for the provided wildcard pattern: " + downloadPath)
+		return "", "", "", errorutils.CheckErrorf("downloading without AQL is not supported for the provided wildcard pattern: %s", downloadPath)
 	}
 	parts := strings.Split(downloadPath, "/")
 	repo = parts[0]
@@ -494,14 +494,14 @@ func removeIfSymlink(localSymlinkPath string) error {
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) (err error) {
 	if symlinkChecksum && symlinkContentChecksum != "" {
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
-			return errorutils.CheckErrorf("symlink validation failed, target doesn't exist: " + symlinkArtifact)
+			return errorutils.CheckErrorf("symlink validation failed, target doesn't exist: %s", symlinkArtifact)
 		}
 		var checksums map[crypto.Algorithm]string
 		if checksums, err = crypto.GetFileChecksums(symlinkArtifact, crypto.SHA1); err != nil {
 			return errorutils.CheckError(err)
 		}
 		if checksums[crypto.SHA1] != symlinkContentChecksum {
-			return errorutils.CheckErrorf("symlink validation failed for target: " + symlinkArtifact)
+			return errorutils.CheckErrorf("symlink validation failed for target: %s", symlinkArtifact)
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)

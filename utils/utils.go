@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
 	"net/url"
 	"os"
 	"path"
@@ -12,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/io"
 
@@ -28,7 +31,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.48.4"
+	Version     = "1.55.0"
 )
 
 const xrayDevVersion = "3.x-dev"
@@ -51,6 +54,8 @@ var (
 	MaxBufferSize          = 50000
 	userAgent              = getDefaultUserAgent()
 	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
+	// #nosec G404
+	backoffRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 func getVersion() string {
@@ -80,6 +85,25 @@ func ValidateMinimumVersion(product MinVersionProduct, currentVersion, minimumVe
 	return nil
 }
 
+// hasRegexPattern checks if a path section contains actual regex patterns.
+// It distinguishes between literal dots in filenames (e.g., "my.folder", "file.txt")
+// and regex metacharacters/patterns (e.g., ".*", ".+", "[0-9]", "(group)").
+// Returns true if the section appears to contain regex syntax.
+func hasRegexPattern(section string) bool {
+	// Check for regex quantifiers and patterns
+	if strings.ContainsAny(section, `*+?[{(|`) {
+		return true
+	}
+
+	// Check for escaped characters (backslash indicates regex mode)
+	// e.g., "file\.txt", "\d+", "\w*"
+	if strings.Contains(section, `\`) {
+		return true
+	}
+
+	return false
+}
+
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
@@ -103,7 +127,10 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 			continue
 		}
 		if patternType == RegExp {
-			if strings.Contains(section, "(") {
+			// Break when we encounter actual regex patterns, not just any dot.
+			// A literal dot in a directory/file name (e.g., "my.folder", "file.txt") is valid.
+			// We only break on regex constructs like ".*", ".+", "[...]", "(..)", etc.
+			if hasRegexPattern(section) {
 				break
 			}
 		} else {
@@ -585,7 +612,7 @@ func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetai
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	return errorutils.CheckError(os.WriteFile(filePath, files, 0700))
+	return errorutils.CheckError(os.WriteFile(filePath, files, 0o700)) // #nosec G703 -- CLI/library runs in user environment
 }
 
 // Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
@@ -621,4 +648,50 @@ func SetEnvWithResetCallback(key, value string) (func() error, error) {
 	return func() error {
 		return errorutils.CheckError(os.Unsetenv(key))
 	}, nil
+}
+
+const (
+	// If the access token used for the client is project-scoped, the API call needs to contain the project key as query param to pass to the Server.
+	ProjectKeyPermissionsQueryParam = "projectKey="
+)
+
+// To access some of the API calls in Xray, we need to add the project key as a query parameter (used for validations if the token is project-scoped).
+func AppendScopedProjectKeyParam(url, projectKey string) string {
+	// make sure the project key is not empty and not already in the URL
+	if projectKey == "" || urlContainsProjectKeyParam(url) {
+		return url
+	}
+	if strings.Contains(url, "?") {
+		// the URL already contains query parameters, append the project key with an '&'
+		url += "&" + ProjectKeyPermissionsQueryParam + projectKey
+	} else {
+		// the URL does not contain any query parameters, add the project key with a '?'
+		url += "?" + ProjectKeyPermissionsQueryParam + projectKey
+	}
+	return url
+}
+
+func urlContainsProjectKeyParam(url string) bool {
+	// check if the URL already contains the project key query parameter
+	return len(url) > 0 && strings.Contains(url, ProjectKeyPermissionsQueryParam)
+}
+
+func CalculateBackoff(attempt int, initialDelay, maxDelay time.Duration) time.Duration {
+	if initialDelay < 0 {
+		initialDelay = 0
+	}
+	if maxDelay < 0 {
+		maxDelay = 0
+	}
+	if initialDelay > maxDelay {
+		initialDelay = maxDelay
+	}
+	expDelay := float64(initialDelay) * math.Pow(2, float64(attempt))
+	cappedDelay := math.Min(expDelay, float64(maxDelay))
+	jitterFactor := 1.0 + (backoffRand.Float64()*0.4 - 0.2)
+	currentDelay := time.Duration(cappedDelay * jitterFactor)
+	if currentDelay < 0 {
+		currentDelay = 0
+	}
+	return currentDelay
 }

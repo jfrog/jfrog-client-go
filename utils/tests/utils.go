@@ -3,6 +3,7 @@ package tests
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -157,6 +158,22 @@ func RemoveAllAndAssert(t *testing.T, path string) {
 	assert.NoError(t, fileutils.RemoveTempDir(path), "Couldn't removeAll: "+path)
 }
 
+func RemoveAllQuietly(t *testing.T, path string) {
+	err := fileutils.RemoveTempDir(path)
+	if err != nil {
+		log.Warn(fmt.Sprintf("Failed to remove %s: %+v", path, err))
+	}
+}
+
+func CloseQuietly(t *testing.T, closer io.Closer) {
+	if closer != nil {
+		err := closer.Close()
+		if err != nil {
+			log.Warn(fmt.Sprintf("Failed to close %+v", err))
+		}
+	}
+}
+
 func SetEnvAndAssert(t *testing.T, key, value string) {
 	assert.NoError(t, os.Setenv(key, value), "Failed to set env: "+key)
 }
@@ -181,7 +198,7 @@ func UnSetEnvAndAssert(t *testing.T, key string) {
 }
 
 func GetLocalArtifactoryTokenIfNeeded(url string) (adminToken string) {
-	if strings.Contains(url, "localhost:8081") {
+	if strings.Contains(url, "localhost:808") {
 		adminToken = os.Getenv("JFROG_TESTS_LOCAL_ACCESS_TOKEN")
 	}
 	return

@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -47,9 +49,10 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 func setVirtualRepositoryBaseParams(params *services.VirtualRepositoryBaseParams, isUpdate bool) {
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	if !isUpdate {
-		params.Repositories = []string{getRtTargetRepoKey()}
+		// Leave Repositories empty to avoid package type mismatch with Generic repo
+		params.Repositories = nil
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(true)
-		params.DefaultDeploymentRepo = getRtTargetRepoKey()
+		params.DefaultDeploymentRepo = ""
 	} else {
 		params.Repositories = nil
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(false)
@@ -87,7 +90,7 @@ func virtualAlpineTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, avp)
 
 	setVirtualRepositoryBaseParams(&avp.VirtualRepositoryBaseParams, true)
@@ -112,7 +115,7 @@ func virtualBowerTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, bvp)
 
 	setVirtualRepositoryBaseParams(&bvp.VirtualRepositoryBaseParams, true)
@@ -137,7 +140,7 @@ func virtualChefTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, true)
@@ -160,7 +163,7 @@ func virtualComposerTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, true)
@@ -183,7 +186,7 @@ func virtualConanTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, true)
@@ -206,7 +209,7 @@ func virtualCondaTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, true)
@@ -229,7 +232,7 @@ func virtualCranTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, true)
@@ -254,7 +257,7 @@ func virtualDebianTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
 	setVirtualRepositoryBaseParams(&dvp.VirtualRepositoryBaseParams, true)
@@ -279,7 +282,7 @@ func virtualDockerTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
 	setVirtualRepositoryBaseParams(&dvp.VirtualRepositoryBaseParams, true)
@@ -301,7 +304,7 @@ func virtualGemsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
@@ -322,7 +325,7 @@ func virtualGenericTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
@@ -343,7 +346,7 @@ func virtualGitlfsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
@@ -366,7 +369,7 @@ func virtualGoTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
@@ -390,7 +393,7 @@ func virtualGradleTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
@@ -413,7 +416,7 @@ func virtualHelmTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, hvp)
 
 	setVirtualRepositoryBaseParams(&hvp.VirtualRepositoryBaseParams, true)
@@ -436,7 +439,7 @@ func virtualIvyTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, ivp)
 
 	setVirtualRepositoryBaseParams(&ivp.VirtualRepositoryBaseParams, true)
@@ -459,7 +462,7 @@ func virtualMavenTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, mvp)
 
 	setVirtualRepositoryBaseParams(&mvp.VirtualRepositoryBaseParams, true)
@@ -485,7 +488,7 @@ func virtualNpmTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, true)
@@ -511,7 +514,7 @@ func virtualNugetTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, true)
@@ -533,7 +536,7 @@ func virtualP2Test(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, true)
@@ -555,7 +558,7 @@ func virtualPuppetTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, true)
@@ -576,7 +579,7 @@ func virtualPypiTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, true)
@@ -598,7 +601,7 @@ func virtualRpmTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, rvp)
 
 	setVirtualRepositoryBaseParams(&rvp.VirtualRepositoryBaseParams, true)
@@ -621,7 +624,7 @@ func virtualSbtTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, svp)
 
 	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, true)
@@ -643,7 +646,7 @@ func virtualSwiftTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, svp)
 
 	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, true)
@@ -665,7 +668,7 @@ func virtualTerraformTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, tvp)
 
 	setVirtualRepositoryBaseParams(&tvp.VirtualRepositoryBaseParams, true)
@@ -690,7 +693,7 @@ func virtualYumTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yvp.PackageType = "rpm"
 	validateRepoConfig(t, repoKey, yvp)
@@ -712,7 +715,7 @@ func virtualCreateWithParamTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, params)
 }
 
@@ -727,7 +730,7 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	// Get repo details
 	data := getRepo(t, repoKey)
 	// Validate
@@ -749,7 +752,7 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	// Get repo details
 	data := getAllRepos(t, "virtual")
 	assert.NotNil(t, data)
@@ -778,7 +781,7 @@ func isVirtualRepoExistsTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
 	assert.NoError(t, err)
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 
 	// Validate repo exists
 	exists = isRepoExists(t, repoKey)

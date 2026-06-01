@@ -1,6 +1,60 @@
 package xray
 
-import xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
+import (
+	xscServices "github.com/jfrog/jfrog-client-go/xsc/services"
+)
+
+const CveRemediationResponse = `
+{
+  "CVE-2023-1234": [
+    {
+      "type": "InLock",
+      "steps": {
+        "0": [
+          {
+            "pkgVersion": {
+              "type": "npm",
+              "name": "test-component-1",
+              "version": "1.0.0",
+              "ecosystem": "generic"
+            },
+            "stepType": "FixVersion",
+            "upgradeTo": {
+              "type": "npm",
+              "name": "test-component-1",
+              "version": "1.0.1",
+              "ecosystem": "generic"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "CVE-2023-5678": [
+    {
+      "type": "InLock",
+      "steps": {
+        "0": [
+          {
+            "pkgVersion": {
+              "type": "npm",
+              "name": "test-component-2",
+              "version": "2.0.0",
+              "ecosystem": "generic"
+            },
+            "stepType": "FixVersion",
+            "upgradeTo": {
+              "type": "npm",
+              "name": "test-component-2",
+              "version": "2.0.2",
+              "ecosystem": "generic"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}`
 
 const ScanResponse = `
 {
@@ -1437,15 +1491,94 @@ const XscGitInfoResponse = `{"multi_scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001
 
 const XscGitInfoBadResponse = `"failed create git info request: git_repo_url field must contain value"`
 
-var GitInfoContextWithMinimalRequiredFields = xrayServices.XscGitInfoContext{
-	GitRepoUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
-	BranchName: "feature/XRAY-123-cool-feature",
-	CommitHash: "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
+const ArtifactStatusResponse = `{
+  "overall": {
+    "status": "DONE",
+    "time": "2023-12-01T10:00:00Z"
+  },
+  "details": {
+    "sca": {
+      "status": "DONE",
+      "time": "2023-12-01T10:00:00Z"
+    },
+    "contextual_analysis": {
+      "status": "DONE",
+      "time": "2023-12-01T10:00:00Z"
+    },
+    "exposures": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T10:00:00Z"
+    },
+    "violations": {
+      "status": "FAILED",
+      "time": "2023-12-01T10:00:00Z"
+    }
+  }
+}`
+
+const ArtifactStatusPendingResponse = `{
+  "overall": {
+    "status": "PENDING",
+    "time": "2023-12-01T09:30:00Z"
+  },
+  "details": {
+    "sca": {
+      "status": "PENDING",
+      "time": "2023-12-01T09:30:00Z"
+    },
+    "contextual_analysis": {
+      "status": "NOT_SCANNED",
+      "time": "2023-12-01T09:30:00Z"
+    },
+    "exposures": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T09:30:00Z"
+    },
+    "violations": {
+      "status": "NOT_SCANNED",
+      "time": "2023-12-01T09:30:00Z"
+    }
+  }
+}`
+
+const ArtifactStatusNotSupportedResponse = `{
+  "overall": {
+    "status": "NOT_SUPPORTED",
+    "time": "2023-12-01T11:00:00Z"
+  },
+  "details": {
+    "sca": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    },
+    "contextual_analysis": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    },
+    "exposures": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    },
+    "violations": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    }
+  }
+}`
+
+var GitInfoContextWithMinimalRequiredFields = xscServices.XscGitInfoContext{
+	Source: xscServices.CommitContext{
+		GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+		BranchName:           "feature/XRAY-123-cool-feature",
+		CommitHash:           "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
+	},
 }
 
-var GitInfoContextWithMissingFields = xrayServices.XscGitInfoContext{
-	GitRepoUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
-	BranchName: "feature/XRAY-123-cool-feature",
+var GitInfoContextWithMissingFields = xscServices.XscGitInfoContext{
+	Source: xscServices.CommitContext{
+		GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+		BranchName:           "feature/XRAY-123-cool-feature",
+	},
 }
 
 const TestMultiScanId = "3472b4e2-bddc-11ee-a9c9-acde48001122"

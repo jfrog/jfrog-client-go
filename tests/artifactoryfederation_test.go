@@ -1,9 +1,12 @@
+//go:build itest
+
 package tests
 
 import (
+	"testing"
+
 	"github.com/jfrog/gofrog/version"
 	"github.com/jfrog/jfrog-client-go/utils"
-	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +41,7 @@ func localConvertLocalToFederatedTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 
 	err = testsFederationService.ConvertLocalToFederated(repoKey)
 	assert.NoError(t, err, "Failed to convert "+repoKey)
@@ -60,7 +63,7 @@ func localTriggerFederatedFullSyncAllTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
 	err = testsFederationService.TriggerFederatedFullSyncAll(repoKey)
@@ -77,7 +80,7 @@ func localTriggerFederatedFullSyncMirrorTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
 	mirror := gfp.Members[0].Url

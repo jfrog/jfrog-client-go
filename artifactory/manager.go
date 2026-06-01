@@ -54,6 +54,12 @@ func NewWithClient(config config.Config, client *jfroghttpclient.JfrogHttpClient
 	return manager, nil
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateUpdateRepositoriesInBatch(body []byte, isUpdate bool) error {
+	repositoryService := services.NewBatchRepositoryService(sm.client, isUpdate)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.PerformBatchRequest(body)
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, false)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
@@ -156,6 +162,12 @@ func (sm *ArtifactoryServicesManagerImp) GetPackageLeadFile(leadFileParams servi
 	return packageService.GetPackageLeadFile(leadFileParams)
 }
 
+func (sm *ArtifactoryServicesManagerImp) UploadTrustedKey(params services.TrustedKeyParams) (*services.TrustedKeyResponse, error) {
+	trustedKeysService := services.NewTrustedKeysService(sm.client)
+	trustedKeysService.SetServiceDetails(sm.config.GetServiceDetails())
+	return trustedKeysService.UploadTrustedKey(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
@@ -198,10 +210,22 @@ func (sm *ArtifactoryServicesManagerImp) GetPermissionTarget(permissionTargetNam
 	return permissionTargetService.Get(permissionTargetName)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetAllPermissionTargets() (*[]services.PermissionTargetParams, error) {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.GetAll()
+}
+
 func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error) {
 	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
 	return buildInfoService.PublishBuildInfo(build, projectKey)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, numberOfBuildOccurrencesToBeDeleted int) error {
+	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
+	buildInfoService.DryRun = sm.config.IsDryRun()
+	return buildInfoService.DeleteBuildInfo(build, projectKey, numberOfBuildOccurrencesToBeDeleted)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DistributeBuild(params services.BuildDistributionParams) error {
@@ -257,6 +281,14 @@ func (sm *ArtifactoryServicesManagerImp) initDownloadService() *services.Downloa
 	return downloadService
 }
 
+func (sm *ArtifactoryServicesManagerImp) initDirectDownloadService() *services.DirectDownloadService {
+	directDownloadService := services.NewDirectDownloadService(sm.config.GetServiceDetails(), sm.client)
+	directDownloadService.DryRun = sm.config.IsDryRun()
+	directDownloadService.Threads = sm.config.GetThreads()
+	directDownloadService.Progress = sm.progress
+	return directDownloadService
+}
+
 func (sm *ArtifactoryServicesManagerImp) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error) {
 	downloadService := sm.initDownloadService()
 	summary, e := downloadService.DownloadFiles(params...)
@@ -270,6 +302,17 @@ func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithSummary(params ...serv
 	downloadService := sm.initDownloadService()
 	downloadService.SetSaveSummary(true)
 	return downloadService.DownloadFiles(params...)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DirectDownloadFiles(params ...services.DirectDownloadParams) (totalDownloaded, totalFailed int, err error) {
+	directDownloadService := sm.initDirectDownloadService()
+	return directDownloadService.DirectDownloadFiles(params...)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DirectDownloadFilesWithSummary(params ...services.DirectDownloadParams) (operationSummary *utils.OperationSummary, err error) {
+	directDownloadService := sm.initDirectDownloadService()
+	directDownloadService.SetSaveSummary(true)
+	return directDownloadService.DirectDownloadFilesWithSummary(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {
@@ -372,6 +415,11 @@ func (sm *ArtifactoryServicesManagerImp) GetConfig() config.Config {
 func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
 	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
 	return buildInfoService.GetBuildInfo(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetBuildRuns(params services.BuildInfoParams) (*buildinfo.BuildRuns, bool, error) {
+	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
+	return buildInfoService.GetBuildRuns(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateAPIKey() (string, error) {
@@ -625,4 +673,40 @@ func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails)
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		SetHttpClient(config.GetHttpClient()).
 		Build()
+}
+
+func (sm *ArtifactoryServicesManagerImp) ListSkills(repoKey string, limit int, cursor, sortBy string) ([]services.SkillListItem, string, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.ListSkills(repoKey, limit, cursor, sortBy)
+}
+
+func (sm *ArtifactoryServicesManagerImp) ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.ListVersions(repoKey, slug)
+}
+
+func (sm *ArtifactoryServicesManagerImp) SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.SearchSkills(repoKey, query, limit)
+}
+
+func (sm *ArtifactoryServicesManagerImp) SkillVersionExists(repoKey, slug, version string) (bool, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.VersionExists(repoKey, slug, version)
+}
+
+func (sm *ArtifactoryServicesManagerImp) SearchSkillsByProperty(query string) ([]services.SkillPropertySearchResult, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.SearchByProperty(query)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetSkillXrayStatus(repoKey, artifactPath string) (*services.SkillXrayStatusResponse, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.GetXrayStatus(repoKey, artifactPath)
 }

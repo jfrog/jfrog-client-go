@@ -2,14 +2,22 @@ package lifecycle
 
 import (
 	"encoding/json"
+	"fmt"
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
+)
+
+const (
+	rbManifestName   = "release-bundle.json.evd"
+	releaseBundlesV2 = "release-bundles-v2"
 )
 
 var testRb = lifecycle.ReleaseBundleDetails{
@@ -184,6 +192,31 @@ func createDefaultHandlerFunc(t *testing.T, status lifecycle.RbStatus) (http.Han
 	}, &requestNum
 }
 
+// TestRemoteDeleteReleaseBundleWithProject
+func TestRemoteDeleteReleaseBundleWithProject(t *testing.T) {
+	rbDetails := lifecycle.ReleaseBundleDetails{
+		ReleaseBundleName:    "cloud-dist-ci-test",
+		ReleaseBundleVersion: "0.1.0",
+	}
+
+	var capturedProject string
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/"+lifecycle.GetRemoteDeleteReleaseBundleApi(rbDetails, false) {
+			capturedProject = r.URL.Query().Get("project")
+			w.WriteHeader(http.StatusOK)
+		}
+	})
+	defer mockServer.Close()
+
+	params := lifecycle.ReleaseBundleRemoteDeleteParams{
+		CommonOptionalQueryParams: lifecycle.CommonOptionalQueryParams{
+			ProjectKey: "ngcidemo",
+		},
+	}
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(rbDetails, params))
+	assert.Equal(t, "ngcidemo", capturedProject)
+}
+
 func TestRemoteDeleteReleaseBundle(t *testing.T) {
 	lifecycle.SyncSleepInterval = 1 * time.Second
 	defer func() { lifecycle.SyncSleepInterval = lifecycle.DefaultSyncSleepInterval }()
@@ -192,7 +225,7 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 		switch r.RequestURI {
 		case "/" + lifecycle.GetReleaseBundleDistributionsApi(testRb):
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusAccepted)
 			var rbStatus lifecycle.RbStatus
 			switch requestNum {
 			case 0:
@@ -204,8 +237,8 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 			}
 			requestNum++
 			writeMockStatusResponse(t, w, lifecycle.GetDistributionsResponse{{Status: rbStatus}})
-		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb):
-			w.WriteHeader(http.StatusAccepted)
+		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, false):
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 
@@ -254,4 +287,280 @@ func TestGetReleaseBundleVersionPromotions(t *testing.T) {
 	assert.Equal(t, "admin", promotion.CreatedBy)
 	assert.Equal(t, "2024-03-14T15:26:46.637Z", promotion.Created)
 	assert.Equal(t, "1710430006637", promotion.CreatedMillis.String())
+}
+
+func TestIsReleaseBundleExist(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetIsExistReleaseBundleApi("rbName/reVersion") {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(
+				`{"exists":true}`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+	exist, err := rbService.ReleaseBundleExists("rbName", "reVersion", "")
+	assert.NoError(t, err)
+	assert.True(t, exist)
+}
+
+func TestIsReleaseBundleExistWithProject(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetIsExistReleaseBundleApi("rbName/reVersion?project=projectKey") {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(
+				`{"exists":false}`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+	exist, err := rbService.ReleaseBundleExists("rbName", "reVersion", "projectKey")
+	assert.NoError(t, err)
+	assert.False(t, exist)
+}
+
+func TestReleaseBundleAnnotate(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetReleaseBundleSetTagApi(testRb) {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(`{
+        {
+            "repository_key": "release-bundles-v2",
+            "release_bundle_name": "bundle-test",
+            "release_bundle_version": "1.2.3",
+			"release_bundle_tag" : "bundle-tag"
+        }
+}`))
+			assert.NoError(t, err)
+		}
+		if r.RequestURI == "/artifactory/"+lifecycle.PropertiesBaseApi {
+			w.WriteHeader(http.StatusOK) // Status 201
+			writeMockStatusResponse(t, w, map[string]interface{}{"message": "Created", "status": "201"})
+		}
+	})
+	defer mockServer.Close()
+	properties := "environment=qa335;buildNumber=335"
+	annotateOperationParams := buildAnnotationOperationParams(testRb, "default", "bundle-tag", properties,
+		"environment", mockServer.URL)
+	err := rbService.AnnotateReleaseBundle(annotateOperationParams)
+	assert.NoError(t, err)
+}
+
+func testAnnotate(t *testing.T, projectKey, tag, properties, delProperties string, expectError bool) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetReleaseBundleSetTagApi(testRb) {
+			w.WriteHeader(http.StatusOK)
+		}
+		if r.RequestURI == "/artifactory/"+lifecycle.PropertiesBaseApi {
+			w.WriteHeader(http.StatusNoContent) // Status 204
+			writeMockStatusResponse(t, w, map[string]interface{}{"message": "Created", "status": "201"})
+		}
+		if r.RequestURI == "/artifactory/"+lifecycle.PropertiesBaseApi {
+			w.WriteHeader(http.StatusNoContent) // Status 200
+		}
+	})
+	defer mockServer.Close()
+	annotateOperationParams := buildAnnotationOperationParams(testRb, projectKey, tag, properties, delProperties,
+		mockServer.URL)
+	err := rbService.AnnotateReleaseBundle(annotateOperationParams)
+	if expectError {
+		assert.Error(t, err)
+		return
+	}
+	assert.NoError(t, err)
+}
+
+func TestReleaseBundleAnnotationCases(t *testing.T) {
+	testCases := []struct {
+		name          string
+		projectKey    string
+		tag           string
+		properties    string
+		delProperties string
+		expectError   bool
+	}{
+		{"tag, properties, del-prop are not empty, project are empty", "", "bundle-tag", "prop1=1;prop2=2", "prop1", false},
+		{"tag, property, del-prop are not empty, project is default", "default", "bundle-tag", "prop1=1;prop2=2", "prop1", false},
+		{"tag is empty, del-prop is empty", "default", "", "prop1=1;prop2=2", "", false},
+		{"property is empty, del-prop is empty, tag isn't empty, project is default", "default", "bundle-tag", "", "", false},
+		{"property is empty", "project", "bundle-tag", "", "", false},
+		{"property is one pair, tag isn't empty", "project", "bundle-tag", "prop1=1", "prop1", false},
+		{"property is one pair, tag is empty", "project", "", "prop1=1", "", false},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			testAnnotate(t, test.projectKey, test.tag, test.properties, test.delProperties, test.expectError)
+		})
+	}
+}
+
+func TestReleaseBundlesSearchGroups(t *testing.T) {
+	mockJSONResponse := `{
+        "release_bundles": [
+            {
+                "repository_key": "release-bundles-v2",
+                "project_key": "default",
+                "project_name": "Default",
+                "service_id": "jfrt@mock",
+                "created": "2025-10-09T11:38:36.002Z",
+                "release_bundle_name": "rb-sample-group-1",
+                "release_bundle_version_latest": "1.0",
+                "release_bundle_versions_count": 1
+            },
+            {
+                "repository_key": "release-bundles-v2",
+                "project_key": "project-b",
+                "project_name": "Project B",
+                "service_id": "jfrt@mock",
+                "created": "2025-10-10T12:00:00.000Z",
+                "release_bundle_name": "rb-sample-group-2",
+                "release_bundle_version_latest": "2.0",
+                "release_bundle_versions_count": 5
+            }
+        ],
+        "total": 2,
+        "limit": 5,
+        "offset": 0
+    }`
+
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		parsedURL, err := url.Parse(r.RequestURI)
+		assert.NoError(t, err)
+		assert.Equal(t, "/"+lifecycle.GetReleaseBundleSearchGroupApi(), parsedURL.Path, "URI path mismatch")
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write([]byte(mockJSONResponse))
+		assert.NoError(t, err)
+	})
+	defer mockServer.Close()
+
+	optionalQueryParams := lifecycle.GetSearchOptionalQueryParams{
+		Limit:    5,
+		Offset:   0,
+		Includes: "",
+		OrderBy:  "",
+		OrderAsc: true,
+	}
+
+	response, err := rbService.ReleaseBundlesSearchGroups(optionalQueryParams)
+	assert.NoError(t, err)
+	assert.NotNil(t, response)
+
+	assert.Len(t, response.ReleaseBundleSearchGroup, 2, "Expected two release bundle groups in response")
+	assert.Equal(t, 2, response.Total, "Expected total to be 2")
+	assert.Equal(t, 5, response.Limit, "Expected limit to be 5")
+	assert.Equal(t, 0, response.Offset, "Expected offset to be 0")
+
+	item1 := response.ReleaseBundleSearchGroup[0]
+	assert.Equal(t, "rb-sample-group-1", item1.ReleaseBundleName)
+	assert.Equal(t, "release-bundles-v2", item1.RepositoryKey)
+	assert.Equal(t, "default", item1.ProjectKey)
+	assert.Equal(t, "Default", item1.ProjectName)
+	assert.Equal(t, "jfrt@mock", item1.ServiceID)
+	parsedTime1, _ := time.Parse(time.RFC3339Nano, "2025-10-09T11:38:36.002Z")
+	assert.True(t, item1.Created.Equal(parsedTime1), "Created time for item 1 mismatch")
+	assert.Equal(t, "1.0", item1.ReleaseBundleVersionLatest)
+	assert.Equal(t, 1, item1.ReleaseBundleVersionsCount)
+
+	item2 := response.ReleaseBundleSearchGroup[1]
+	assert.Equal(t, "rb-sample-group-2", item2.ReleaseBundleName)
+	assert.Equal(t, "project-b", item2.ProjectKey)
+	assert.Equal(t, "Project B", item2.ProjectName)
+	assert.Equal(t, "jfrt@mock", item2.ServiceID)
+	parsedTime2, _ := time.Parse(time.RFC3339Nano, "2025-10-10T12:00:00.000Z")
+	assert.True(t, item2.Created.Equal(parsedTime2), "Created time for item 2 mismatch")
+	assert.Equal(t, "2.0", item2.ReleaseBundleVersionLatest)
+	assert.Equal(t, 5, item2.ReleaseBundleVersionsCount)
+}
+
+func TestReleaseBundlesSearchVersions(t *testing.T) {
+	releaseBundleName := "sample-release-bundle"
+	mockJSONResponse := `{
+        "release_bundles": [
+            {
+                "repository_key": "release-bundles-v2",
+                "status": "COMPLETED",
+                "service_id": "jfrt@...",
+                "created": "2025-10-09T11:38:36.002Z",
+                "release_bundle_name": "rb-sample-version",
+                "release_bundle_version": "1.0",
+                "release_status": "COMPLETED"
+            }
+        ],
+        "total": 1,
+        "limit": 5,
+        "offset": 0
+    }`
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		parsedURL, err := url.Parse(r.RequestURI)
+		assert.NoError(t, err)
+		expectedPath := "/" + lifecycle.GetReleaseBundleSearchVersionsApi(releaseBundleName)
+		assert.Equal(t, expectedPath, parsedURL.Path, "URI path mismatch for versions API")
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write([]byte(mockJSONResponse))
+		assert.NoError(t, err)
+	})
+	defer mockServer.Close()
+	optionalQueryParams := lifecycle.GetSearchOptionalQueryParams{
+		Limit:    5,
+		Offset:   0,
+		Includes: "",
+		OrderBy:  "",
+		OrderAsc: true,
+	}
+	response, err := rbService.ReleaseBundlesSearchVersions(releaseBundleName, optionalQueryParams)
+	assert.NoError(t, err)
+	assert.NotNil(t, response)
+	assert.Len(t, response.ReleaseBundles, 1, "Expected one release bundle version in response")
+	assert.Equal(t, 1, response.Total, "Expected total to be 1")
+	assert.Equal(t, 5, response.Limit, "Expected limit to be 5")
+	assert.Equal(t, 0, response.Offset, "Expected offset to be 0")
+	item := response.ReleaseBundles[0]
+	assert.Equal(t, "rb-sample-version", item.ReleaseBundleName)
+	assert.Equal(t, "1.0", item.ReleaseBundleVersion)
+	assert.Equal(t, "COMPLETED", item.Status)
+	assert.Equal(t, "COMPLETED", item.ReleaseStatus)
+}
+
+func buildAnnotationOperationParams(rbDetails lifecycle.ReleaseBundleDetails, projectKey, bundleTag, properties, delProperties,
+	artUrl string) lifecycle.AnnotateOperationParams {
+	props, _ := utils.ParseProperties(properties)
+	annotateOperationParams := lifecycle.AnnotateOperationParams{
+		RbTag: lifecycle.RbAnnotationTag{
+			Tag:   bundleTag,
+			Exist: true,
+		},
+		RbProps: lifecycle.RbAnnotationProps{
+			Properties: props.ToMap(),
+			Exist:      true,
+		},
+		RbDetails: rbDetails,
+		QueryParams: lifecycle.CommonOptionalQueryParams{
+			ProjectKey: projectKey,
+		},
+		PropertyParams: lifecycle.CommonPropParams{
+			Path:      resolveManifestPath(projectKey, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion),
+			Recursive: false,
+		},
+		RbDelProps: lifecycle.RbDelProps{
+			Keys:  delProperties,
+			Exist: true,
+		},
+		ArtifactoryUrl: lifecycle.ArtCommonParams{
+			Url: artUrl + "/artifactory/",
+		},
+	}
+	return annotateOperationParams
+}
+
+func resolveManifestPath(projectKey, bundleName, bundleVersion string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", resolveRepoKey(projectKey), bundleName, bundleVersion, rbManifestName)
+}
+func resolveRepoKey(project string) string {
+	if project == "" || project == "default" {
+		return releaseBundlesV2
+	}
+	return fmt.Sprintf("%s-%s", project, releaseBundlesV2)
 }

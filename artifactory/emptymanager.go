@@ -17,6 +17,7 @@ import (
 )
 
 type ArtifactoryServicesManager interface {
+	CreateUpdateRepositoriesInBatch(body []byte, isUpdate bool) error
 	CreateLocalRepository() *services.LocalRepositoryService
 	CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error
 	CreateRemoteRepository() *services.RemoteRepositoryService
@@ -40,7 +41,9 @@ type ArtifactoryServicesManager interface {
 	UpdatePermissionTarget(params services.PermissionTargetParams) error
 	DeletePermissionTarget(permissionTargetName string) error
 	GetPermissionTarget(permissionTargetName string) (*services.PermissionTargetParams, error)
+	GetAllPermissionTargets() (*[]services.PermissionTargetParams, error)
 	PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error)
+	DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) error
 	DistributeBuild(params services.BuildDistributionParams) error
 	PromoteBuild(params services.PromotionParams) error
 	DiscardBuilds(params services.DiscardBuildsParams) error
@@ -50,6 +53,8 @@ type ArtifactoryServicesManager interface {
 	ReadRemoteFile(readPath string) (io.ReadCloser, error)
 	DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error)
 	DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error)
+	DirectDownloadFiles(params ...services.DirectDownloadParams) (totalDownloaded, totalFailed int, err error)
+	DirectDownloadFilesWithSummary(params ...services.DirectDownloadParams) (operationSummary *utils.OperationSummary, err error)
 	GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error)
 	SearchFiles(params services.SearchParams) (*content.ContentReader, error)
 	Aql(aql string) (io.ReadCloser, error)
@@ -64,6 +69,7 @@ type ArtifactoryServicesManager interface {
 	Ping() ([]byte, error)
 	GetConfig() config.Config
 	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error)
+	GetBuildRuns(params services.BuildInfoParams) (*buildinfo.BuildRuns, bool, error)
 	CreateAPIKey() (string, error)
 	RegenerateAPIKey() (string, error)
 	GetAPIKey() (string, error)
@@ -107,12 +113,23 @@ type ArtifactoryServicesManager interface {
 	CalculateStorageInfo() error
 	ImportReleaseBundle(string) error
 	GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error)
+	UploadTrustedKey(params services.TrustedKeyParams) (*services.TrustedKeyResponse, error)
+	ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error)
+	ListSkills(repoKey string, limit int, cursor, sortBy string) ([]services.SkillListItem, string, error)
+	SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error)
+	SkillVersionExists(repoKey, slug, version string) (bool, error)
+	SearchSkillsByProperty(query string) ([]services.SkillPropertySearchResult, error)
+	GetSkillXrayStatus(repoKey, artifactPath string) (*services.SkillXrayStatusResponse, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
 // interface's methods, but still implement this interface.
 // This comes in very handy for tests.
 type EmptyArtifactoryServicesManager struct {
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateUpdateRepositoriesInBatch(_ []byte, _ bool) error {
+	panic("Failed: Method is not implemented")
 }
 
 func (esm *EmptyArtifactoryServicesManager) CreateLocalRepository() *services.LocalRepositoryService {
@@ -199,6 +216,10 @@ func (esm *EmptyArtifactoryServicesManager) GetPermissionTarget(string) (*servic
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) GetAllPermissionTargets() (*[]services.PermissionTargetParams, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) PublishBuildInfo(*buildinfo.BuildInfo, string) (*clientutils.Sha256Summary, error) {
 	panic("Failed: Method is not implemented")
 }
@@ -236,6 +257,14 @@ func (esm *EmptyArtifactoryServicesManager) DownloadFiles(...services.DownloadPa
 }
 
 func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithSummary(...services.DownloadParams) (*utils.OperationSummary, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DirectDownloadFiles(...services.DirectDownloadParams) (int, int, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DirectDownloadFilesWithSummary(...services.DirectDownloadParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -292,6 +321,10 @@ func (esm *EmptyArtifactoryServicesManager) GetConfig() config.Config {
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetBuildRuns(services.BuildInfoParams) (*buildinfo.BuildRuns, bool, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -472,6 +505,54 @@ func (esm *EmptyArtifactoryServicesManager) ImportReleaseBundle(string) error {
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFileParams) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UploadTrustedKey(services.TrustedKeyParams) (*services.TrustedKeyResponse, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo, string, int) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetRepositoriesStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetJPDsStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetReleaseBundlesStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetTokenDetails(string, string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ListSkillVersions(string, string) ([]services.SkillVersion, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ListSkills(string, int, string, string) ([]services.SkillListItem, string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) SearchSkills(string, string, int) ([]services.SkillSearchResult, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) SkillVersionExists(string, string, string) (bool, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) SearchSkillsByProperty(string) ([]services.SkillPropertySearchResult, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetSkillXrayStatus(string, string) (*services.SkillXrayStatusResponse, error) {
 	panic("Failed: Method is not implemented")
 }
 

@@ -3,10 +3,11 @@ package fileutils
 import (
 	"archive/zip"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 func ZipFolderFiles(source, target string) (err error) {
@@ -45,6 +46,7 @@ func ZipFolderFiles(source, target string) (err error) {
 			return errorutils.CheckError(currentErr)
 		}
 
+		// #nosec G122 -- TODO: refactor to use os.OpenRoot for symlink TOCTOU protection
 		file, currentErr := os.Open(path)
 		if currentErr != nil {
 			return errorutils.CheckError(currentErr)

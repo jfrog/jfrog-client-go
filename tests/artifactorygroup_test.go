@@ -1,13 +1,17 @@
+//go:build itest
+
 package tests
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"sort"
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/utils"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGroups(t *testing.T) {
@@ -19,10 +23,7 @@ func TestGroups(t *testing.T) {
 }
 
 func testCreateGroup(t *testing.T) {
-	groupParams := getTestGroupParams(false)
-	err := testGroupService.CreateGroup(groupParams)
-	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
-	assert.NoError(t, err)
+	groupParams := createGroup(t, "", false, true)
 
 	createdGroup, err := testGroupService.GetGroup(groupParams)
 	assert.NoError(t, err)
@@ -33,21 +34,17 @@ func testCreateGroup(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, allGroups)
 	assert.Contains(t, *allGroups, groupParams.GroupDetails.Name)
-
 }
 
 func testUpdateGroup(t *testing.T) {
-	groupParams := getTestGroupParams(false)
-	err := testGroupService.CreateGroup(groupParams)
-	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
-	assert.NoError(t, err)
+	groupParams := createGroup(t, "", false, true)
 	groupParams.GroupDetails.Description = "Changed description"
 	groupParams.GroupDetails.AutoJoin = utils.Pointer(true)
 	groupParams.GroupDetails.AdminPrivileges = utils.Pointer(false)
-	err = testGroupService.UpdateGroup(groupParams)
-	assert.NoError(t, err)
+	err := testGroupService.UpdateGroup(groupParams)
+	require.NoError(t, err)
 	group, err := testGroupService.GetGroup(groupParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, groupParams.GroupDetails, *group)
 }
 

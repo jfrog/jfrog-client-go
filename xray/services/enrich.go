@@ -2,6 +2,10 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -9,7 +13,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
-	"net/http"
 )
 
 const (
@@ -27,7 +30,7 @@ func NewEnrichService(client *jfroghttpclient.JfrogHttpClient) *EnrichService {
 	return &EnrichService{client: client}
 }
 
-func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string, error) {
+func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams, fileName string) (string, error) {
 	httpClientsDetails := es.XrayDetails.CreateHttpClientDetails()
 	var v interface{}
 	// There's an option to run on XML or JSON file so we need to call the correct API accordingly.
@@ -40,7 +43,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string
 		httpClientsDetails.SetContentTypeApplicationJson()
 		url = es.XrayDetails.GetUrl() + importGraph
 	}
-
+	url += fmt.Sprintf("?file_name=%s", fileName)
 	requestBody := importParams.SBOMInput
 	resp, body, err := es.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
@@ -49,7 +52,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
 		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
-			return "", errorutils.CheckErrorf(scanErrorJson.Error)
+			return "", errors.New(scanErrorJson.Error)
 		}
 		return "", err
 	}
@@ -79,7 +82,7 @@ func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, er
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: %s", err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
 		// Failed due to an internal Xray error
@@ -89,10 +92,7 @@ func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, er
 }
 
 type XrayGraphImportParams struct {
-	// A path in Artifactory that this Artifact is intended to be deployed to.
-	// This will provide a way to extract the watches that should be applied on this graph
-	ScanType          ScanType
-	SBOMInput         []byte
-	XscGitInfoContext *XscGitInfoContext
-	XscVersion        string
+	ScanType   ScanType
+	SBOMInput  []byte
+	XscVersion string
 }

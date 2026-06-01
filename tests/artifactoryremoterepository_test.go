@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -141,7 +143,7 @@ func remoteAlpineTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, arp)
 
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, true)
@@ -165,7 +167,7 @@ func remoteBowerTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, brp)
 
 	setRemoteRepositoryBaseParams(&brp.RemoteRepositoryBaseParams, true)
@@ -190,7 +192,7 @@ func remoteCargoTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -213,7 +215,7 @@ func remoteChefTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -237,7 +239,7 @@ func remoteCocoapodsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -262,7 +264,7 @@ func remoteComposerTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -285,7 +287,7 @@ func remoteConanTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -307,7 +309,7 @@ func remoteCondaTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -329,7 +331,7 @@ func remoteCranTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -352,7 +354,7 @@ func remoteDebianTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, drp)
 
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, true)
@@ -379,7 +381,7 @@ func remoteDockerTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, drp)
 
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, true)
@@ -407,7 +409,7 @@ func remoteGemsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -431,7 +433,7 @@ func remoteGenericTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -454,7 +456,7 @@ func remoteGitlfsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -477,7 +479,7 @@ func remoteGoTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -501,7 +503,7 @@ func remoteGradleTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -527,7 +529,7 @@ func remoteHelmTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, hrp)
 
 	setRemoteRepositoryBaseParams(&hrp.RemoteRepositoryBaseParams, true)
@@ -553,7 +555,7 @@ func remoteIvyTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, irp)
 
 	setRemoteRepositoryBaseParams(&irp.RemoteRepositoryBaseParams, true)
@@ -577,7 +579,7 @@ func remoteMavenTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, mrp)
 
 	setRemoteRepositoryBaseParams(&mrp.RemoteRepositoryBaseParams, true)
@@ -600,7 +602,7 @@ func remoteNpmTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, nrp)
 
 	setRemoteRepositoryBaseParams(&nrp.RemoteRepositoryBaseParams, true)
@@ -626,7 +628,7 @@ func remoteNugetTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, nrp)
 
 	setRemoteRepositoryBaseParams(&nrp.RemoteRepositoryBaseParams, true)
@@ -652,7 +654,7 @@ func remoteOpkgTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, orp)
 
 	setRemoteRepositoryBaseParams(&orp.RemoteRepositoryBaseParams, true)
@@ -675,7 +677,7 @@ func remoteP2Test(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, prp)
 
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
@@ -698,7 +700,7 @@ func remotePuppetTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, prp)
 
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
@@ -722,7 +724,7 @@ func remotePypiTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, prp)
 
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
@@ -745,7 +747,7 @@ func remoteRpmTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, rrp)
 
 	setRemoteRepositoryBaseParams(&rrp.RemoteRepositoryBaseParams, true)
@@ -769,7 +771,7 @@ func remoteSbtTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, srp)
 
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
@@ -792,7 +794,7 @@ func remoteSwiftTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, srp)
 
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
@@ -814,7 +816,7 @@ func remoteTerraformTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, trp)
 
 	setRemoteRepositoryBaseParams(&trp.RemoteRepositoryBaseParams, true)
@@ -841,7 +843,7 @@ func remoteVcsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, vrp)
 
 	setRemoteRepositoryBaseParams(&vrp.RemoteRepositoryBaseParams, true)
@@ -866,7 +868,7 @@ func remoteYumTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yrp.PackageType = "rpm"
 	validateRepoConfig(t, repoKey, yrp)
@@ -890,7 +892,7 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKeyLocal) {
 		return
 	}
-	defer deleteRepo(t, repoKeyLocal)
+	deleteRepoOnTestDone(t, repoKeyLocal)
 	validateRepoConfig(t, repoKeyLocal, glp)
 
 	UserParams := getTestUserParams(false, "")
@@ -927,7 +929,7 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKeyRemote) {
 		return
 	}
-	defer deleteRepo(t, repoKeyRemote)
+	deleteRepoOnTestDone(t, repoKeyRemote)
 	validateRepoConfig(t, repoKeyRemote, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -965,7 +967,7 @@ func remoteCreateWithParamTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	validateRepoConfig(t, repoKey, params)
 }
 
@@ -981,7 +983,7 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	// Get repo details
 	data := getRepo(t, repoKey)
 	// Validate
@@ -1004,7 +1006,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 	// Get repo details
 	data := getAllRepos(t, "remote")
 	assert.NotNil(t, data)
@@ -1038,7 +1040,7 @@ func isRemoteRepoExistsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err)
-	defer deleteRepo(t, repoKey)
+	deleteRepoOnTestDone(t, repoKey)
 
 	// Validate repo exists
 	exists = isRepoExists(t, repoKey)

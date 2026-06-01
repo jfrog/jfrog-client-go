@@ -1,10 +1,13 @@
+//go:build itest
+
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -86,15 +89,16 @@ func TestScanBuild(t *testing.T) {
 		buildName   string
 		buildNumber string
 		xrayVersion string
+		triggerRetries int
 	}{
-		{name: "get-api", buildName: "test-get", buildNumber: "3", xrayVersion: "3.75.12"},
-		{name: "post-api", buildName: "test-post", buildNumber: "3", xrayVersion: "3.77.0"},
+		{name: "get-api", buildName: "test-get", buildNumber: "3", xrayVersion: "3.75.12", triggerRetries: 1},
+		{name: "post-api", buildName: "test-post", buildNumber: "3", xrayVersion: "3.77.0", triggerRetries: 2},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			xrayDetails.version = test.xrayVersion
 			testsBuildScanService.XrayDetails = xrayDetails
-			scanResponse, noFailBuildPolicy, err := testsBuildScanService.ScanBuild(services.XrayBuildParams{BuildName: test.buildName, BuildNumber: test.buildNumber}, true)
+			scanResponse, noFailBuildPolicy, err := testsBuildScanService.ScanBuild(services.XrayBuildParams{BuildName: test.buildName, BuildNumber: test.buildNumber}, true, test.triggerRetries)
 			assert.NoError(t, err)
 			assert.True(t, noFailBuildPolicy)
 			assert.NotNil(t, scanResponse)
@@ -106,6 +110,7 @@ func initXrayTest(t *testing.T) {
 	if !*TestXray {
 		t.Skip("Skipping xray test. To run xray test add the '-test.xray=true' option.")
 	}
+	createRepo(t)
 }
 
 type testXrayDetails struct {

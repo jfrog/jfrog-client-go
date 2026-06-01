@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	releaseBundleNewApi = "api/v2/release_bundle"
 	distributionBaseApi = "api/v2/distribution/"
 	distribute          = "distribute"
 	trackers            = "trackers"

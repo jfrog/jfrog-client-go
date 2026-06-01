@@ -64,9 +64,12 @@ func (xirs *IgnoreRuleService) Delete(ignoreRuleId string) error {
 }
 
 // Create will create a new Xray ignore rule
-// The function creates the ignore rule and returns its id which is recieved after post
+// The function creates the ignore rule and returns its id which is received after post
 func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRuleId string, err error) {
 	ignoreRuleBody := utils.CreateIgnoreRuleBody(params)
+	if err = validateIgnoreFilters(ignoreRuleBody.IgnoreFilters); err != nil {
+		return "", err
+	}
 	content, err := json.Marshal(ignoreRuleBody)
 	if err != nil {
 		return "", errorutils.CheckError(err)
@@ -96,6 +99,24 @@ func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRule
 	log.Debug("Ignore rule id is: ", ignoreRuleId)
 
 	return ignoreRuleId, nil
+}
+
+func validateIgnoreFilters(ignoreFilters utils.IgnoreFilters) error {
+	filters := []string{}
+	if len(ignoreFilters.CVEs) > 0 {
+		filters = append(filters, "CVEs")
+	}
+	if ignoreFilters.Exposures != nil {
+		filters = append(filters, "Exposures")
+	}
+	if ignoreFilters.Sast != nil {
+		filters = append(filters, "Sast")
+	}
+	// if more than one filter is set, notify the user
+	if len(filters) > 1 {
+		return errorutils.CheckErrorf("more than one ignore filter is set, split them to multiple ignore rules: %v", filters)
+	}
+	return nil
 }
 
 func getIgnoreRuleIdFromBody(body []byte) (string, error) {

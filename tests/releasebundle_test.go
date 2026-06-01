@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -12,6 +14,8 @@ import (
 )
 
 func TestImportReleaseBundle(t *testing.T) {
+	initUnitTests(t)
+
 	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.RequestURI == "/"+services.ReleaseBundleImportRestApiEndpoint {
 			w.WriteHeader(http.StatusBadRequest)

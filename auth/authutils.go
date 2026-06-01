@@ -3,9 +3,10 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"strings"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -17,13 +18,19 @@ type CreateTokenResponseData struct {
 	TokenId        string `json:"token_id,omitempty"`
 }
 
+type OidcTokenResponseData struct {
+	CommonTokenParams
+	IssuedTokenType string `json:"issued_token_type,omitempty"`
+	Username        string `json:"username,omitempty"`
+}
+
 type CommonTokenParams struct {
 	Scope        string `json:"scope,omitempty"`
-	AccessToken  string `json:"access_token,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"` // #nosec G117 -- API struct for OAuth token response
 	ExpiresIn    *uint  `json:"expires_in,omitempty"`
 	TokenType    string `json:"token_type,omitempty"`
 	Refreshable  *bool  `json:"refreshable,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"` // #nosec G117 -- API struct for OAuth token response
 	GrantType    string `json:"grant_type,omitempty"`
 	Audience     string `json:"audience,omitempty"`
 }
@@ -45,7 +52,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	var tokenPayload TokenPayload
 	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		return TokenPayload{}, errorutils.CheckErrorf("failed extracting payload from the provided access-token: " + err.Error())
+		return TokenPayload{}, errorutils.CheckErrorf("failed extracting payload from the provided access-token: %s", err.Error())
 	}
 	err = setAudienceManually(&tokenPayload, payload)
 	return tokenPayload, err
@@ -56,7 +63,7 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 	allValuesMap := make(map[string]interface{})
 	err := json.Unmarshal(payload, &allValuesMap)
 	if err != nil {
-		return errorutils.CheckErrorf("failed extracting audience from payload: " + err.Error())
+		return errorutils.CheckErrorf("failed extracting audience from payload: %s", err.Error())
 	}
 	aud, exists := allValuesMap["aud"]
 	if !exists {

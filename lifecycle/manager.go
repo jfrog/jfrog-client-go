@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type LifecycleServicesManager struct {
@@ -41,28 +42,95 @@ func (lcs *LifecycleServicesManager) IsDryRun() bool {
 	return lcs.config.IsDryRun()
 }
 
+// CreateReleaseBundleFromAql creates a release bundle from AQL query (backward compatible, draft defaults to false)
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromAql(rbDetails lifecycle.ReleaseBundleDetails,
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, aqlQuery string) error {
-	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateFromAql(rbDetails, queryParams, signingKeyName, aqlQuery)
+	return lcs.CreateReleaseBundleFromAqlDraft(rbDetails, queryParams, signingKeyName, aqlQuery, false)
 }
 
+// CreateReleaseBundleFromAqlDraft creates a release bundle from AQL query with draft option
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromAqlDraft(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, aqlQuery string, draft bool) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromAqlDraft(rbDetails, queryParams, signingKeyName, aqlQuery, draft)
+}
+
+// CreateReleaseBundleFromArtifacts creates a release bundle from artifacts (backward compatible, draft defaults to false)
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromArtifacts(rbDetails lifecycle.ReleaseBundleDetails,
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceArtifacts lifecycle.CreateFromArtifacts) error {
-	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateFromArtifacts(rbDetails, queryParams, signingKeyName, sourceArtifacts)
+	return lcs.CreateReleaseBundleFromArtifactsDraft(rbDetails, queryParams, signingKeyName, sourceArtifacts, false)
 }
 
+// CreateReleaseBundleFromArtifactsDraft creates a release bundle from artifacts with draft option
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromArtifactsDraft(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceArtifacts lifecycle.CreateFromArtifacts, draft bool) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromArtifactsDraft(rbDetails, queryParams, signingKeyName, sourceArtifacts, draft)
+}
+
+// CreateReleaseBundleFromBuilds creates a release bundle from builds (backward compatible, draft defaults to false)
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBuilds(rbDetails lifecycle.ReleaseBundleDetails,
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceBuilds lifecycle.CreateFromBuildsSource) error {
-	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateFromBuilds(rbDetails, queryParams, signingKeyName, sourceBuilds)
+	return lcs.CreateReleaseBundleFromBuildsDraft(rbDetails, queryParams, signingKeyName, sourceBuilds, false)
 }
 
+// CreateReleaseBundleFromBuildsDraft creates a release bundle from builds with draft option
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBuildsDraft(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceBuilds lifecycle.CreateFromBuildsSource, draft bool) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromBuildsDraft(rbDetails, queryParams, signingKeyName, sourceBuilds, draft)
+}
+
+// CreateReleaseBundleFromBundles creates a release bundle from other release bundles (backward compatible, draft defaults to false)
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBundles(rbDetails lifecycle.ReleaseBundleDetails,
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles lifecycle.CreateFromReleaseBundlesSource) error {
+	return lcs.CreateReleaseBundleFromBundlesDraft(rbDetails, queryParams, signingKeyName, sourceReleaseBundles, false)
+}
+
+// CreateReleaseBundleFromBundlesDraft creates a release bundle from other release bundles with draft option
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBundlesDraft(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles lifecycle.CreateFromReleaseBundlesSource, draft bool) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateFromBundles(rbDetails, queryParams, signingKeyName, sourceReleaseBundles)
+	return rbService.CreateFromBundlesDraft(rbDetails, queryParams, signingKeyName, sourceReleaseBundles, draft)
+}
+
+// CreateReleaseBundleFromPackages creates a release bundle from packages (backward compatible, draft defaults to false)
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromPackages(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, packageSource lifecycle.CreateFromPackagesSource) error {
+	return lcs.CreateReleaseBundleFromPackagesDraft(rbDetails, queryParams, signingKeyName, packageSource, false)
+}
+
+// CreateReleaseBundleFromPackagesDraft creates a release bundle from packages with draft option
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromPackagesDraft(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, packageSource lifecycle.CreateFromPackagesSource, draft bool) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromPackagesDraft(rbDetails, queryParams, signingKeyName, packageSource, draft)
+}
+
+// CreateReleaseBundlesFromMultipleSources creates a release bundle from multiple sources (backward compatible, draft defaults to false)
+func (lcs *LifecycleServicesManager) CreateReleaseBundlesFromMultipleSources(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sources []lifecycle.RbSource) (response []byte, err error) {
+	return lcs.CreateReleaseBundlesFromMultipleSourcesDraft(rbDetails, queryParams, signingKeyName, sources, false)
+}
+
+// CreateReleaseBundlesFromMultipleSourcesDraft creates a release bundle from multiple sources with draft option
+func (lcs *LifecycleServicesManager) CreateReleaseBundlesFromMultipleSourcesDraft(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sources []lifecycle.RbSource, draft bool) (response []byte, err error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	resp, err := rbService.CreateReleaseBundleFromMultipleSourcesDraft(rbDetails, queryParams, signingKeyName, sources, draft)
+	return resp, errorutils.CheckError(err)
+}
+
+// UpdateReleaseBundleFromMultipleSources updates an existing draft release bundle by adding sources
+func (lcs *LifecycleServicesManager) UpdateReleaseBundleFromMultipleSources(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, addSources []lifecycle.RbSource) (response []byte, err error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	resp, err := rbService.UpdateReleaseBundleFromMultipleSources(rbDetails, queryParams, signingKeyName, addSources)
+	return resp, errorutils.CheckError(err)
+}
+
+// FinalizeReleaseBundle finalizes a draft release bundle
+func (lcs *LifecycleServicesManager) FinalizeReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string) ([]byte, error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	resp, err := rbService.FinalizeReleaseBundle(rbDetails, queryParams, signingKeyName)
+	return resp, errorutils.CheckError(err)
 }
 
 func (lcs *LifecycleServicesManager) GetReleaseBundleSpecification(rbDetails lifecycle.ReleaseBundleDetails) (lifecycle.ReleaseBundleSpecResponse, error) {
@@ -115,7 +183,7 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
 	distributeBundleService.ProjectKey = distributeParams.ProjectKey
 
-	mappings := &distributeBundleService.Modifications.PathMappings
+	mappings := &distributeBundleService.PathMappings
 	*mappings = []utils.PathMapping{}
 	for _, pathMapping := range distributeParams.PathMappings {
 		*mappings = append(*mappings,
@@ -132,4 +200,29 @@ func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(rbDetails lifecyc
 func (lcs *LifecycleServicesManager) ExportReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, modifications lifecycle.Modifications, queryParams lifecycle.CommonOptionalQueryParams) (exportResponse lifecycle.ReleaseBundleExportedStatusResponse, err error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.ExportReleaseBundle(rbDetails, modifications, queryParams)
+}
+
+func (lcs *LifecycleServicesManager) IsReleaseBundleExist(rbName, rbVersion, projectKey string) (bool, error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.ReleaseBundleExists(rbName, rbVersion, projectKey)
+}
+
+func (lcs *LifecycleServicesManager) AnnotateReleaseBundle(params lifecycle.AnnotateOperationParams) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.AnnotateReleaseBundle(params)
+}
+
+func (lcs *LifecycleServicesManager) GetReleaseBundlesStats(serverUrl string) ([]byte, error) {
+	rbService := lifecycle.NewReleaseBundlesStatsService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.GetReleaseBundlesStats(serverUrl)
+}
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchGroup(params lifecycle.GetSearchOptionalQueryParams) (lifecycle.ReleaseBundlesGroupResponse, error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.ReleaseBundlesSearchGroups(params)
+}
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchVersions(releaseBundleName string, params lifecycle.GetSearchOptionalQueryParams) (lifecycle.ReleaseBundleVersionsResponse, error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.ReleaseBundlesSearchVersions(releaseBundleName, params)
 }

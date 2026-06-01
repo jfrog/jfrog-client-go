@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -23,6 +25,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	testutils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestArtifactoryUpload(t *testing.T) {
@@ -305,46 +308,42 @@ func propsUpload(t *testing.T) {
 }
 
 func summaryUpload(t *testing.T) {
-	pattern := filepath.Join("testdata", "a", "*")
+	pattern := filepath.Join(getTestDataPath(), "a", "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
 	testsUploadService.SetSaveSummary(true)
 	defer testsUploadService.SetSaveSummary(false)
 	summary, err := testsUploadService.UploadFiles(up)
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, summary.Close())
 	}()
-	if summary.TotalSucceeded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if summary.TotalFailed != 0 {
-		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
+	require.Equal(t, 1, summary.TotalSucceeded, "Expected to upload 1 file.")
+	require.Equal(t, 0, summary.TotalFailed, "Failed to upload %d files.", summary.TotalFailed)
+
 	var transfers []clientutils.FileTransferDetails
 	for item := new(clientutils.FileTransferDetails); summary.TransferDetailsReader.NextRecord(item) == nil; item = new(clientutils.FileTransferDetails) {
 		transfers = append(transfers, *item)
 	}
+	require.Len(t, transfers, 1)
+
 	expectedSha256 := "4eb341b5d2762a853d79cc25e622aa8b978eb6e12c3259e2d99dc9dc60d82c5d"
-	assert.Len(t, transfers, 1)
-	assert.Equal(t, filepath.Join("testdata", "a", "a.in"), transfers[0].SourcePath)
+	assert.Equal(t, filepath.Join(getTestDataPath(), "a", "a.in"), transfers[0].SourcePath)
 	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"a.in", transfers[0].RtUrl+transfers[0].TargetPath)
 	assert.Equal(t, expectedSha256, transfers[0].Sha256)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
 		artifacts = append(artifacts, *item)
 	}
-	assert.Len(t, artifacts, 1)
+	require.Len(t, artifacts, 1)
 	assert.Equal(t, getRtTargetRepo()+"a.in", artifacts[0].ArtifactoryPath)
 	artifactoryCleanup(t)
 }
 
 func archiveUpload(t *testing.T) {
 	// Upload zip
-	uploadPattern := filepath.Join("testdata", "a", "a.in")
+	uploadPattern := filepath.Join(getTestDataPath(), "a", "a.in")
 	downloadPattern := path.Join(getRtTargetRepo(), "test.zip")
 	targetProps, err := utils.ParseProperties("key1=val1")
 	assert.NoError(t, err)
@@ -369,7 +368,7 @@ func archiveUpload(t *testing.T) {
 
 	// Check for timezone offset for each file in the zip
 	r, err := zip.OpenReader(downloadTarget + "test.zip")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer func() { assert.NoError(t, r.Close()) }()
 	_, sysTimezoneOffset := time.Now().Zone()
 	for _, file := range r.File {
@@ -397,13 +396,12 @@ func readerGetErrorAndAssert(t *testing.T, reader *content.ContentReader) {
 }
 
 func TestUploadFilesWithFailure(t *testing.T) {
+	initArtifactoryTest(t)
 	// Create Artifactory mock server
 	port := startArtifactoryMockServer(createUploadFilesWithFailureHandlers())
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		Build()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 
 	// Create Artifactory mock details
 	rtDetails := auth.NewArtifactoryDetails()
@@ -413,9 +411,7 @@ func TestUploadFilesWithFailure(t *testing.T) {
 
 	// Create upload service
 	params := services.NewUploadParams()
-	dir, err := os.Getwd()
-	assert.NoError(t, err)
-	params.Pattern = filepath.Join(dir, "testdata", "upload", "folder*")
+	params.Pattern = filepath.Join(getTestDataPath(), "upload", "folder*")
 	params.Target = "generic"
 	params.Flat = true
 	params.Recursive = true

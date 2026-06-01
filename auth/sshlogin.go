@@ -78,12 +78,12 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 	if errorutils.CheckError(err) != nil {
 		return nil, "", err
 	}
-	defer connection.Close()
+	defer func() { _ = connection.Close() }()
 	session, err := connection.NewSession()
 	if errorutils.CheckError(err) != nil {
 		return nil, "", err
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	stdout, err := session.StdoutPipe()
 	if errorutils.CheckError(err) != nil {
@@ -150,7 +150,7 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 		host = groups[2]
 		port, err = strconv.Atoi(groups[3])
 		if err != nil {
-			err = errorutils.CheckErrorf("URL: " + url + " is invalid. Expecting ssh://<host>:<port> or http(s)://...")
+			err = errorutils.CheckErrorf("URL: %s is invalid. Expecting ssh://<host>:<port> or http(s)://...", url)
 		}
 		return
 	}

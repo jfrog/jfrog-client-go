@@ -1,8 +1,17 @@
+//go:build itest
+
 package tests
 
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/distribution/services"
@@ -10,13 +19,9 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
+	"github.com/stretchr/testify/require"
 )
 
 type distributableDistributionStatus string
@@ -36,11 +41,18 @@ const (
 	bundleVersion                  = "10"
 )
 
-var httpClient *httpclient.HttpClient
-var distHttpDetails httputils.HttpClientDetails
+var (
+	httpClient      *httpclient.HttpClient
+	distHttpDetails httputils.HttpClientDetails
+)
 
 func TestDistributionServices(t *testing.T) {
 	initDistributionTest(t)
+
+	t.Cleanup(func() {
+		artifactoryCleanup(t)
+	})
+
 	initClients(t)
 	sendGpgKeys(t)
 
@@ -56,15 +68,14 @@ func TestDistributionServices(t *testing.T) {
 	t.Run("createDistributeMappingFromPatternAndTarget", createDistributeMappingFromPatternAndTarget)
 	t.Run("createDistributeMappingWithPlaceholder", createDistributeMappingWithPlaceholder)
 	t.Run("createDistributeMappingFromPatternAndTargetWithPlaceholder", createDistributeMappingFromPatternAndTargetWithPlaceholder)
-
-	artifactoryCleanup(t)
-	deleteGpgKeys(t)
 }
 
 func initDistributionTest(t *testing.T) {
 	if !*TestDistribution {
 		t.Skip("Skipping distribution test. To run distribution test add the '-test.distribution=true' option.")
 	}
+	t.Skip("JGC-407 - Multiple Trusted Keys is only available on Enterprise Plus licensed Artifactory instances")
+	createRepo(t)
 }
 
 func initClients(t *testing.T) {
@@ -478,57 +489,81 @@ func createDistributeMappingFromPatternAndTargetWithPlaceholder(t *testing.T) {
 
 // Send GPG keys to Distribution and Artifactory to allow signing of release bundles
 func sendGpgKeys(t *testing.T) {
+	deleteGpgKeys(t, false)
+
 	// Read gpg public and private key
 	publicKey, err := os.ReadFile(filepath.Join(getTestDataPath(), "public.key"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
 	privateKey, err := os.ReadFile(filepath.Join(getTestDataPath(), "private.key"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = testsBundleSetSigningKeyService.SetSigningKey(services.NewSetSigningKeyParams(string(publicKey), string(privateKey)))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Send public key to Artifactory
 	content := fmt.Sprintf(artifactoryGpgKeyCreatePattern, publicKey)
 	resp, body, err := httpClient.SendPost(GetRtDetails().GetUrl()+"api/security/keys/trusted", []byte(content), distHttpDetails, "")
-	assert.NoError(t, err)
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusConflict {
-		t.Error(resp.Status)
-		t.Error(string(body))
-	}
+	require.NoError(t, err)
+	require.Truef(t, resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusConflict, "Send GPG key to Artifactory returned: %s", string(body))
+
+	t.Cleanup(func() {
+		deleteGpgKeys(t, true)
+	})
 }
 
 // Delete GPG key from Artifactory to clean up the test environment
-func deleteGpgKeys(t *testing.T) {
+func deleteGpgKeys(t *testing.T, fail bool) {
 	// Delete public key from Artifactory
-	gpgKeyId := getGpgKeyId(t)
+	gpgKeyId := getGpgKeyId()
 	if gpgKeyId == "" {
 		return
 	}
 	resp, body, err := httpClient.SendDelete(GetRtDetails().GetUrl()+"api/security/keys/trusted/"+gpgKeyId, nil, distHttpDetails, "")
-	assert.NoError(t, err)
+	if err != nil {
+		if fail {
+			t.Error(err)
+		} else {
+			log.Warn(fmt.Sprintf("Failed to delete GPG key: %+v", err))
+		}
+		return
+	}
+
 	if resp.StatusCode != http.StatusNoContent {
-		t.Error(resp.Status)
-		t.Error(string(body))
+		if fail {
+			t.Error(string(body))
+		} else {
+			log.Warn(fmt.Sprintf("Failed to delete GPG key: %s", string(body)))
+		}
 	}
 }
 
 // Get GPG key ID created in the tests
-func getGpgKeyId(t *testing.T) string {
+func getGpgKeyId() string {
 	resp, body, _, err := httpClient.SendGet(GetRtDetails().GetUrl()+"api/security/keys/trusted", true, distHttpDetails, "")
-	assert.NoError(t, err)
-	if resp.StatusCode != http.StatusOK {
-		t.Error(resp.Status)
-		t.Error(string(body))
+	if err != nil {
+		log.Warn(fmt.Sprintf("Failed to get GPG key ID: %+v", err))
 		return ""
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Warn(fmt.Sprintf("Get GPG key ID returned body: %s", string(body)))
+		return ""
+	}
+
 	responses := &gpgKeysResponse{}
 	err = json.Unmarshal(body, &responses)
-	assert.NoError(t, err)
+	if err != nil {
+		log.Warn(fmt.Sprintf("Failed to unmarshal GPG key ID: %+v", err))
+		return ""
+	}
+
 	for _, gpgKeyResponse := range responses.Keys {
 		if gpgKeyResponse.Alias == gpgKeyAlias {
 			return gpgKeyResponse.Kid
 		}
 	}
+
 	return ""
 }
 

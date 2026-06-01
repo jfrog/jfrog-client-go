@@ -31,6 +31,7 @@ const (
 	buildRepositoriesSuffix      = "-build-info"
 	defaultBuildRepositoriesName = "artifactory"
 	defaultProjectKey            = "default"
+	buildArtifactsApiPath        = "api/builds/buildArtifacts"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -170,9 +171,10 @@ func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey str
 
 func getBuildNameAndNumberFromProps(properties []Property) (buildName string, buildNumber string) {
 	for _, property := range properties {
-		if property.Key == "build.name" {
+		switch property.Key {
+		case "build.name":
 			buildName = property.Value
-		} else if property.Key == "build.number" {
+		case "build.number":
 			buildNumber = property.Value
 		}
 		if len(buildName) > 0 && len(buildNumber) > 0 {
@@ -197,7 +199,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + LatestBuildNumberKey)
 			return identifier, LatestBuildNumberKey, nil
 		} else {
-			return "", "", errorutils.CheckErrorf("no '" + Delimiter + "' is found in '" + identifier + "'")
+			return "", "", errorutils.CheckErrorf("no '%s' is found in '%s'", Delimiter, identifier)
 		}
 	}
 	name, version := "", ""
@@ -222,7 +224,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			name = identifier
 			version = LatestBuildNumberKey
 		} else {
-			return "", "", errorutils.CheckErrorf("no delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'")
+			return "", "", errorutils.CheckErrorf("no delimiter char (%s) without escaping char was found in '%s'", Delimiter, identifier)
 		}
 	}
 	// Remove escape chars.
@@ -238,7 +240,8 @@ type Build struct {
 
 func GetLatestBuildNumberFromArtifactory(buildName, projectKey string, flags CommonConf) (buildNumber string, err error) {
 	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
-	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
+	encodedBuildName := encodeForBuildInfoRepository(buildName)
+	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, encodedBuildName)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", err
@@ -324,12 +327,12 @@ func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.Conte
 	if err != nil {
 		return nil, err
 	}
-	defer readerWithProps.Close()
+	defer func() { _ = readerWithProps.Close() }()
 	tempReader, err := loadMissingProperties(reader, readerWithProps)
 	if err != nil {
 		return nil, err
 	}
-	defer tempReader.Close()
+	defer func() { _ = tempReader.Close() }()
 
 	wg.Wait()
 	// Merge artifacts and dependencies Sha1 maps.
@@ -360,7 +363,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	if err != nil {
 		return nil, err
 	}
-	defer resultFile.Close()
+	defer func() { _ = resultFile.Close() }()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		buffer[resultItem.GetItemRelativePath()] = resultItem
 		// Since maps are an unordered collection, we use slice to save the order of the items
@@ -394,10 +397,17 @@ func updateProps(readerWithProps *content.ContentReader, resultWriter *content.C
 	if len(buffer) == 0 {
 		return nil
 	}
-	// Load buffer items with their properties.
+	// Load buffer items with their properties and any missing metadata fields.
 	for resultItem := new(ResultItem); readerWithProps.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if value, ok := buffer[resultItem.GetItemRelativePath()]; ok {
 			value.Properties = resultItem.Properties
+			// If size is 0, it means metadata is missing (e.g., from API). Update all metadata fields.
+			if value.Size == 0 {
+				value.Actual_Sha1 = resultItem.Actual_Sha1
+				value.Actual_Md5 = resultItem.Actual_Md5
+				value.Sha256 = resultItem.Sha256
+				value.Size = resultItem.Size
+			}
 		}
 	}
 	if err := readerWithProps.GetError(); err != nil {
@@ -467,7 +477,7 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 	if err != nil {
 		return nil, err
 	}
-	defer resultCw.Close()
+	defer func() { _ = resultCw.Close() }()
 	// Step 1 - Fill the priority files with search results.
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if _, ok := buildArtifactsSha[resultItem.Actual_Sha1]; !ok {
@@ -562,9 +572,38 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		return nil, false, err
 	}
 
-	// Get build-info json from Artifactory.
-	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
 	restApi := path.Join("api/build/", name, number)
+	body, found, err := sendGetBuildInfo(restApi, projectKey, flags)
+	if err != nil || !found {
+		return nil, found, err
+	}
+
+	// Build BuildInfo struct from json.
+	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
+	if err = json.Unmarshal(body, publishedBuildInfo); err != nil {
+		return nil, true, err
+	}
+
+	return publishedBuildInfo, true, nil
+}
+
+func GetBuildRuns(buildName, projectKey string, flags CommonConf) (runs *buildinfo.BuildRuns, found bool, err error) {
+	restApi := path.Join("api/build/", buildName)
+	body, found, err := sendGetBuildInfo(restApi, projectKey, flags)
+	if err != nil || !found {
+		return nil, found, err
+	}
+
+	buildRuns := &buildinfo.BuildRuns{}
+	if err = json.Unmarshal(body, buildRuns); err != nil {
+		return nil, true, err
+	}
+
+	return buildRuns, true, nil
+}
+
+func sendGetBuildInfo(restApi, projectKey string, flags CommonConf) (body []byte, found bool, err error) {
+	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
 
 	queryParams := make(map[string]string)
 	if projectKey != "" {
@@ -578,6 +617,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 
 	httpClient := flags.GetJfrogHttpClient()
 	log.Debug("Getting build-info from:", requestFullUrl)
+
 	resp, body, _, err := httpClient.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
 		return nil, false, err
@@ -589,14 +629,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, false, err
 	}
-
-	// Build BuildInfo struct from json.
-	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
-	if err = json.Unmarshal(body, publishedBuildInfo); err != nil {
-		return nil, true, err
-	}
-
-	return publishedBuildInfo, true, nil
+	return body, true, nil
 }
 
 // Recursively, aggregate all transitive builds of the input buildName and buildNumber.
@@ -626,6 +659,70 @@ func getAggregatedBuilds(buildName, buildNumber, projectKey string, flags Common
 		}
 	}
 	return aggregatedBuilds, nil
+}
+
+// BuildArtifactItem represents a single artifact returned by the build artifacts API.
+type BuildArtifactItem struct {
+	Repo string `json:"repo"`
+	Path string `json:"path"`
+	Name string `json:"name"`
+}
+
+// GetBuildArtifacts calls the dedicated build artifacts API to fetch the list of artifacts
+// for the given builds. This API uses indexed lookups and avoids expensive AQL JOINs.
+// It returns a ContentReader with ResultItem entries containing only repo/path/name (no checksums or properties).
+func GetBuildArtifacts(builds []Build, projectKey string, flags CommonConf) (*content.ContentReader, error) {
+	if len(builds) == 0 {
+		return content.NewEmptyContentReader(content.DefaultKey), nil
+	}
+
+	artifactoryDetails := flags.GetArtifactoryDetails()
+	client := flags.GetJfrogHttpClient()
+	httpClientsDetails := artifactoryDetails.CreateHttpClientDetails()
+
+	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if closeErr := resultWriter.Close(); closeErr != nil {
+			log.Error("Failed to close writer:", closeErr)
+		}
+	}()
+
+	for _, build := range builds {
+		apiPath := path.Join(buildArtifactsApiPath, build.BuildName, build.BuildNumber, buildRepo)
+		apiUrl, err := utils.BuildUrl(artifactoryDetails.GetUrl(), apiPath, nil)
+		if err != nil {
+			return nil, err
+		}
+		log.Debug("Fetching build artifacts via API for build:", build.BuildName+"/"+build.BuildNumber)
+
+		resp, body, _, err := client.SendGet(apiUrl, true, &httpClientsDetails)
+		if err != nil {
+			return nil, err
+		}
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+			return nil, err
+		}
+
+		var items []BuildArtifactItem
+		if err = json.Unmarshal(body, &items); err != nil {
+			return nil, errorutils.CheckErrorf("failed to parse build artifacts API response: %w", err)
+		}
+
+		for _, item := range items {
+			resultWriter.Write(ResultItem{
+				Repo: item.Repo,
+				Path: item.Path,
+				Name: item.Name,
+				Type: "file",
+			})
+		}
+	}
+
+	return content.NewContentReader(resultWriter.GetFilePath(), content.DefaultKey), nil
 }
 
 type CommonConf interface {

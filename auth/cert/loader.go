@@ -38,7 +38,7 @@ func LoadCertificate(clientCertPath, clientCertKeyPath string) (certificate tls.
 			err = errorutils.CheckErrorf("failed using the certificate located at %s. Reason: %s. Hint: A certificate key was not provided. Make sure that the certificate doesn't require a key", clientCertPath, err.Error())
 			return
 		}
-		err = errorutils.CheckErrorf("failed loading client certificate: " + err.Error())
+		err = errorutils.CheckErrorf("failed loading client certificate: %s", err.Error())
 	}
 	return
 }
@@ -57,8 +57,9 @@ func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, tr
 	transport.TLSClientConfig = &tls.Config{
 		RootCAs:            caCertPool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1),
-		//#nosec G402 -- Skipping insecure tls verification was requested by the user.
+		//#nosec G402 jfrog-ignore -- Skipping insecure tls verification was requested by the user.
 		InsecureSkipVerify: insecureTls,
+		MinVersion:         tls.VersionTLS12,
 	}
 
 	return transport, nil

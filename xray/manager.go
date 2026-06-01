@@ -1,6 +1,7 @@
 package xray
 
 import (
+	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -12,6 +13,8 @@ import (
 type XrayServicesManager struct {
 	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
+	// Global reference to the provided project key, used for API endpoints that require it for authentication
+	scopeProjectKey string
 }
 
 // New creates a service manager to interact with Xray
@@ -32,6 +35,11 @@ func New(config config.Config) (*XrayServicesManager, error) {
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		Build()
 	return manager, err
+}
+
+func (sm *XrayServicesManager) SetProjectKey(projectKey string) *XrayServicesManager {
+	sm.scopeProjectKey = projectKey
+	return sm
 }
 
 // Client will return the http client
@@ -154,6 +162,7 @@ func (sm *XrayServicesManager) IsTokenValidationEnabled() (isEnabled bool, err e
 func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (scanId string, err error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
+	scanService.ScopeProjectKey = sm.scopeProjectKey
 	return scanService.ScanGraph(params)
 }
 
@@ -162,13 +171,14 @@ func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (s
 func (sm *XrayServicesManager) GetScanGraphResults(scanID, xrayVersion string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*services.ScanResponse, error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
+	scanService.ScopeProjectKey = sm.scopeProjectKey
 	return scanService.GetScanGraphResults(scanID, xrayVersion, includeVulnerabilities, includeLicenses, xscEnabled)
 }
 
-func (sm *XrayServicesManager) ImportGraph(params services.XrayGraphImportParams) (scanId string, err error) {
+func (sm *XrayServicesManager) ImportGraph(params services.XrayGraphImportParams, fileName string) (scanId string, err error) {
 	enrichService := services.NewEnrichService(sm.client)
 	enrichService.XrayDetails = sm.config.GetServiceDetails()
-	return enrichService.ImportGraph(params)
+	return enrichService.ImportGraph(params, fileName)
 }
 
 // GetScanGraphResults returns an Xray scan output of the requested graph scan.
@@ -182,10 +192,11 @@ func (sm *XrayServicesManager) GetImportGraphResults(scanID string) (*services.S
 // BuildScan scans a published build-info with Xray.
 // 'scanResponse' - Xray scan output of the requested build scan.
 // 'noFailBuildPolicy' - Indicates that the Xray API returned a "No Xray Fail build...." error
-func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
+func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool, triggerRetries int) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
-	return buildScanService.ScanBuild(params, includeVulnerabilities)
+	buildScanService.ScopeProjectKey = sm.scopeProjectKey
+	return buildScanService.ScanBuild(params, includeVulnerabilities, triggerRetries)
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
@@ -241,6 +252,7 @@ func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryPa
 func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService := services.NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
+	entitlementsService.ScopeProjectKey = sm.scopeProjectKey
 	return entitlementsService.IsEntitled(featureId)
 }
 
@@ -248,5 +260,34 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService := xsc.NewXscService(sm.client)
 	xscService.XrayDetails = sm.config.GetServiceDetails()
+	xscService.ScopeProjectKey = sm.scopeProjectKey
 	return xscService
+}
+
+func (sm *XrayServicesManager) GetArtifactStatus(repo, path string) (*services.ArtifactStatusResponse, error) {
+	artifactService := services.NewArtifactService(sm.client)
+	artifactService.XrayDetails = sm.config.GetServiceDetails()
+	artifactService.ScopeProjectKey = sm.scopeProjectKey
+	return artifactService.GetStatus(repo, path)
+}
+
+func (sm *XrayServicesManager) GetViolations(params xrayUtils.ViolationsRequest) (*services.ViolationsResponse, error) {
+	violationsService := services.NewViolationsService(sm.client)
+	violationsService.XrayDetails = sm.config.GetServiceDetails()
+	violationsService.ScopeProjectKey = sm.scopeProjectKey
+	return violationsService.GetViolations(params)
+}
+
+func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName string) (string, error) {
+	indexerService := services.NewIndexerService(sm.client)
+	indexerService.XrayDetails = sm.config.GetServiceDetails()
+	indexerService.ScopeProjectKey = sm.scopeProjectKey
+	return indexerService.Download(localDirPath, localFileName)
+}
+
+func (sm *XrayServicesManager) RemediationByCve(bom *cyclonedx.BOM) (xrayUtils.CveRemediationResponse, error) {
+	remediationService := services.NewRemediationService(sm.client)
+	remediationService.XrayDetails = sm.config.GetServiceDetails()
+	remediationService.ScopeProjectKey = sm.scopeProjectKey
+	return remediationService.RemediationByCve(bom)
 }

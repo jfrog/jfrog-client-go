@@ -14,6 +14,10 @@ import (
 
 const spaceEncoding = "%20"
 
+// errTransitiveMultiRepoMsg is shared by both pattern-based and build-with-pattern AQL
+// builders so the validation and its error text stay in lockstep.
+const errTransitiveMultiRepoMsg = "when searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash"
+
 var specialAqlCharacters = map[rune]string{
 	'/':  "%2F",
 	'\\': "%5C",
@@ -34,7 +38,7 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 		return "", err
 	}
 	if params.Transitive && !singleRepo {
-		return "", errorutils.CheckErrorf("when searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash.")
+		return "", errorutils.CheckErrorf(errTransitiveMultiRepoMsg)
 	}
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	triplesSize := len(repoPathFileTriples)
@@ -108,22 +112,98 @@ func handleArchiveSearch(triple RepoPathFile, archivePathFilePairs []RepoPathFil
 	return query
 }
 
+// createAqlBodyForBuildArtifacts builds the AQL body for build artifacts with no pattern or
+// exclusions. Safe wrapper: the underlying function only errors on user-supplied input, which
+// is nil here.
 func createAqlBodyForBuildArtifacts(builds []Build) string {
-	buildArtifactsItem := `{"$and":[{"artifact.module.build.name":"%s","artifact.module.build.number":"%s"}]}`
-	var items []string
-	for _, build := range builds {
-		items = append(items, fmt.Sprintf(buildArtifactsItem, build.BuildName, build.BuildNumber))
-	}
-	return `{"$or":[` + strings.Join(items, ",") + "]}"
+	body, _ := createAqlBodyForBuildArtifactsWithExclusions(builds, nil)
+	return body
 }
 
-func createAqlBodyForBuildDependencies(builds []Build) string {
-	buildDependenciesItem := `{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`
-	var items []string
-	for _, build := range builds {
-		items = append(items, fmt.Sprintf(buildDependenciesItem, build.BuildName, build.BuildNumber))
+// createAqlBodyForBuildArtifactsWithExclusions builds the AQL body for build artifacts.
+// When a non-trivial pattern is supplied, its repo/path/name triples are included in the AQL
+// so Artifactory performs the match server-side; this preserves virtual-repo resolution that
+// a client-side string compare on the result's Repo cannot do.
+func createAqlBodyForBuildArtifactsWithExclusions(builds []Build, params *CommonParams) (string, error) {
+	items := buildClauseItems(builds, "artifact")
+	buildOr := fmt.Sprintf(`"$or":[%s]`, strings.Join(items, ","))
+
+	excludeQuery, err := maybeBuildExcludeQuery(params)
+	if err != nil {
+		return "", err
 	}
-	return `{"$or":[` + strings.Join(items, ",") + "]}"
+
+	patternOr, err := buildPatternFilterForBuildArtifacts(params)
+	if err != nil {
+		return "", err
+	}
+	if patternOr != "" {
+		return fmt.Sprintf(`{%s"$and":[{%s},{%s}]}`, excludeQuery, buildOr, patternOr), nil
+	}
+	return fmt.Sprintf(`{%s%s}`, excludeQuery, buildOr), nil
+}
+
+// buildPatternFilterForBuildArtifacts returns an AQL "$or" clause matching the pattern's
+// repo/path/name triples, or an empty string when no non-trivial pattern is supplied. Callers
+// compose it with the build-name/build-number filter under "$and".
+func buildPatternFilterForBuildArtifacts(params *CommonParams) (string, error) {
+	if params == nil || params.Pattern == "" || params.Pattern == "*" {
+		return "", nil
+	}
+	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target)
+	triples, singleRepo, err := createRepoPathFileTriples(searchPattern, params.Recursive)
+	if err != nil {
+		return "", err
+	}
+	if params.Transitive && !singleRepo {
+		return "", errorutils.CheckErrorf(errTransitiveMultiRepoMsg)
+	}
+	if len(triples) == 0 {
+		return "", nil
+	}
+	return fmt.Sprintf(`"$or":[%s]`, handleRepoPathFileTriples(triples, nil, len(triples))), nil
+}
+
+// createAqlBodyForBuildDependencies builds the AQL body for build dependencies with no
+// exclusions. Safe wrapper: the underlying function only errors on user-supplied exclusions,
+// which are nil here.
+func createAqlBodyForBuildDependencies(builds []Build) string {
+	body, _ := createAqlBodyForBuildDependenciesWithExclusions(builds, nil)
+	return body
+}
+
+// createAqlBodyForBuildDependenciesWithExclusions builds the AQL body for build dependencies.
+// Matches the error-propagation behavior of its artifact-side sibling so malformed exclusions
+// surface consistently on both paths.
+func createAqlBodyForBuildDependenciesWithExclusions(builds []Build, params *CommonParams) (string, error) {
+	items := buildClauseItems(builds, "dependency")
+	excludeQuery, err := maybeBuildExcludeQuery(params)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`{%s"$or":[%s]}`, excludeQuery, strings.Join(items, ",")), nil
+}
+
+// buildClauseItems returns the per-build AQL clauses used inside the outer "$or". kind is
+// either "artifact" or "dependency" and selects the AQL domain prefix.
+func buildClauseItems(builds []Build, kind string) []string {
+	items := make([]string, 0, len(builds))
+	for _, b := range builds {
+		items = append(items, fmt.Sprintf(
+			`{"$and":[{"%s.module.build.name":"%s","%s.module.build.number":"%s"}]}`,
+			kind, b.BuildName, kind, b.BuildNumber,
+		))
+	}
+	return items
+}
+
+// maybeBuildExcludeQuery returns the exclusion AQL fragment for params (with trailing comma,
+// as consumed by callers) or an empty string when there are no exclusions. params may be nil.
+func maybeBuildExcludeQuery(params *CommonParams) (string, error) {
+	if params == nil || len(params.GetExclusions()) == 0 {
+		return "", nil
+	}
+	return buildExcludeQueryPart(params, true, params.Recursive)
 }
 
 func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds []Build) string {
@@ -294,13 +374,16 @@ func buildNePathPart(includeRoot bool) string {
 }
 
 func buildInnerQueryPart(triple RepoPathFile) string {
-	innerQueryPattern := `{"$and":` +
-		`[{` +
-		`"repo":%s,` +
-		`"path":%s,` +
-		`"name":%s` +
-		`}]}`
-	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file))
+	conditions := make([]string, 0, 3)
+	// Below Condition will handle to not include the unnecessary n.repo = ? or n.repo = ? or n.repo = ? or
+	// n.repo = ? or n.repo = ? or n.repo = ? or n.repo if repo is similar to "*" or "**", in the AQL query
+	if triple.repo != "" && triple.repo != "*" && triple.repo != "**" {
+		conditions = append(conditions, fmt.Sprintf(`"repo":%s`, getAqlValue(triple.repo)))
+	}
+	conditions = append(conditions, fmt.Sprintf(`"path":%s`, getAqlValue(triple.path)))
+	conditions = append(conditions, fmt.Sprintf(`"name":%s`, getAqlValue(triple.file)))
+	innerConditions := strings.Join(conditions, ",")
+	return fmt.Sprintf(`{"$and":[{%s}]}`, innerConditions)
 }
 
 func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName string) string {
@@ -397,7 +480,7 @@ func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
 // This due to an Artifactory limitation related to using these flags with props in an AQL statement.
 // Meaning - the result won't contain properties.
 func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
-	return !(len(specFile.SortBy) > 0 || specFile.Limit > 0)
+	return len(specFile.SortBy) == 0 && specFile.Limit <= 0
 }
 
 func appendMissingFields(fields []string, defaultFields []string) []string {
@@ -471,7 +554,7 @@ func createPropsQuery(aqlBody, propKey string, propValues []string) string {
 		`items.find({` +
 			`"$and":[%s,{%s}]` +
 			`})%s`
-	return fmt.Sprintf(propsQuery, aqlBody, propKeyValQueryPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "property"}))
+	return fmt.Sprintf(propsQuery, aqlBody, propKeyValQueryPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "property"}))
 }
 
 func buildIncludeQueryPart(fieldsToInclude []string) string {

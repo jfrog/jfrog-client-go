@@ -1,11 +1,13 @@
 package services
 
 import (
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
-	"net/url"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type EvidenceService struct {
@@ -24,11 +26,16 @@ func (es *EvidenceService) GetEvidenceDetails() auth.ServiceDetails {
 type EvidenceOperation interface {
 	getOperationRestApi() string
 	getRequestBody() []byte
+	getProviderId() string
 }
 
 func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, error) {
-	u := url.URL{Path: operation.getOperationRestApi()}
-	requestFullUrl, err := url.Parse(es.GetEvidenceDetails().GetUrl() + u.String())
+	queryParams := make(map[string]string)
+	if operation.getProviderId() != "" {
+		queryParams["providerId"] = operation.getProviderId()
+	}
+
+	requestFullUrl, err := clientutils.BuildUrl(es.GetEvidenceDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
 	if err != nil {
 		return []byte{}, errorutils.CheckError(err)
 	}
@@ -36,7 +43,8 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
 
-	resp, body, err := es.client.SendPost(requestFullUrl.String(), operation.getRequestBody(), &httpClientDetails)
+	log.Debug("Creating Evidence:")
+	resp, body, err := es.client.SendPost(requestFullUrl, operation.getRequestBody(), &httpClientDetails)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -45,6 +53,14 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 }
 
 type EvidenceDetails struct {
-	SubjectUri  string `json:"subject_uri"`
-	DSSEFileRaw []byte `json:"dsse_file_raw"`
+	SubjectUri  string              `json:"subject_uri"`
+	DSSEFileRaw []byte              `json:"dsse_file_raw"`
+	ProviderId  string              `json:"provider_id"`
+	Attachments []AttachmentDetails `json:"attachments,omitempty"`
+}
+
+type AttachmentDetails struct {
+	Repository string `json:"repository"`
+	Path       string `json:"path"`
+	Sha256     string `json:"sha256"`
 }
