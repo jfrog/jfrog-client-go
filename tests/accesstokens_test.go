@@ -26,6 +26,9 @@ func TestAccessTokens(t *testing.T) {
 	t.Run("createAccessTokenWithReference", testAccessTokenWithReference)
 	t.Run("refreshToken", testRefreshTokenTest)
 	t.Run("exchangeOIDCToken", testExchangeOidcToken)
+	t.Run("getTokens", testGetTokens)
+	t.Run("getTokenByID", testGetTokenByID)
+	t.Run("revokeTokenByID", testRevokeTokenByID)
 }
 
 // This test uses a mock response because the subject_token (TokenID) is not available in the test environment
@@ -156,6 +159,198 @@ func testRefreshTokenTest(t *testing.T) {
 	assert.NotEqual(t, token.RefreshToken, newToken.RefreshToken, "New refresh token is identical to original one")
 	assert.EqualValues(t, token.ExpiresIn, newToken.ExpiresIn, "New access token's expiration is different from original one")
 	assert.Empty(t, token.ReferenceToken)
+}
+
+func testGetTokens(t *testing.T) {
+	initAccessTest(t)
+
+	// Create mock server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/access/api/v1/tokens", r.URL.Path)
+
+		// Check query parameters
+		query := r.URL.Query()
+		if len(query) > 0 {
+			assert.Equal(t, "admin", query.Get("username"))
+			assert.Equal(t, "true", query.Get("refreshable"))
+			assert.Equal(t, "description", query.Get("order_by"))
+			assert.Equal(t, "true", query.Get("descending_order"))
+		}
+
+		// Mock response - wrapped in TokenInfos structure
+		response := services.TokenInfos{
+			Tokens: []services.TokenInfo{
+				{
+					TokenId:     "test-token-1",
+					Subject:     "jfrt@test/users/admin",
+					IssuedAt:    1640995200,
+					Issuer:      "jfrt@test",
+					Description: "Test token 1",
+					Refreshable: true,
+					Scope:       "applied-permissions/admin",
+				},
+				{
+					TokenId:     "test-token-2",
+					Subject:     "jfrt@test/users/user1",
+					IssuedAt:    1640995200,
+					Issuer:      "jfrt@test",
+					Description: "Test token 2",
+					Refreshable: false,
+					Scope:       "applied-permissions/user",
+				},
+			},
+		}
+
+		responseBody, err := json.Marshal(response)
+		assert.NoError(t, err)
+
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write(responseBody)
+		assert.NoError(t, err)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	// Setup JFrog client
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetInsecureTls(true).
+		Build()
+	assert.NoError(t, err, "Failed to create JFrog client")
+
+	// Setup TokenService
+	service := services.NewTokenService(client)
+	serverDetails := accessAuth.NewAccessDetails()
+	serverDetails.SetUrl(ts.URL + "/access")
+	service.ServiceDetails = serverDetails
+
+	// Test GetTokens without parameters
+	params := services.GetTokensParams{}
+	tokens, err := service.GetTokens(params)
+
+	// Verify response
+	assert.NoError(t, err)
+	assert.NotNil(t, tokens)
+	assert.Len(t, tokens, 2)
+	assert.Equal(t, "test-token-1", tokens[0].TokenId)
+	assert.Equal(t, "jfrt@test/users/admin", tokens[0].Subject)
+	assert.Equal(t, "jfrt@test", tokens[0].Issuer)
+	assert.True(t, tokens[0].Refreshable)
+	assert.Equal(t, "test-token-2", tokens[1].TokenId)
+	assert.Equal(t, "jfrt@test/users/user1", tokens[1].Subject)
+	assert.Equal(t, "jfrt@test", tokens[1].Issuer)
+	assert.False(t, tokens[1].Refreshable)
+
+	// Test GetTokens with parameters
+	paramsWithFilters := services.GetTokensParams{
+		Username:        "admin",
+		Refreshable:     utils.Pointer(true),
+		OrderBy:         "description",
+		DescendingOrder: utils.Pointer(true),
+	}
+	tokens, err = service.GetTokens(paramsWithFilters)
+
+	// Verify response
+	assert.NoError(t, err)
+	assert.NotNil(t, tokens)
+	assert.Len(t, tokens, 2)
+}
+
+func testGetTokenByID(t *testing.T) {
+	initAccessTest(t)
+
+	// Create mock server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/access/api/v1/tokens/test-token-1", r.URL.Path)
+
+		// Mock response for single token
+		token := services.TokenInfo{
+			TokenId:     "test-token-1",
+			Subject:     "jfrt@test/users/admin",
+			IssuedAt:    1640995200,
+			Issuer:      "jfrt@test",
+			Description: "Test token 1",
+			Refreshable: true,
+			Scope:       "applied-permissions/admin",
+		}
+
+		responseBody, err := json.Marshal(token)
+		assert.NoError(t, err)
+
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write(responseBody)
+		assert.NoError(t, err)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	// Setup JFrog client
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetInsecureTls(true).
+		Build()
+	assert.NoError(t, err, "Failed to create JFrog client")
+
+	// Setup TokenService
+	service := services.NewTokenService(client)
+	serverDetails := accessAuth.NewAccessDetails()
+	serverDetails.SetUrl(ts.URL + "/access")
+	service.ServiceDetails = serverDetails
+
+	// Test GetTokenByID
+	token, err := service.GetTokenByID("test-token-1")
+
+	// Verify response
+	assert.NoError(t, err)
+	assert.NotNil(t, token)
+	assert.Equal(t, "test-token-1", token.TokenId)
+	assert.Equal(t, "jfrt@test/users/admin", token.Subject)
+	assert.Equal(t, "jfrt@test", token.Issuer)
+	assert.True(t, token.Refreshable)
+	assert.Equal(t, "Test token 1", token.Description)
+
+	// Test error case with empty token ID
+	_, err = service.GetTokenByID("")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "token ID cannot be empty")
+}
+
+func testRevokeTokenByID(t *testing.T) {
+	initAccessTest(t)
+
+	// Create mock server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodDelete, r.Method)
+		assert.Equal(t, "/access/api/v1/tokens/test-token-1", r.URL.Path)
+
+		// Mock successful deletion response
+		w.WriteHeader(http.StatusOK)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	// Setup JFrog client
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetInsecureTls(true).
+		Build()
+	assert.NoError(t, err, "Failed to create JFrog client")
+
+	// Setup TokenService
+	service := services.NewTokenService(client)
+	serverDetails := accessAuth.NewAccessDetails()
+	serverDetails.SetUrl(ts.URL + "/access")
+	service.ServiceDetails = serverDetails
+
+	// Test RevokeTokenByID
+	err = service.RevokeTokenByID("test-token-1")
+
+	// Verify response
+	assert.NoError(t, err)
+
+	// Test error case with empty token ID
+	err = service.RevokeTokenByID("")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "token ID cannot be empty")
 }
 
 func createRefreshableAccessTokenParams(expiredIn uint) services.CreateTokenParams {
