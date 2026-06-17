@@ -123,6 +123,6 @@ type ComponentResolutionRequest struct {
 }
 
 type ComponentResolutionResponse struct {
-	Content json.RawMessage `json:"content"`
+	Content json.RawMessage `json:"lockfile"`
 	Changes []Change        `json:"changes,omitempty"`
 }
