@@ -332,7 +332,7 @@ func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		response = fmt.Sprintf(`{"content":%s}`, string(lockfile))
+		response = fmt.Sprintf(`{"lockfile":%s}`, string(lockfile))
 	default:
 		response = HealComponentsDefaultResponse
 	}

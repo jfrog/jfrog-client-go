@@ -2719,12 +2719,10 @@ Resolves lockfile dependencies against a virtual repository and returns an updat
 
 ```go
 import (
-  "encoding/json"
-
   "github.com/jfrog/jfrog-client-go/xray/services"
 )
 
-lockfile := json.RawMessage(`{"lockfileVersion":3}`)
+lockfile := `{"lockfileVersion":3}`
 response, err := xrayManager.HealComponents(services.ComponentResolutionRequest{
   BuildTool: "npm",
   Repo:      "npm-virtual",
@@ -2734,7 +2732,7 @@ if err != nil {
   // handle error
 }
 
-// response.Content contains the healed lockfile
+// response.Lockfile contains the healed lockfile text (JSON string for npm, XML string for maven)
 // response.Changes lists packages whose integrity was updated
 for _, change := range response.Changes {
   fmt.Printf("Package: %s, before: %s, after: %s\n", change.Package, change.BeforeIntegrity, change.AfterIntegrity)

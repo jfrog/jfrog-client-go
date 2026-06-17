@@ -49,16 +49,16 @@ func (chs *ComponentsHealService) Heal(req ComponentResolutionRequest) (*Compone
 
 func (chs *ComponentsHealService) mockResponse(req ComponentResolutionRequest) (ComponentResolutionResponse, error) {
 	if req.BuildTool == "maven" {
-		return ComponentResolutionResponse{Content: json.RawMessage(fakeMavenLockfile), Changes: []Change{
+		return ComponentResolutionResponse{Lockfile: fakeMavenHealedPom, Changes: []Change{
 			{
-				Package:         "org.apache.commons:commons-lang3:3.14.0",
-				BeforeIntegrity: "sha256-orig",
-				AfterIntegrity:  "sha256-chainguard",
+				Package:         "org.springframework:spring-core:5.3.39-0.cgr.4",
+				BeforeIntegrity: "5.3.20",
+				AfterIntegrity:  "5.3.39-0.cgr.4",
 			},
 		}}, nil
 	}
 	if req.BuildTool == "npm" {
-		return ComponentResolutionResponse{Content: json.RawMessage(fakeNpmLockfile), Changes: []Change{
+		return ComponentResolutionResponse{Lockfile: fakeNpmLockfile, Changes: []Change{
 			{
 				Package:         "lodash",
 				BeforeIntegrity: "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
@@ -69,21 +69,25 @@ func (chs *ComponentsHealService) mockResponse(req ComponentResolutionRequest) (
 	return ComponentResolutionResponse{}, fmt.Errorf("unsupported build tool: %s", req.BuildTool)
 }
 
-const fakeMavenLockfile = `{
-  "groupId": "com.example",
-  "artifactId": "demo-app",
-  "version": "1.0.0",
-  "lockFileVersion": 1,
-  "dependencies": [{
-    "groupId": "org.apache.commons",
-    "artifactId": "commons-lang3",
-    "version": "3.14.0",
-    "checksumAlgorithm": "SHA-256",
-    "checksum": "sha256-chainguard",
-    "resolved": "https://example.jfrog.io/artifactory/maven-virtual-chainguard/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.jar",
-    "id": "org.apache.commons:commons-lang3:3.14.0"
-  }]
-}`
+// fakeMavenHealedPom is a sample healed pom.xml returned by the maven heal stub.
+const fakeMavenHealedPom = `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>demo-app</artifactId>
+  <version>1.0.0</version>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>5.3.39-0.cgr.4</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>`
 
 const (
 	fakeNpmLockfile = `{
@@ -115,12 +119,12 @@ type Change struct {
 }
 
 type ComponentResolutionRequest struct {
-	BuildTool string          `json:"build-tool"`
-	Repo      string          `json:"repo"`
-	Lockfile  json.RawMessage `json:"lockfile"`
+	BuildTool string `json:"build-tool"`
+	Repo      string `json:"repo"`
+	Lockfile  string `json:"lockfile"`
 }
 
 type ComponentResolutionResponse struct {
-	Content json.RawMessage `json:"lockfile"`
-	Changes []Change        `json:"changes,omitempty"`
+	Lockfile string   `json:"lockfile"`
+	Changes  []Change `json:"changes,omitempty"`
 }

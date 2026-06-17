@@ -5,49 +5,16 @@ import (
 )
 
 const HealComponentsMavenResponse = `{
-  "content": {
-    "groupId": "com.example",
-    "artifactId": "demo-app",
-    "version": "1.0.0",
-    "lockFileVersion": 1,
-    "dependencies": [{
-      "groupId": "org.apache.commons",
-      "artifactId": "commons-lang3",
-      "version": "3.14.0",
-      "checksumAlgorithm": "SHA-256",
-      "checksum": "sha256-chainguard",
-      "resolved": "https://example.jfrog.io/artifactory/maven-virtual-chainguard/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.jar",
-      "id": "org.apache.commons:commons-lang3:3.14.0"
-    }]
-  },
+  "lockfile": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"><modelVersion>4.0.0</modelVersion><groupId>com.example</groupId><artifactId>demo-app</artifactId><version>1.0.0</version><dependencyManagement><dependencies><dependency><groupId>org.springframework</groupId><artifactId>spring-core</artifactId><version>5.3.39-0.cgr.4</version></dependency></dependencies></dependencyManagement></project>",
   "changes": [{
-    "package": "org.apache.commons:commons-lang3:3.14.0",
-    "before_integrity": "sha256-orig",
-    "after_integrity": "sha256-chainguard"
+    "package": "org.springframework:spring-core:5.3.39-0.cgr.4",
+    "before_integrity": "5.3.20",
+    "after_integrity": "5.3.39-0.cgr.4"
   }]
 }`
 
 const HealComponentsDefaultResponse = `{
-  "content": {
-    "name": "xray-simple-npm-app",
-    "version": "1.0.0",
-    "lockfileVersion": 3,
-    "requires": true,
-    "packages": {
-      "": {
-        "name": "xray-simple-npm-app",
-        "version": "1.0.0",
-        "dependencies": {
-          "lodash": "4.17.21"
-        }
-      },
-      "node_modules/lodash": {
-        "version": "4.17.21",
-        "resolved": "https://z0xraylnp2.jfrogdev.org/artifactory/api/npm/npm-virtual-chainguard/lodash/-/lodash-4.17.21.tgz",
-        "integrity": "sha512-Hpyrx+puvIK8/81t1qrv51FEytpvZ78WB88A/NQYFttbH0nQGXQETXvVBK7R+meEGcdC2E8US4QLY6tMAIE2Vw=="
-      }
-    }
-  },
+  "lockfile": "{\"name\":\"xray-simple-npm-app\",\"version\":\"1.0.0\",\"lockfileVersion\":3,\"requires\":true,\"packages\":{\"\":{\"name\":\"xray-simple-npm-app\",\"version\":\"1.0.0\",\"dependencies\":{\"lodash\":\"4.17.21\"}},\"node_modules/lodash\":{\"version\":\"4.17.21\",\"resolved\":\"https://z0xraylnp2.jfrogdev.org/artifactory/api/npm/npm-virtual-chainguard/lodash/-/lodash-4.17.21.tgz\",\"integrity\":\"sha512-Hpyrx+puvIK8/81t1qrv51FEytpvZ78WB88A/NQYFttbH0nQGXQETXvVBK7R+meEGcdC2E8US4QLY6tMAIE2Vw==\"}}}",
   "changes": [{
     "package": "lodash",
     "before_integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",

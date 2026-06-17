@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"encoding/json"
 	"strconv"
 	"testing"
 
@@ -30,10 +29,9 @@ func initXrayHealComponentsTest(t *testing.T) (xrayServerPort int, xrayDetails a
 	return
 }
 
-
 func TestHealComponentsService_Heal_NpmBuildTool(t *testing.T) {
 	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
-	input := json.RawMessage(`{"lockfileVersion":3}`)
+	input := `{"lockfileVersion":3}`
 	svc := xrayServices.NewComponentsHealService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
@@ -43,25 +41,25 @@ func TestHealComponentsService_Heal_NpmBuildTool(t *testing.T) {
 		Lockfile:  input,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, input, resp.Content)
+	assert.Equal(t, input, resp.Lockfile)
 	assert.Empty(t, resp.Changes)
 }
 
 func TestHealComponentsService_Heal_MavenBuildTool(t *testing.T) {
 	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
-	input := json.RawMessage(`{"lockFileVersion":1,"groupId":"demo","artifactId":"app"}`)
+	inputPom := `<?xml version="1.0"?><project><artifactId>app</artifactId></project>`
 	svc := xrayServices.NewComponentsHealService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
 	resp, err := svc.Heal(xrayServices.ComponentResolutionRequest{
 		BuildTool: "maven",
 		Repo:      "maven-virtual",
-		Lockfile:  input,
+		Lockfile:  inputPom,
 	})
 	require.NoError(t, err)
-	assert.NotEqual(t, input, resp.Content)
+	assert.NotEqual(t, inputPom, resp.Lockfile)
 	assert.NotEmpty(t, resp.Changes)
-	var healed map[string]any
-	require.NoError(t, json.Unmarshal(resp.Content, &healed))
-	assert.Equal(t, float64(1), healed["lockFileVersion"])
+	assert.Contains(t, resp.Lockfile, "<?xml")
+	assert.Contains(t, resp.Lockfile, "spring-core")
+	assert.Contains(t, resp.Lockfile, "5.3.39-0.cgr.4")
 }
