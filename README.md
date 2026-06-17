@@ -183,6 +183,7 @@
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Artifact Scan Status](#get-artifact-scan-status)
       - [Get Entitlement info](#get-entitlement-info)
+      - [Heal Lockfile Components](#heal-lockfile-components)
     - [XSC APIs](#xsc-apis)
       - [Creating XSC Service Manager](#creating-xray-service-manager)
       - [Creating XSC Details](#creating-xsc-details)
@@ -2712,6 +2713,35 @@ if err == nil {
     isEntitled, err := xrayManager.IsEntitled(featureId)
 ```
 
+#### Heal Lockfile Components
+
+Resolves lockfile dependencies against a virtual repository and returns an updated lockfile with any integrity changes.
+
+```go
+import (
+  "encoding/json"
+
+  "github.com/jfrog/jfrog-client-go/xray/services"
+)
+
+lockfile := json.RawMessage(`{"lockfileVersion":3}`)
+response, err := xrayManager.HealComponents(services.ComponentResolutionRequest{
+  BuildTool: "npm",
+  Repo:      "npm-virtual",
+  Lockfile:  lockfile,
+})
+if err != nil {
+  // handle error
+}
+
+// response.Content contains the healed lockfile
+// response.Changes lists packages whose integrity was updated
+for _, change := range response.Changes {
+  fmt.Printf("Package: %s, before: %s, after: %s\n", change.Package, change.BeforeIntegrity, change.AfterIntegrity)
+}
+```
+
+Supported `BuildTool` values include `npm` and `maven`.
 
 ## XSC APIs
 
