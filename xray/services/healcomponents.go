@@ -34,7 +34,6 @@ func (chs *ComponentsHealService) Heal(req ComponentResolutionRequest) (*Compone
 	if err != nil {
 		return nil, err
 	}
-	log.Debug("Sending request to Xray component-resolution API: %s", chs.getUrl())
 	resp, body, err := chs.client.SendPost(chs.getUrl(), body, &httpDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed while attempting to resolve component: %w", err)
