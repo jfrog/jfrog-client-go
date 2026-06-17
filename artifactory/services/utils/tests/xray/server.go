@@ -305,6 +305,45 @@ func cveRemediationHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid CVE remediation request", http.StatusBadRequest)
 }
 
+func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid heal components request", http.StatusBadRequest)
+		return
+	}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	buildTool, err := jsonparser.GetString(body, "build-tool")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var response string
+	switch buildTool {
+	case "maven":
+		response = HealComponentsMavenResponse
+	case "npm":
+		lockfile, _, _, err := jsonparser.Get(body, "lockfile")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		response = fmt.Sprintf(`{"content":%s}`, string(lockfile))
+	default:
+		response = HealComponentsDefaultResponse
+	}
+
+	_, err = fmt.Fprint(w, response)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 type MockServerParams struct {
 	MSI         string
 	XrayVersion string
@@ -333,6 +372,7 @@ func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers[fmt.Sprintf("/xray/api/v1/indexer-resources/download/%s/%s", runtime.GOOS, runtime.GOARCH)] = indexerDownloadHandler(t)
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers["/xray/api/v1/cveRemediationCDX"] = cveRemediationHandler
+	handlers["/xray/api/v1/lockfile/heal"] = healComponentsHandler
 	// Xsc handlers
 	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
 	handlers["/xray/api/v1/xsc/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
