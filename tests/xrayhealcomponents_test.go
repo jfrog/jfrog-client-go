@@ -29,7 +29,7 @@ func initXrayHealComponentsTest(t *testing.T) (xrayServerPort int, xrayDetails a
 	return
 }
 
-func TestHealComponentsService_Heal_NpmBuildTool(t *testing.T) {
+func TestHealComponentsService_Heal_NpmBuildTool_NoChanges(t *testing.T) {
 	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
 	input := `{"lockfileVersion":3}`
 	svc := xrayServices.NewComponentsHealService(client)
@@ -45,7 +45,7 @@ func TestHealComponentsService_Heal_NpmBuildTool(t *testing.T) {
 	assert.Empty(t, resp.Changes)
 }
 
-func TestHealComponentsService_Heal_MavenBuildTool(t *testing.T) {
+func TestHealComponentsService_Heal_MavenBuildTool_Changes(t *testing.T) {
 	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
 	inputPom := `<?xml version="1.0"?><project><artifactId>app</artifactId></project>`
 	svc := xrayServices.NewComponentsHealService(client)
