@@ -1,6 +1,7 @@
 package xray
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -330,12 +331,17 @@ func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
 	case "maven":
 		response = HealComponentsMavenResponse
 	case "npm":
-		lockfile, _, _, err := jsonparser.Get(body, "lockfile")
+		lockfile, err := jsonparser.GetString(body, "lockfile")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		response = fmt.Sprintf(`{"lockfile":%s}`, string(lockfile))
+		responseBytes, err := json.Marshal(map[string]string{"lockfile": lockfile})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		response = string(responseBytes)
 	default:
 		response = HealComponentsDefaultResponse
 	}

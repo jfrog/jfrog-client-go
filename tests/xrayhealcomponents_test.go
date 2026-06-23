@@ -35,12 +35,13 @@ func TestHealComponentsService_Heal_NpmBuildTool_NoChanges(t *testing.T) {
 	svc := xrayServices.NewComponentsHealService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
-	resp, err := svc.Heal(xrayServices.ComponentResolutionRequest{
+	resp, disabled, err := svc.Heal(xrayServices.ComponentResolutionRequest{
 		BuildTool: "npm",
 		Repo:      "npm-virtual",
 		Lockfile:  input,
 	})
 	require.NoError(t, err)
+	assert.False(t, disabled)
 	assert.Equal(t, input, resp.Lockfile)
 	assert.Empty(t, resp.Changes)
 }
@@ -51,12 +52,13 @@ func TestHealComponentsService_Heal_SelfHealDisabled_NoChanges(t *testing.T) {
 	svc := xrayServices.NewComponentsHealService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
-	resp, err := svc.Heal(xrayServices.ComponentResolutionRequest{
+	resp, disabled, err := svc.Heal(xrayServices.ComponentResolutionRequest{
 		BuildTool: "self-heal-disabled",
 		Repo:      "npm-virtual",
 		Lockfile:  input,
 	})
 	require.NoError(t, err)
+	assert.True(t, disabled)
 	assert.Equal(t, input, resp.Lockfile)
 	assert.Empty(t, resp.Changes)
 }
@@ -67,12 +69,13 @@ func TestHealComponentsService_Heal_MavenBuildTool_Changes(t *testing.T) {
 	svc := xrayServices.NewComponentsHealService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
-	resp, err := svc.Heal(xrayServices.ComponentResolutionRequest{
+	resp, disabled, err := svc.Heal(xrayServices.ComponentResolutionRequest{
 		BuildTool: "maven",
 		Repo:      "maven-virtual",
 		Lockfile:  inputPom,
 	})
 	require.NoError(t, err)
+	assert.False(t, disabled)
 	assert.NotEqual(t, inputPom, resp.Lockfile)
 	assert.NotEmpty(t, resp.Changes)
 	assert.Contains(t, resp.Lockfile, "<?xml")

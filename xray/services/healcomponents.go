@@ -28,28 +28,29 @@ func (chs *ComponentsHealService) getUrl() string {
 	return utils.AppendScopedProjectKeyParam(utils.AddTrailingSlashIfNeeded(chs.XrayDetails.GetUrl())+componentResolutionApi, chs.ScopeProjectKey)
 }
 
-func (chs *ComponentsHealService) Heal(req ComponentResolutionRequest) (*ComponentResolutionResponse, error) {
+func (chs *ComponentsHealService) Heal(req ComponentResolutionRequest) (*ComponentResolutionResponse, bool, error) {
 	httpDetails := chs.XrayDetails.CreateHttpClientDetails()
+	// SendPost retries on 5xx, disable retries for this request
+	httpDetails.AddPreRetryInterceptor(func() bool { return false })
 	body, err := json.Marshal(req)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	resp, body, err := chs.client.SendPost(chs.getUrl(), body, &httpDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed while attempting to resolve component: %w", err)
+		return nil, false, fmt.Errorf("failed while attempting to resolve component: %w", err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusServiceUnavailable); err != nil {
-		return nil, fmt.Errorf("got unexpected server response while attempting to resolve component: %w", err)
+		return nil, false, fmt.Errorf("got unexpected server response while attempting to resolve component: %w", err)
 	}
 	if resp.StatusCode == http.StatusServiceUnavailable {
-		log.Warn("Self-heal is disabled on JFrog Xray server. Skipping component resolution.")
-		return &ComponentResolutionResponse{Lockfile: req.Lockfile}, nil
+		return &ComponentResolutionResponse{Lockfile: req.Lockfile}, true, nil
 	}
 	var response ComponentResolutionResponse
 	if err = json.Unmarshal(body, &response); err != nil {
-		return nil, fmt.Errorf("failed to decode component resolution response: %w", err)
+		return nil, false, fmt.Errorf("failed to decode component resolution response: %w", err)
 	}
-	return &response, nil
+	return &response, false, nil
 }
 
 type Change struct {

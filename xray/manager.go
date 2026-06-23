@@ -292,7 +292,7 @@ func (sm *XrayServicesManager) RemediationByCve(bom *cyclonedx.BOM) (xrayUtils.C
 	return remediationService.RemediationByCve(bom)
 }
 
-func (sm *XrayServicesManager) HealComponents(req services.ComponentResolutionRequest) (*services.ComponentResolutionResponse, error) {
+func (sm *XrayServicesManager) HealComponents(req services.ComponentResolutionRequest) (*services.ComponentResolutionResponse, bool, error) {
 	svc := services.NewComponentsHealService(sm.client)
 	svc.XrayDetails = sm.config.GetServiceDetails()
 	svc.ScopeProjectKey = sm.scopeProjectKey

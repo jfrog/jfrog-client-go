@@ -2723,13 +2723,16 @@ import (
 )
 
 lockfile := `{"lockfileVersion":3}`
-response, err := xrayManager.HealComponents(services.ComponentResolutionRequest{
+response, disabled, err := xrayManager.HealComponents(services.ComponentResolutionRequest{
   BuildTool: "npm",
   Repo:      "npm-virtual",
   Lockfile:  lockfile,
 })
 if err != nil {
   // handle error
+}
+if disabled {
+  // self-heal is disabled on the server; response.Lockfile is unchanged
 }
 
 // response.Lockfile contains the healed lockfile text (JSON string for npm, XML string for maven)
