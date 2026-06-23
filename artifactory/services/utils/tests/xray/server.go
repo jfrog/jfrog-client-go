@@ -324,6 +324,9 @@ func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var response string
 	switch buildTool {
+	case "self-heal-disabled":
+		http.Error(w, "self-heal is disabled", http.StatusServiceUnavailable)
+		return
 	case "maven":
 		response = HealComponentsMavenResponse
 	case "npm":

@@ -45,6 +45,22 @@ func TestHealComponentsService_Heal_NpmBuildTool_NoChanges(t *testing.T) {
 	assert.Empty(t, resp.Changes)
 }
 
+func TestHealComponentsService_Heal_SelfHealDisabled_NoChanges(t *testing.T) {
+	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
+	input := `{"lockfileVersion":3}`
+	svc := xrayServices.NewComponentsHealService(client)
+	svc.XrayDetails = xrayDetails
+	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
+	resp, err := svc.Heal(xrayServices.ComponentResolutionRequest{
+		BuildTool: "self-heal-disabled",
+		Repo:      "npm-virtual",
+		Lockfile:  input,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, input, resp.Lockfile)
+	assert.Empty(t, resp.Changes)
+}
+
 func TestHealComponentsService_Heal_MavenBuildTool_Changes(t *testing.T) {
 	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
 	inputPom := `<?xml version="1.0"?><project><artifactId>app</artifactId></project>`

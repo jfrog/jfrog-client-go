@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const componentResolutionApi = "api/v1/lockfile/heal"
@@ -37,8 +38,12 @@ func (chs *ComponentsHealService) Heal(req ComponentResolutionRequest) (*Compone
 	if err != nil {
 		return nil, fmt.Errorf("failed while attempting to resolve component: %w", err)
 	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusServiceUnavailable); err != nil {
 		return nil, fmt.Errorf("got unexpected server response while attempting to resolve component: %w", err)
+	}
+	if resp.StatusCode == http.StatusServiceUnavailable {
+		log.Warn("Self-heal is disabled on JFrog Xray server. Skipping component resolution.")
+		return &ComponentResolutionResponse{Lockfile: req.Lockfile}, nil
 	}
 	var response ComponentResolutionResponse
 	if err = json.Unmarshal(body, &response); err != nil {
