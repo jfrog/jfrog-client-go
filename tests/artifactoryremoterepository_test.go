@@ -17,6 +17,7 @@ const MavenCentralUrl = "https://repo.maven.apache.org"
 func TestArtifactoryRemoteRepository(t *testing.T) {
 	initRepositoryTest(t)
 	t.Run("remoteAlpineTest", remoteAlpineTest)
+	t.Run("remoteAnsibleTest", remoteAnsibleTest)
 	t.Run("remoteBowerTest", remoteBowerTest)
 	t.Run("remoteCargoTest", remoteCargoTest)
 	t.Run("remoteChefTest", remoteChefTest)
@@ -149,6 +150,28 @@ func remoteAlpineTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Alpine(arp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, arp)
+	}
+}
+
+func remoteAnsibleTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	arp := services.NewAnsibleRemoteRepositoryParams()
+	arp.Key = repoKey
+	arp.Url = "https://galaxy.ansible.com"
+	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, false)
+
+	err := testsCreateRemoteRepositoryService.Ansible(arp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	deleteRepoOnTestDone(t, repoKey)
+	validateRepoConfig(t, repoKey, arp)
+
+	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, true)
+
+	err = testsUpdateRemoteRepositoryService.Ansible(arp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, arp)
 	}
@@ -623,6 +646,7 @@ func remoteNugetTest(t *testing.T) {
 	nrp.DownloadContextPath = "api/v1/package"
 	nrp.V3FeedUrl = "https://api.nuget.org/v3/index.json"
 	nrp.ForceNugetAuthentication = utils.Pointer(true)
+	nrp.SymbolServerUrl = "https://community.chocolatey.org"
 
 	err := testsCreateRemoteRepositoryService.Nuget(nrp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -636,6 +660,7 @@ func remoteNugetTest(t *testing.T) {
 	nrp.DownloadContextPath = ""
 	nrp.V3FeedUrl = ""
 	nrp.ForceNugetAuthentication = utils.Pointer(true)
+	nrp.SymbolServerUrl = "https://community.chocolatey.org"
 
 	err = testsUpdateRemoteRepositoryService.Nuget(nrp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
