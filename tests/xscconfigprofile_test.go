@@ -67,8 +67,8 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 		},
 		Modules: []services.Module{
 			{
-				ModuleName:   "default-module",
-				PathFromRoot: ".",
+				ModuleName:      "default-module",
+				PathFromRoot:    ".",
 				IncludePatterns: []string{"*.go"},
 				ExcludePatterns: []string{"*.log*", "*.tmp*"},
 				ScanConfig: services.ScanConfig{
@@ -95,6 +95,9 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 					IacScannerConfig: services.IacScannerConfig{
 						EnableIacScan:   true,
 						ExcludePatterns: []string{"*.tfstate"},
+					},
+					ServicesScannerConfig: services.ServicesScannerConfig{
+						EnableServicesScan: false,
 					},
 				},
 			},

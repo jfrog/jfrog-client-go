@@ -68,11 +68,12 @@ type Module struct {
 }
 
 type ScanConfig struct {
-	ScaScannerConfig                ScaScannerConfig     `json:"sca_scanner_config,omitempty"`
-	ContextualAnalysisScannerConfig CaScannerConfig      `json:"contextual_analysis_scanner_config,omitempty"`
-	SastScannerConfig               SastScannerConfig    `json:"sast_scanner_config,omitempty"`
-	SecretsScannerConfig            SecretsScannerConfig `json:"secrets_scanner_config,omitempty"`
-	IacScannerConfig                IacScannerConfig     `json:"iac_scanner_config,omitempty"`
+	ScaScannerConfig                ScaScannerConfig      `json:"sca_scanner_config,omitempty"`
+	ContextualAnalysisScannerConfig CaScannerConfig       `json:"contextual_analysis_scanner_config,omitempty"`
+	SastScannerConfig               SastScannerConfig     `json:"sast_scanner_config,omitempty"`
+	SecretsScannerConfig            SecretsScannerConfig  `json:"secrets_scanner_config,omitempty"`
+	IacScannerConfig                IacScannerConfig      `json:"iac_scanner_config,omitempty"`
+	ServicesScannerConfig           ServicesScannerConfig `json:"services_scanner_config,omitempty"`
 }
 
 type ScaScannerConfig struct {
@@ -103,6 +104,11 @@ type SecretsScannerConfig struct {
 type IacScannerConfig struct {
 	EnableIacScan   bool     `json:"enable_iac_scan,omitempty"`
 	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
+}
+
+type ServicesScannerConfig struct {
+	EnableServicesScan bool     `json:"enable_services_scan,omitempty"`
+	ExcludePatterns    []string `json:"exclude_patterns,omitempty"`
 }
 
 func (cp *ConfigurationProfileService) sendConfigProfileByNameRequest(profileName string) (url string, resp *http.Response, body []byte, err error) {
