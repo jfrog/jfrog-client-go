@@ -1,15 +1,51 @@
 package log
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/forPelevin/gomoji"
-	"github.com/gookit/color"
-	"golang.org/x/term"
 	"io"
 	"log"
 	"os"
 	"runtime"
+	"strconv"
+	"sync"
+	"sync/atomic"
+
+	"github.com/forPelevin/gomoji"
+	"github.com/gookit/color"
+	"golang.org/x/term"
 )
+
+// goroutineLoggers stores per-goroutine loggers for parallel isolated tasks
+var goroutineLoggers sync.Map
+
+// goroutineLoggerCount tracks how many goroutine-local loggers are set.
+// Used as a fast-path check to avoid expensive getGoroutineID() calls
+// when no goroutine loggers exist
+var goroutineLoggerCount int64
+
+// getGoroutineID extracts the current goroutine's ID from the runtime stack.
+func getGoroutineID() int64 {
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	// Stack trace starts with "goroutine XXX ["
+	idField := bytes.Fields(buf[:n])[1]
+	id, _ := strconv.ParseInt(string(idField), 10, 64)
+	return id
+}
+
+// SetLoggerForGoroutine sets a logger for the current goroutine only.
+// Other goroutines will continue using the global logger.
+func SetLoggerForGoroutine(logger Log) {
+	goroutineLoggers.Store(getGoroutineID(), logger)
+	atomic.AddInt64(&goroutineLoggerCount, 1)
+}
+
+// ClearLoggerForGoroutine removes the logger for the current goroutine.
+func ClearLoggerForGoroutine() {
+	goroutineLoggers.Delete(getGoroutineID())
+	atomic.AddInt64(&goroutineLoggerCount, -1)
+}
 
 var Logger Log
 
@@ -81,6 +117,15 @@ func SetLogger(newLogger Log) {
 }
 
 func GetLogger() Log {
+	// Fast path: if no goroutine-local loggers exist, skip expensive getGoroutineID()
+	if atomic.LoadInt64(&goroutineLoggerCount) > 0 {
+		if logger, ok := goroutineLoggers.Load(getGoroutineID()); ok {
+			if typedLogger, valid := logger.(Log); valid {
+				return typedLogger
+			}
+		}
+	}
+
 	if Logger != nil {
 		return Logger
 	}
