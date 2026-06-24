@@ -2,6 +2,7 @@ package evidence
 
 import (
 	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/evidence/external/sonarqube"
 	"github.com/jfrog/jfrog-client-go/evidence/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
@@ -38,4 +39,14 @@ func (esm *EvidenceServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 func (esm *EvidenceServicesManager) UploadEvidence(evidenceDetails services.EvidenceDetails) ([]byte, error) {
 	evidenceService := services.NewEvidenceService(esm.config.GetServiceDetails(), esm.client)
 	return evidenceService.UploadEvidence(evidenceDetails)
+}
+
+func (esm *EvidenceServicesManager) FetchSonarTaskStatus(taskID, sonarQubeURL, proxy string) ([]byte, error) {
+	sonarTaskStatus := sonarqube.NewSonarQubeEvidence(sonarQubeURL, proxy)
+	return sonarTaskStatus.CollectSonarQubePredicate(taskID)
+}
+
+func (esm *EvidenceServicesManager) GetSonarAnalysisReport(analysisID, sonarQubeURL, proxy string) ([]byte, error) {
+	sonarAnalysisReport := sonarqube.NewSonarQubeEvidence(sonarQubeURL, proxy)
+	return sonarAnalysisReport.GetSonarAnalysis(analysisID)
 }
