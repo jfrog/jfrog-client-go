@@ -94,8 +94,8 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 		},
 		Modules: []services.Module{
 			{
-				ModuleName:   "default-module",
-				PathFromRoot: ".",
+				ModuleName:      "default-module",
+				PathFromRoot:    ".",
 				IncludePatterns: []string{"*.go"},
 				ExcludePatterns: []string{"*.log*", "*.tmp*"},
 				ScanConfig: services.ScanConfig{
