@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	scanResultsRouteAPIUrl = "gitinfo/scanResultsUiRoute"
+	scanResultsRouteAPIUrl         = "gitinfo/scanResultsUiRoute"
+	MinXrayVersionForGetUIRouteAPI = "3.76.0"
 )
 
 type ScanResultsRouteService struct {
@@ -25,11 +26,14 @@ func NewScanResultsRouteService(client *jfroghttpclient.JfrogHttpClient) *ScanRe
 	return &ScanResultsRouteService{client: client}
 }
 
+func (s *ScanResultsRouteService) getScanResultsUIRouteURL() string {
+	return utils.AppendScopedProjectKeyParam(utils.AddTrailingSlashIfNeeded(s.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+scanResultsRouteAPIUrl, s.ScopeProjectKey)
+}
+
 func (s *ScanResultsRouteService) GetScanResultsUIRoute(gitInfo *XscGitInfoContext) (*ScanResultsUIRouteResponse, error) {
 	httpClientsDetails := s.XrayDetails.CreateHttpClientDetails()
 	httpClientsDetails.SetContentTypeApplicationJson()
 
-	url := s.getScanResultsUIRouteURL()
 	request := ScanResultsUIRouteRequest{
 		GitInfoUrl: gitInfo.Source.GitRepoHttpsCloneUrl,
 		BranchName: gitInfo.Source.BranchName,
@@ -42,7 +46,7 @@ func (s *ScanResultsRouteService) GetScanResultsUIRoute(gitInfo *XscGitInfoConte
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	resp, body, err := s.client.SendPost(url, requestBody, &httpClientsDetails)
+	resp, body, err := s.client.SendPost(s.getScanResultsUIRouteURL(), requestBody, &httpClientsDetails)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
@@ -52,10 +56,6 @@ func (s *ScanResultsRouteService) GetScanResultsUIRoute(gitInfo *XscGitInfoConte
 	var response ScanResultsUIRouteResponse
 	err = json.Unmarshal(body, &response)
 	return &response, errorutils.CheckError(err)
-}
-
-func (s *ScanResultsRouteService) getScanResultsUIRouteURL() string {
-	return utils.AppendScopedProjectKeyParam(utils.AddTrailingSlashIfNeeded(s.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+scanResultsRouteAPIUrl, s.ScopeProjectKey)
 }
 
 type ScanResultsUIRouteRequest struct {
