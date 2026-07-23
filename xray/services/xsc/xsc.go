@@ -60,6 +60,13 @@ func (xs *XscInnerService) GetAnalyticsGeneralEvent(msi string) (*services.XscAn
 	return eventService.GetGeneralEvent(msi)
 }
 
+func (xs *XscInnerService) GetScanResultsUIRoute(gitInfo *services.XscGitInfoContext) (*services.ScanResultsUIRouteResponse, error) {
+	scanResultsService := services.NewScanResultsRouteService(xs.client)
+	scanResultsService.XrayDetails = xs.XrayDetails
+	scanResultsService.ScopeProjectKey = xs.ScopeProjectKey
+	return scanResultsService.GetScanResultsUIRoute(gitInfo)
+}
+
 func (xs *XscInnerService) GetConfigProfileByName(profileName string) (*services.ConfigProfile, error) {
 	configProfileService := services.NewConfigurationProfileService(xs.client)
 	configProfileService.XrayDetails = xs.XrayDetails
