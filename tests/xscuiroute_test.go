@@ -10,7 +10,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xsc/services"
-	"github.com/jfrog/jfrog-client-go/xsc/services/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +27,7 @@ const (
 )
 
 func TestXscGetScanResultsUIRoute(t *testing.T) {
-	initXscTest(t, "", utils.MinXrayVersionXscTransitionToXray)
+	initXscTest(t, "", services.GetUIRouteAPIMinXrayVersion)
 
 	baseGitInfo := func() *services.XscGitInfoContext {
 		return &services.XscGitInfoContext{

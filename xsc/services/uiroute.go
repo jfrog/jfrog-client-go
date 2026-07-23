@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	scanResultsRouteAPIUrl         = "gitinfo/scanResultsUiRoute"
-	MinXrayVersionForGetUIRouteAPI = "3.76.0"
+	scanResultsRouteAPIUrl      = "gitinfo/scanResultsUiRoute"
+	GetUIRouteAPIMinXrayVersion = "3.76.0"
 )
 
 type ScanResultsRouteService struct {
