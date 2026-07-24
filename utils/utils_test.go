@@ -263,6 +263,46 @@ func TestReplacePlaceHolders(t *testing.T) {
 	}
 }
 
+func TestGetRootPath(t *testing.T) {
+	emptyParentheses := NewParenthesesSlice([]Parentheses{})
+	tests := []struct {
+		name        string
+		path        string
+		patternType PatternType
+		expected    string
+	}{
+		// RegExp without capture groups: the fix — root path must stop before regex metacharacters
+		{"regexp dot-star", "dir/.*\\.txt", RegExp, "dir"},
+		{"regexp dot-star no extension", "dir/.*", RegExp, "dir"},
+		{"regexp char class", "dir/[0-9]+/file", RegExp, "dir"},
+		{"regexp plus quantifier", "dir/prefix.+suffix", RegExp, "dir"},
+		{"regexp question mark", "dir/colou?r", RegExp, "dir"},
+		{"regexp alternation pipe", "dir/foo|bar", RegExp, "dir"},
+		{"regexp backslash escape", "dir/file\\.txt", RegExp, "dir"},
+		{"regexp nested dirs no metachar", "a/b/c", RegExp, "a/b/c"},
+		{"regexp starts with metachar", ".*\\.txt", RegExp, "."},
+		{"regexp multi-level prefix", "a/b/c/.*", RegExp, "a/b/c"},
+		// Literal dots in directory/file names should NOT trigger regex detection
+		{"regexp literal dot in dirname", "/tmp/jfrog.cli.temp.-1775042212-1894730057/(.*)", RegExp, "/tmp/jfrog.cli.temp.-1775042212-1894730057"},
+		{"regexp literal dots in filename", "my.folder/file.txt/(.*)", RegExp, "my.folder/file.txt"},
+		{"regexp multiple literal dots", "archive.tar.gz.backup/.*", RegExp, "archive.tar.gz.backup"},
+		{"regexp dots with numbers", "dir.1.2.3/test.file/(.*)", RegExp, "dir.1.2.3/test.file"},
+		// RegExp with capture groups: existing behaviour preserved
+		{"regexp with capture group", "dir/(.*)/file", RegExp, "dir"},
+		{"regexp capture at root", "(.*)/file", RegExp, "."},
+		// Wildcard: existing behaviour unchanged
+		{"wildcard star", "dir/*/file.txt", WildCardPattern, "dir"},
+		{"wildcard multi-level", "a/b/*/c", WildCardPattern, "a/b"},
+		{"wildcard no star", "a/b/c", WildCardPattern, "a/b/c"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetRootPath(tt.path, tt.patternType, emptyParentheses)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
 func TestValidateMinimumVersion(t *testing.T) {
 	minTestVersion := "6.9.0"
 	tests := []struct {

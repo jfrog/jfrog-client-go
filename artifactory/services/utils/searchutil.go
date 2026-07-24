@@ -35,6 +35,9 @@ const (
 
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
+// If a pattern is also specified, the pattern is applied server-side via AQL inside
+// getBuildArtifactsUsingAql → createAqlBodyForBuildArtifactsWithExclusions. This preserves
+// virtual-repo resolution (AQL translates virtual repo names to their backing locals).
 func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerContent *content.ContentReader, err error) {
 	log.Info("Searching items related to a build...")
 	buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
@@ -96,7 +99,11 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependenciesWithExclusions(builds, &specFile)}
+	aqlBody, err := createAqlBodyForBuildDependenciesWithExclusions(builds, &specFile)
+	if err != nil {
+		return nil, err
+	}
+	specFile.Aql = Aql{ItemsFind: aqlBody}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }
@@ -105,6 +112,12 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 	// When sort or limit is specified, fall back to AQL since the API doesn't support these flags.
 	if !includePropertiesInAqlForSpec(&specFile) {
 		log.Debug("Sort/limit specified, using AQL for build artifacts search")
+		return getBuildArtifactsUsingAql(specFile, flags, builds)
+	}
+
+	// When a specific pattern is provided alongside the build, use AQL directly
+	if specFile.Pattern != "" && specFile.Pattern != "*" {
+		log.Debug("Pattern specified with build, using AQL for build artifacts search")
 		return getBuildArtifactsUsingAql(specFile, flags, builds)
 	}
 
@@ -122,7 +135,11 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 }
 
 func getBuildArtifactsUsingAql(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)}
+	aqlBody, err := createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)
+	if err != nil {
+		return nil, err
+	}
+	specFile.Aql = Aql{ItemsFind: aqlBody}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }

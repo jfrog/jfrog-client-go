@@ -16,6 +16,8 @@ const (
 	Pending     Severity = "Pending"
 	Information Severity = "Information"
 	Unknown     Severity = "Unknown"
+	// ScannedNoIssues indicates the target was scanned and no issues were found (Xray server severity value).
+	ScannedNoIssues Severity = "Scanned - No Issues"
 )
 
 type PolicyType string

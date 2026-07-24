@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -12,6 +13,25 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
+
+// Xray gate status values returned by the Skills xrayStatus endpoint.
+const (
+	SkillXrayStatusNotInEntitlement = "NOT_IN_ENTITLEMENT"
+	SkillXrayStatusDisabledForRepo  = "XRAY_DISABLED_FOR_REPO"
+	SkillXrayStatusScanInProgress   = "SCAN_IN_PROGRESS"
+	SkillXrayStatusBlocked          = "BLOCKED"
+	SkillXrayStatusApproved         = "APPROVED"
+
+	SkillSortByUpdated   = "updated"
+	SkillSortByDownloads = "downloads"
+)
+
+// SkillXrayStatusResponse is the response from the Skills Xray gate status endpoint.
+type SkillXrayStatusResponse struct {
+	Status  string `json:"status"`
+	RepoKey string `json:"repoKey"`
+	Path    string `json:"path"`
+}
 
 type SkillsService struct {
 	client     *jfroghttpclient.JfrogHttpClient
@@ -40,9 +60,28 @@ func (ss *SkillsService) ListVersions(repoKey, slug string) ([]SkillVersion, err
 	return wrapper.Items, nil
 }
 
+func (ss *SkillsService) ListSkills(repoKey string, limit int, cursor, sortBy string) ([]SkillListItem, string, error) {
+	log.Debug(fmt.Sprintf("Listing skills in repo '%s'...", repoKey))
+	sort := SkillSortByUpdated
+	if sortBy == SkillSortByDownloads {
+		sort = sortBy
+	}
+	endpoint := fmt.Sprintf("skills?limit=%d&cursor=%s&sort=%s", limit, url.QueryEscape(cursor), sort)
+	body, err := ss.sendGet(repoKey, endpoint)
+	if err != nil {
+		return nil, "", err
+	}
+
+	var wrapper skillListResponse
+	if err = json.Unmarshal(body, &wrapper); err != nil {
+		return nil, "", errorutils.CheckErrorf("failed to parse skill list response: %s", err.Error())
+	}
+	return wrapper.Items, wrapper.NextCursor, nil
+}
+
 func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]SkillSearchResult, error) {
 	log.Debug(fmt.Sprintf("Searching skills in repo '%s' with query '%s'...", repoKey, query))
-	body, err := ss.sendGet(repoKey, fmt.Sprintf("search?q=%s&limit=%d", query, limit))
+	body, err := ss.sendGet(repoKey, fmt.Sprintf("search?q=%s&limit=%d", url.QueryEscape(query), limit))
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +161,29 @@ func parsePropSearchURI(uri string) (SkillPropertySearchResult, bool) {
 	}, true
 }
 
+// GetXrayStatus calls the Skills Xray gate endpoint to check the scan status of a skill artifact.
+// This endpoint uses api/skills/{repoKey}/xrayStatus (no /api/v1/ segment).
+func (ss *SkillsService) GetXrayStatus(repoKey, artifactPath string) (*SkillXrayStatusResponse, error) {
+	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
+	requestURL := fmt.Sprintf("%sapi/skills/%s/xrayStatus?path=%s", baseURL, repoKey, url.QueryEscape(artifactPath))
+	log.Debug("Skills Xray status request:", requestURL)
+
+	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet(requestURL, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+
+	var result SkillXrayStatusResponse
+	if err = json.Unmarshal(body, &result); err != nil {
+		return nil, errorutils.CheckErrorf("failed to parse xray status response: %s", err.Error())
+	}
+	return &result, nil
+}
+
 func (ss *SkillsService) sendGet(repoKey, endpoint string) ([]byte, error) {
 	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
 	url := fmt.Sprintf("%sapi/skills/%s/api/v1/%s", baseURL, repoKey, endpoint)
@@ -156,6 +218,21 @@ type SkillPropertySearchResult struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 	URI     string `json:"uri"`
+}
+
+type SkillListItem struct {
+	Slug          string        `json:"slug"`
+	DisplayName   string        `json:"displayName,omitempty"`
+	Summary       string        `json:"summary,omitempty"`
+	LatestVersion *SkillVersion `json:"latestVersion,omitempty"`
+	Versions      int           `json:"versions,omitempty"`
+	Updated       string        `json:"updated,omitempty"`
+}
+
+type skillListResponse struct {
+	Items      []SkillListItem `json:"items"`
+	NextCursor string          `json:"nextCursor,omitempty"`
+	Total      int             `json:"total,omitempty"`
 }
 
 type skillVersionsResponse struct {

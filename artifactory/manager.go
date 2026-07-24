@@ -675,6 +675,12 @@ func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails)
 		Build()
 }
 
+func (sm *ArtifactoryServicesManagerImp) ListSkills(repoKey string, limit int, cursor, sortBy string) ([]services.SkillListItem, string, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.ListSkills(repoKey, limit, cursor, sortBy)
+}
+
 func (sm *ArtifactoryServicesManagerImp) ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error) {
 	skillsService := services.NewSkillsService(sm.client)
 	skillsService.ArtDetails = sm.config.GetServiceDetails()
@@ -697,4 +703,10 @@ func (sm *ArtifactoryServicesManagerImp) SearchSkillsByProperty(query string) ([
 	skillsService := services.NewSkillsService(sm.client)
 	skillsService.ArtDetails = sm.config.GetServiceDetails()
 	return skillsService.SearchByProperty(query)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetSkillXrayStatus(repoKey, artifactPath string) (*services.SkillXrayStatusResponse, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.GetXrayStatus(repoKey, artifactPath)
 }
