@@ -59,7 +59,7 @@ func (s *ScanResultsRouteService) GetScanResultsUIRoute(gitInfo *XscGitInfoConte
 }
 
 type ScanResultsUIRouteRequest struct {
-	GitInfoUrl    string `json:"git_info_url"`
+	GitInfoUrl    string `json:"git_repo_url"`
 	BranchName    string `json:"branch_name,omitempty"`
 	CommitHash    string `json:"commit_hash,omitempty"`
 	PullRequestId int64  `json:"pull_request_id,omitempty"`
