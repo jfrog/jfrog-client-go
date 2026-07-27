@@ -1,23 +1,17 @@
 name: "Frogbot Scan Pull Request"
 on:
-  pull_request_target:
-    types: [opened, synchronize]
-    branches:
-      - "master"
-
+  workflow_call:
 permissions:
   pull-requests: write
   contents: read
 jobs:
   scan-pull-request:
-    if: ${{ github.actor != 'dependabot[bot]' }}
     strategy:
       matrix:
         os:
           - name: ubuntu
             version: 24.04
     runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
-    environment: frogbot
     steps:
       - uses: actions/checkout@v4
         with:

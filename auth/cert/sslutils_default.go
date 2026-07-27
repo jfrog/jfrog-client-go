@@ -8,5 +8,9 @@ import (
 )
 
 func loadSystemRoots() (*x509.CertPool, error) {
-	return x509.SystemCertPool()
+	pool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, err
+	}
+	return pool, nil
 }

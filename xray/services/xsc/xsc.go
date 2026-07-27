@@ -74,6 +74,13 @@ func (xs *XscInnerService) GetConfigProfileByUrl(repoUrl string) (*services.Conf
 	return configProfileService.GetConfigurationProfileByUrl(repoUrl)
 }
 
+func (xs *XscInnerService) GetConfigProfileByUrlAndWorkspace(repoUrl, workspaceName string) (*services.ConfigProfile, error) {
+	configProfileService := services.NewConfigurationProfileService(xs.client)
+	configProfileService.XrayDetails = xs.XrayDetails
+	configProfileService.ScopeProjectKey = xs.ScopeProjectKey
+	return configProfileService.GetConfigurationProfileByUrlAndWorkspace(repoUrl, workspaceName)
+}
+
 func (xs *XscInnerService) GetResourceWatches(gitRepo, project string) (watches *utils.ResourcesWatchesBody, err error) {
 	watchService := services.NewWatchService(xs.client)
 	watchService.XrayDetails = xs.XrayDetails
