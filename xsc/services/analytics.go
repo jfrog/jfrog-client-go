@@ -210,9 +210,10 @@ type XscAnalyticsGeneralEvent struct {
 
 type XscGitInfoContext struct {
 	GitDiffContext
-	Source       CommitContext `json:"source"`
-	GitProvider  string        `json:"git_provider,omitempty"`
-	Technologies []string      `json:"technologies,omitempty"`
+	Source        CommitContext `json:"source"`
+	GitProvider   string        `json:"git_provider,omitempty"`
+	Technologies  []string      `json:"technologies,omitempty"`
+	WorkspaceName string        `json:"workspace_name,omitempty"`
 }
 
 // Optional fields for git diff context
