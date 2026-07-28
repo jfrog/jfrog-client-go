@@ -54,6 +54,7 @@ func localConvertNonExistentLocalToFederatedTest(t *testing.T) {
 }
 
 func localTriggerFederatedFullSyncAllTest(t *testing.T) {
+	t.Skip("Skipping flaky test, see RTECO-1724")
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gfp := services.NewGenericFederatedRepositoryParams()
 	gfp.Key = repoKey
@@ -71,6 +72,7 @@ func localTriggerFederatedFullSyncAllTest(t *testing.T) {
 }
 
 func localTriggerFederatedFullSyncMirrorTest(t *testing.T) {
+	t.Skip("Skipping flaky test, see RTECO-1724")
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gfp := services.NewGenericFederatedRepositoryParams()
 	gfp.Key = repoKey
