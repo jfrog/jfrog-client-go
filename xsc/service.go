@@ -24,4 +24,6 @@ type XscService interface {
 	GetConfigProfileByUrlAndWorkspace(profileUrl, workspaceName string) (*services.ConfigProfile, error)
 	// SendGitIntegrationEvent sends a git integration event to xray
 	SendGitIntegrationEvent(event services.GitIntegrationEvent, xrayVersion string) error
+	// GetGitScanUIRoute returns a UI route URL for viewing git scan results. Only supported for static SCA scans.
+	GetGitScanUIRoute(request services.GetGitScanUIRouteRequest) (string, error)
 }
