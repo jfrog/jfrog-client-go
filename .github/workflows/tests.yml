@@ -7,9 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          # Safe: this workflow only runs after human approval via the build-gate environment.
+          allow-unsafe-pr-checkout: true
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -28,9 +30,11 @@ jobs:
     runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          # Safe: this workflow only runs after human approval via the build-gate environment.
+          allow-unsafe-pr-checkout: true
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -62,9 +66,11 @@ jobs:
 
       - name: Checkout code
         if: matrix.os.name != 'macos'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          # Safe: this workflow only runs after human approval via the build-gate environment.
+          allow-unsafe-pr-checkout: true
 
       - name: Setup Go with cache
         if: matrix.os.name != 'macos'
@@ -104,9 +110,11 @@ jobs:
 
       - name: Checkout code
         if: matrix.os.name != 'macos'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          # Safe: this workflow only runs after human approval via the build-gate environment.
+          allow-unsafe-pr-checkout: true
 
       - name: Setup Go with cache
         if: matrix.os.name != 'macos'
@@ -140,9 +148,11 @@ jobs:
 
       - name: Checkout code
         if: matrix.os.name != 'macos'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          # Safe: this workflow only runs after human approval via the build-gate environment.
+          allow-unsafe-pr-checkout: true
 
       - name: Setup Go with cache
         if: matrix.os.name != 'macos'
@@ -163,9 +173,11 @@ jobs:
     runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          # Safe: this workflow only runs after human approval via the build-gate environment.
+          allow-unsafe-pr-checkout: true
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
