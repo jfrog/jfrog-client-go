@@ -21,6 +21,9 @@ type XscService interface {
 	GetConfigProfileByName(profileName string) (*services.ConfigProfile, error)
 	// GetConfigProfileByUrl returns the configuration profile related to the provided repository url.
 	GetConfigProfileByUrl(profileUrl string) (*services.ConfigProfile, error)
+	// GetConfigProfileByUrlAndWorkspace returns the configuration profile related to the provided repository url,
+	// optionally scoped to a specific workspace. An empty workspaceName is equivalent to GetConfigProfileByUrl.
+	GetConfigProfileByUrlAndWorkspace(profileUrl, workspaceName string) (*services.ConfigProfile, error)
 	// SendGitIntegrationEvent sends a git integration event to xray
 	SendGitIntegrationEvent(event services.GitIntegrationEvent, xrayVersion string) error
 }

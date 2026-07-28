@@ -88,6 +88,11 @@ func (sm *XscServicesManager) GetConfigProfileByUrl(_ string) (*services.ConfigP
 	return nil, nil
 }
 
+func (sm *XscServicesManager) GetConfigProfileByUrlAndWorkspace(_, _ string) (*services.ConfigProfile, error) {
+	// Empty implementation required for alignment with interface, implemented only at the new service inside the Xray service
+	return nil, nil
+}
+
 // SendGitIntegrationEvent sends a git integration event to xray
 func (sm *XscServicesManager) SendGitIntegrationEvent(event services.GitIntegrationEvent, xrayVersion string) error {
 	// Empty implementation required for alignment with interface, implemented only at the new service inside the Xray service
