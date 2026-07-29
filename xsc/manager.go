@@ -98,3 +98,9 @@ func (sm *XscServicesManager) SendGitIntegrationEvent(event services.GitIntegrat
 	// Empty implementation required for alignment with interface, implemented only at the new service inside the Xray service
 	return nil
 }
+
+// GetScanResultsUIRoute returns the UI route for the Git context provided scan results.
+func (sm *XscServicesManager) GetScanResultsUIRoute(gitInfo *services.XscGitInfoContext) (*services.ScanResultsUIRouteResponse, error) {
+	// Empty implementation required for alignment with interface, implemented only at the new service inside the Xray service
+	return nil, nil
+}
