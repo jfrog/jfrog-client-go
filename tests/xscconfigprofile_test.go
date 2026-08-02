@@ -125,6 +125,7 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 					},
 					ServicesScannerConfig: services.ServicesScannerConfig{
 						EnableServicesScan: false,
+						ExcludePatterns:    []string{"**/docs/**"},
 					},
 				},
 			},
