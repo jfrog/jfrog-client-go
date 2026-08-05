@@ -250,8 +250,11 @@ type GitIntegrationEvent struct {
 
 type XscAnalyticsGeneralEventFinalize struct {
 	XscAnalyticsBasicGeneralEvent
-	MultiScanId string `json:"multi_scan_id,omitempty"`
-	GitRepoUrl  string `json:"git_repository,omitempty"`
+	MultiScanId           string   `json:"multi_scan_id,omitempty"`
+	GitRepoUrl            string   `json:"git_repository,omitempty"`
+	ScanTypesExecuted     []string `json:"scan_types_executed,omitempty"`
+	ProjectKey            string   `json:"project_key,omitempty"`
+	ArtifactoryRepository string   `json:"artifactory_repository,omitempty"`
 }
 
 type XscAnalyticsBasicGeneralEvent struct {
