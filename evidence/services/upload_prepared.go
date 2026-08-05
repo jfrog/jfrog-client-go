@@ -31,7 +31,7 @@ func (es *EvidenceService) resolvePreparedEvidencePostURL(postURL string) (strin
 		return "", errorutils.CheckError(err)
 	}
 	if base.Scheme == "" || base.Host == "" {
-		return "", fmt.Errorf("Evidence URL must include a scheme and host")
+		return "", fmt.Errorf("evidence URL must include a scheme and host")
 	}
 
 	post.Scheme = base.Scheme
