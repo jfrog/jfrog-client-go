@@ -16,16 +16,11 @@ import (
 const (
 	ConfigProfileMinXscVersion                = "1.11.0"
 	ConfigProfileByUrlMinXrayVersion          = "3.110.0"
-	ConfigProfileNewSchemaMinXrayVersion      = "3.117.0"
 	xscConfigProfileByNameApi                 = "profile"
 	xscConfigProfileByUrlApi                  = "profile_repos"
 	xscDeprecatedConfigProfileByNameApiSuffix = "api/v1/" + xscConfigProfileByNameApi
+	getProfileByUrlBody                       = "{\"repo_url\":\"%s\"}"
 )
-
-type GetRepoConfigurationProfileRequest struct {
-	RepoUrl       string `json:"repo_url"`
-	WorkspaceName string `json:"workspace_name,omitempty"`
-}
 
 type ConfigurationProfileService struct {
 	client          *jfroghttpclient.JfrogHttpClient
@@ -42,13 +37,13 @@ type ConfigProfile struct {
 	ProfileName   string        `json:"profile_name"`
 	GeneralConfig GeneralConfig `json:"general_config,omitempty"`
 	FrogbotConfig FrogbotConfig `json:"frogbot_config,omitempty"`
-	ProjectKey    string        `json:"project_key,omitempty"`
 	Modules       []Module      `json:"modules"`
 }
 
 type GeneralConfig struct {
-	ScannersDownloadPath    string `json:"scanners_download_path,omitempty"`
-	FailUponAnyScannerError bool   `json:"fail_upon_any_scanner_error,omitempty"`
+	ScannersDownloadPath    string   `json:"scanners_download_path,omitempty"`
+	GeneralExcludePatterns  []string `json:"general_exclude_patterns,omitempty"`
+	FailUponAnyScannerError bool     `json:"fail_upon_any_scanner_error,omitempty"`
 }
 
 type FrogbotConfig struct {
@@ -60,15 +55,15 @@ type FrogbotConfig struct {
 	ShowSecretsAsPrComment              bool   `json:"show_secrets_as_pr_comment,omitempty"`
 	CreateAutoFixPr                     bool   `json:"create_auto_fix_pr,omitempty"`
 	IncludeVulnerabilitiesAndViolations bool   `json:"include_vulnerabilities_and_violations,omitempty"`
+	MinSeverityToDisplay                string `json:"min_severity_to_display,omitempty"`
+	DisplayFixableOnly                  bool   `json:"display_fixable_only,omitempty"`
 }
 
 type Module struct {
-	ModuleId        int32      `json:"module_id,omitempty"`
-	ModuleName      string     `json:"module_name"`
-	PathFromRoot    string     `json:"path_from_root"`
-	ExcludePatterns []string   `json:"exclude_patterns,omitempty"`
-	IncludePatterns []string   `json:"include_patterns,omitempty"`
-	ScanConfig      ScanConfig `json:"scan_config"`
+	ModuleId     int32      `json:"module_id,omitempty"`
+	ModuleName   string     `json:"module_name"`
+	PathFromRoot string     `json:"path_from_root"`
+	ScanConfig   ScanConfig `json:"scan_config"`
 }
 
 type ScanConfig struct {
@@ -80,9 +75,8 @@ type ScanConfig struct {
 }
 
 type ScaScannerConfig struct {
-	EnableScaScan          bool     `json:"enable_sca_scan,omitempty"`
-	EnableSnippetDetection bool     `json:"enable_snippet_detection,omitempty"`
-	ExcludePatterns        []string `json:"exclude_patterns,omitempty"`
+	EnableScaScan   bool     `json:"enable_sca_scan,omitempty"`
+	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
 }
 
 type CaScannerConfig struct {
@@ -91,10 +85,9 @@ type CaScannerConfig struct {
 }
 
 type SastScannerConfig struct {
-	EnableSastScan     bool     `json:"enable_sast_scan,omitempty"`
-	EnableFastDiffMode bool     `json:"enable_differential_scanning,omitempty"`
-	ExcludePatterns    []string `json:"exclude_patterns,omitempty"`
-	ExcludeRules       []string `json:"exclude_rules,omitempty"`
+	EnableSastScan  bool     `json:"enable_sast_scan,omitempty"`
+	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
+	ExcludeRules    []string `json:"exclude_rules,omitempty"`
 }
 
 type SecretsScannerConfig struct {
@@ -137,28 +130,20 @@ func (cp *ConfigurationProfileService) GetConfigurationProfileByName(profileName
 	return &profile, err
 }
 
-func (cp *ConfigurationProfileService) sendConfigProfileByUrlRequest(req GetRepoConfigurationProfileRequest) (url string, resp *http.Response, body []byte, err error) {
+func (cp *ConfigurationProfileService) sendConfigProfileByUrlRequest(repoUrl string) (url string, resp *http.Response, body []byte, err error) {
 	if cp.XrayDetails == nil {
 		err = errors.New("received empty Xray details")
 		return
 	}
 	httpDetails := cp.XrayDetails.CreateHttpClientDetails()
 	url = fmt.Sprintf("%s%s%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscutils.XscInXraySuffix, xscConfigProfileByUrlApi)
-	requestContent, err := json.Marshal(req)
-	if err = errorutils.CheckError(err); err != nil {
-		return
-	}
+	requestContent := []byte(fmt.Sprintf(getProfileByUrlBody, repoUrl))
 	resp, body, err = cp.client.SendPost(utils.AppendScopedProjectKeyParam(url, cp.ScopeProjectKey), requestContent, &httpDetails)
 	return
 }
 
-func (cp *ConfigurationProfileService) GetConfigurationProfileByUrl(repoUrl string) (*ConfigProfile, error) {
-	return cp.GetConfigurationProfileByUrlAndWorkspace(repoUrl, "")
-}
-
-func (cp *ConfigurationProfileService) GetConfigurationProfileByUrlAndWorkspace(repoUrl, workspaceName string) (*ConfigProfile, error) {
-	req := GetRepoConfigurationProfileRequest{RepoUrl: repoUrl, WorkspaceName: workspaceName}
-	url, res, body, err := cp.sendConfigProfileByUrlRequest(req)
+func (cp *ConfigurationProfileService) GetConfigurationProfileByUrl(url string) (*ConfigProfile, error) {
+	url, res, body, err := cp.sendConfigProfileByUrlRequest(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send POST query to '%s': %q", url, err)
 	}

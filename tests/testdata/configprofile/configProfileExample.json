@@ -1,8 +1,8 @@
 {
   "profile_name": "default-profile",
-  "project_key": "default-project",
   "general_config": {
     "scanners_download_path": "https://repo.example.com/releases",
+    "general_exclude_patterns": ["*.log*", "*.tmp*"],
     "fail_upon_any_scanner_error": true
   },
   "frogbot_config": {
@@ -13,18 +13,17 @@
     "commit_message_template": "Upgrade {IMPACTED_PACKAGE} to {FIX_VERSION}",
     "show_secrets_as_pr_comment": false,
     "create_auto_fix_pr": true,
-    "include_vulnerabilities_and_violations": false
+    "include_vulnerabilities_and_violations": false,
+    "min_severity_to_display": "Medium",
+    "display_fixable_only": true
   },
   "modules": [
     {
       "module_name": "default-module",
       "path_from_root": ".",
-      "exclude_patterns": ["*.log*", "*.tmp*"],
-      "include_patterns": ["*.go"],
       "scan_config": {
         "sca_scanner_config": {
           "enable_sca_scan": true,
-          "enable_snippet_detection": false,
           "exclude_patterns": ["**/build/**"]
         },
         "contextual_analysis_scanner_config": {
