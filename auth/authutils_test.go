@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -68,4 +70,58 @@ func TestExtractSubjectFromAccessToken(t *testing.T) {
 		}
 		assert.Equal(t, testCase.expectedSubject, subject)
 	}
+}
+
+func TestCalculateProportionalRefreshThreshold(t *testing.T) {
+	testCases := []struct {
+		name                  string
+		tokenLifetimeMinutes  int64
+		expectedThresholdMins int64
+	}{
+		{"1 year lifetime is capped", 365 * 24 * 60, RefreshPlatformTokenBeforeExpiryMinutes},
+		{"30 day lifetime uses 10%", 30 * 24 * 60, 4320},
+		{"7 day lifetime uses 10%", 7 * 24 * 60, 1008},
+		{"1 hour lifetime is floored", 60, MinRefreshBeforeExpiryMinutes},
+		{"zero lifetime is floored", 0, MinRefreshBeforeExpiryMinutes},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			assert.Equal(t, testCase.expectedThresholdMins, CalculateProportionalRefreshThreshold(testCase.tokenLifetimeMinutes))
+		})
+	}
+}
+
+func TestGetPlatformTokenRefreshThreshold(t *testing.T) {
+	testCases := []struct {
+		name                  string
+		lifetimeSeconds       int64
+		expectedThresholdMins int64
+	}{
+		{"1 year token is capped", 365 * 24 * 60 * 60, RefreshPlatformTokenBeforeExpiryMinutes},
+		{"7 day token uses 10%", 7 * 24 * 60 * 60, 1008},
+		{"1 hour token is floored", 60 * 60, MinRefreshBeforeExpiryMinutes},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			token := buildTestAccessToken(1000, 1000+testCase.lifetimeSeconds)
+			threshold, err := GetPlatformTokenRefreshThreshold(token)
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.expectedThresholdMins, threshold)
+		})
+	}
+
+	t.Run("invalid token returns error", func(t *testing.T) {
+		_, err := GetPlatformTokenRefreshThreshold(token3)
+		assert.Error(t, err)
+	})
+}
+
+// buildTestAccessToken builds an unsigned JWT-shaped token with the given iat/exp claims,
+// matching the header.payload.signature decoding done by extractPayloadFromAccessToken.
+func buildTestAccessToken(iat, exp int64) string {
+	payload, _ := json.Marshal(map[string]int64{"iat": iat, "exp": exp})
+	encodedPayload := base64.RawStdEncoding.EncodeToString(payload)
+	return "header." + encodedPayload + ".signature"
 }
