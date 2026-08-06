@@ -10,7 +10,7 @@ require (
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gookit/color v1.6.1
-	github.com/jfrog/archiver/v3 v3.6.3
+	github.com/jfrog/archiver/v3 v3.6.4-0.20260806042605-c34639c8b90e
 	github.com/jfrog/build-info-go v1.13.0
 	github.com/jfrog/gofrog v1.7.6
 	github.com/minio/sha256-simd v1.0.1
