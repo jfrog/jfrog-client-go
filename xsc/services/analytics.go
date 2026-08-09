@@ -254,7 +254,7 @@ type XscAnalyticsGeneralEventFinalize struct {
 	GitRepoUrl           string   `json:"git_repository,omitempty"`
 	ScanTypesExecuted    []string `json:"scan_types_executed,omitempty"`
 	ProjectKey           string   `json:"project_key,omitempty"`
-	UploadedArtifactPath string   `json:"uploaded_artifact_pathi,omitempty"`
+	UploadedArtifactPath string   `json:"uploaded_artifact_path,omitempty"`
 }
 
 type XscAnalyticsBasicGeneralEvent struct {
