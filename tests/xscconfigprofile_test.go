@@ -123,6 +123,10 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 						EnableIacScan:   true,
 						ExcludePatterns: []string{"*.tfstate"},
 					},
+					ServicesScannerConfig: services.ServicesScannerConfig{
+						EnableServicesScan: false,
+						ExcludePatterns:    []string{"**/docs/**"},
+					},
 				},
 			},
 		},
