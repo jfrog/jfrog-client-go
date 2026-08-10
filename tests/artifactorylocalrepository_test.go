@@ -649,6 +649,7 @@ func localTerraformTest(t *testing.T) {
 	tlp := services.NewTerraformLocalRepositoryParams()
 	tlp.Key = repoKey
 	setLocalRepositoryBaseParams(&tlp.LocalRepositoryBaseParams, false)
+	setTerraformRepositoryParams(&tlp.TerraformRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Terraform(tlp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -658,6 +659,7 @@ func localTerraformTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, tlp)
 
 	setLocalRepositoryBaseParams(&tlp.LocalRepositoryBaseParams, true)
+	setTerraformRepositoryParams(&tlp.TerraformRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Terraform(tlp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {

@@ -81,6 +81,7 @@ type AdditionalRepositoryBaseParams struct {
 
 type CargoRepositoryParams struct {
 	CargoAnonymousAccess *bool `json:"cargoAnonymousAccess,omitempty"`
+	CargoInternalIndex   *bool `json:"cargoInternalIndex,omitempty"`
 }
 
 type DebianRepositoryParams struct {
@@ -102,6 +103,10 @@ type JavaPackageManagersRepositoryParams struct {
 	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
 	SnapshotVersionBehavior      string `json:"snapshotVersionBehavior,omitempty"`
 	ChecksumPolicyType           string `json:"checksumPolicyType,omitempty"`
+}
+
+type TerraformRepositoryParams struct {
+	TerraformType string `json:"terraformType"`
 }
 
 type KeyPairRefsRepositoryParams struct {
