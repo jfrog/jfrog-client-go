@@ -19,7 +19,7 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: actions/stale@v10
+      - uses: actions/stale@v11
         with:
           # Days of inactivity before marking an issue as stale
           days-before-stale: 180
