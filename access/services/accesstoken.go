@@ -3,12 +3,15 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"net/http"
 )
 
 // #nosec G101 -- False positive - no hardcoded credentials.
@@ -48,6 +51,31 @@ type CreateOidcTokenParams struct {
 	Revision              string `json:"revision,omitempty"`
 	Branch                string `json:"branch,omitempty"`
 	ApplicationKey        string `json:"application_key,omitempty"`
+}
+
+type GetTokensParams struct {
+	Description     string `url:"description,omitempty"`
+	Username        string `url:"username,omitempty"`
+	Refreshable     *bool  `url:"refreshable,omitempty"`
+	TokenId         string `url:"token_id,omitempty"`
+	OrderBy         string `url:"order_by,omitempty"`
+	DescendingOrder *bool  `url:"descending_order,omitempty"`
+}
+
+type TokenInfos struct {
+	Tokens []TokenInfo `json:"tokens"`
+}
+
+type TokenInfo struct {
+	TokenId     string `json:"token_id"`
+	Subject     string `json:"subject"`
+	Expiry      int64  `json:"expiry,omitempty"`
+	IssuedAt    int64  `json:"issued_at"`
+	Issuer      string `json:"issuer"`
+	Description string `json:"description,omitempty"`
+	Refreshable bool   `json:"refreshable,omitempty"`
+	Scope       string `json:"scope,omitempty"`
+	LastUsed    int64  `json:"last_used,omitempty"`
 }
 
 func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
@@ -125,6 +153,84 @@ func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.Oi
 	}
 	err = json.Unmarshal(body, &tokenInfo)
 	return tokenInfo, errorutils.CheckError(err)
+}
+
+func (ps *TokenService) GetTokens(params GetTokensParams) ([]TokenInfo, error) {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	requestUrl := fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), tokensApi)
+
+	// Build query parameters manually
+	queryParams := url.Values{}
+	if params.Description != "" {
+		queryParams.Add("description", params.Description)
+	}
+	if params.Username != "" {
+		queryParams.Add("username", params.Username)
+	}
+	if params.Refreshable != nil {
+		queryParams.Add("refreshable", strconv.FormatBool(*params.Refreshable))
+	}
+	if params.TokenId != "" {
+		queryParams.Add("token_id", params.TokenId)
+	}
+	if params.OrderBy != "" {
+		queryParams.Add("order_by", params.OrderBy)
+	}
+	if params.DescendingOrder != nil {
+		queryParams.Add("descending_order", strconv.FormatBool(*params.DescendingOrder))
+	}
+
+	if queryString := queryParams.Encode(); queryString != "" {
+		requestUrl += "?" + queryString
+	}
+
+	resp, body, _, err := ps.client.SendGet(requestUrl, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+
+	var tokenInfos TokenInfos
+	err = json.Unmarshal(body, &tokenInfos)
+	return tokenInfos.Tokens, errorutils.CheckError(err)
+}
+
+func (ps *TokenService) GetTokenByID(tokenId string) (*TokenInfo, error) {
+	if tokenId == "" {
+		return nil, errorutils.CheckErrorf("token ID cannot be empty")
+	}
+
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s%s/%s", ps.ServiceDetails.GetUrl(), tokensApi, tokenId)
+
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+
+	var tokenInfo TokenInfo
+	err = json.Unmarshal(body, &tokenInfo)
+	return &tokenInfo, errorutils.CheckError(err)
+}
+
+func (ps *TokenService) RevokeTokenByID(tokenId string) error {
+	if tokenId == "" {
+		return errorutils.CheckErrorf("token ID cannot be empty")
+	}
+
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s%s/%s", ps.ServiceDetails.GetUrl(), tokensApi, tokenId)
+
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNoContent)
 }
 
 func prepareForRefresh(p CreateTokenParams) (*CreateTokenParams, error) {

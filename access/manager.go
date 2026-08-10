@@ -143,3 +143,21 @@ func (sm *AccessServicesManager) ExchangeOidcToken(params services.CreateOidcTok
 	tokenService.ServiceDetails = sm.config.GetServiceDetails()
 	return tokenService.ExchangeOidcToken(params)
 }
+
+func (sm *AccessServicesManager) GetTokens(params services.GetTokensParams) ([]services.TokenInfo, error) {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.GetTokens(params)
+}
+
+func (sm *AccessServicesManager) GetTokenByID(tokenId string) (*services.TokenInfo, error) {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.GetTokenByID(tokenId)
+}
+
+func (sm *AccessServicesManager) RevokeTokenByID(tokenId string) error {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.RevokeTokenByID(tokenId)
+}
