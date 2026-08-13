@@ -93,6 +93,23 @@ func (rbs *ReleaseBundlesService) ExportReleaseBundle(rbDetails ReleaseBundleDet
 	return
 }
 
+func (rbs *ReleaseBundlesService) ExportReleaseBundleOnly(rbDetails ReleaseBundleDetails, modifications Modifications, queryParams CommonOptionalQueryParams) (exportResponse ReleaseBundleExportedStatusResponse, err error) {
+	// Check the current status
+	if exportResponse, err = rbs.getExportedReleaseBundleStatus(rbDetails, queryParams); err != nil {
+		return
+	}
+	if exportResponse.Status == ExportCompleted {
+		return
+	}
+	// Trigger export only, don't wait for completion
+	if err = rbs.triggerReleaseBundleExportProcess(rbDetails, modifications, queryParams); err != nil {
+		return
+	}
+	// Return current status after triggering export
+	exportResponse, err = rbs.getExportedReleaseBundleStatus(rbDetails, queryParams)
+	return
+}
+
 func (rbs *ReleaseBundlesService) waitForExport(rbDetails ReleaseBundleDetails, queryParams CommonOptionalQueryParams) (response ReleaseBundleExportedStatusResponse, err error) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		response, err = rbs.getExportedReleaseBundleStatus(rbDetails, queryParams)
