@@ -53,7 +53,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	}
 	log.Info(dryRunStr + "Remote Deleting: " + rbDetails.ReleaseBundleName + "/" + rbDetails.ReleaseBundleVersion)
 
-	rbBody := distribution.CreateDistributeV1Body(params.DistributionRules, params.DryRun, false)
+	rbBody := distribution.CreateDistributeV1BodyWithPriority(params.DistributionRules, params.DryRun, false, params.Priority)
 	content, err := json.Marshal(rbBody)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -138,5 +138,7 @@ type ReleaseBundleRemoteDeleteParams struct {
 	DryRun            bool
 	// Max time in minutes to wait for sync distribution to finish.
 	MaxWaitMinutes int
+	// Priority is the optional base priority for RBv2 remote delete (low|medium|high).
+	Priority string
 	CommonOptionalQueryParams
 }
