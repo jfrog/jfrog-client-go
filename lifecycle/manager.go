@@ -182,6 +182,7 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	distributeBundleService.Sync = distributeParams.Sync
 	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
 	distributeBundleService.ProjectKey = distributeParams.ProjectKey
+	distributeBundleService.Priority = distributeParams.Priority
 
 	mappings := &distributeBundleService.PathMappings
 	*mappings = []utils.PathMapping{}
