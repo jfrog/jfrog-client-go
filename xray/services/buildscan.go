@@ -31,8 +31,15 @@ const (
 )
 
 var (
-	// Artifactory is still indexing the build (asynchronous indexing, can take time until it is available for Xray).
-	buildNotFoundRegex = regexp.MustCompile(`Build (.+) number (.+) wasn't found in Artifactory`)
+	// Phrases Xray returns (in the "info" or "error" field of a 404) while the build has not finished
+	// asynchronous indexing yet — a transient, retryable condition. Matched case-insensitively because the
+	// exact wording has varied across Xray versions, so we match a set of stable substrings rather than one
+	// exact format:
+	//   - "not indexed" covers the issue-596 string ("build doesn't exist or not indexed in Xray").
+	//   - "build doesn't exist" is defensive coverage for phrasings that omit "not indexed".
+	//   - "wasn't found in artifactory" covers the legacy "Build <name> number <num> wasn't found in
+	//     Artifactory" message — the case-insensitive substring subsumes that older structured wording.
+	buildNotIndexedRegex = regexp.MustCompile(`(?i)not indexed|build doesn't exist|wasn't found in artifactory`)
 )
 
 type BuildScanService struct {
@@ -73,10 +80,22 @@ func isArtifactoryBuildNotFoundError(resp *http.Response, body []byte) error {
 		log.Debug("Failed to parse Xray build scan response:", err)
 		return nil
 	}
-	if buildNotFoundRegex.MatchString(buildScanResponse.Info) {
+	// Xray returns the transient "still indexing" message in either the "info" or the "error" field,
+	// and the exact wording has changed across Xray versions. Treat any known phrasing as a retryable
+	// not-found so the trigger waits for asynchronous indexing to complete instead of failing.
+	if isBuildNotIndexedMessage(buildScanResponse.Info) {
 		return errors.New(buildScanResponse.Info)
 	}
+	if isBuildNotIndexedMessage(buildScanResponse.Error) {
+		return errors.New(buildScanResponse.Error)
+	}
 	return nil
+}
+
+// isBuildNotIndexedMessage reports whether an Xray 404 message indicates the build is not yet indexed
+// (a transient, retryable condition) rather than a permanent error such as a genuinely wrong build name.
+func isBuildNotIndexedMessage(message string) bool {
+	return buildNotIndexedRegex.MatchString(message)
 }
 
 func (bs *BuildScanService) triggerScan(params XrayBuildParams, retries int) error {
@@ -226,7 +245,8 @@ type XrayBuildParams struct {
 }
 
 type RequestBuildScanResponse struct {
-	Info string `json:"info,omitempty"`
+	Info  string `json:"info,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type BuildScanResponse struct {
