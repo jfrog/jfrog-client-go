@@ -94,3 +94,10 @@ func (xs *XscInnerService) GetResourceWatches(gitRepo, project string) (watches 
 	watchService.ScopeProjectKey = xs.ScopeProjectKey
 	return watchService.GetResourceWatches(gitRepo, project)
 }
+
+func (xs *XscInnerService) UploadScanCdx(params services.UploadScanCdxParams) (*services.UploadScanCdxResponse, error) {
+	uploadScanCdxService := services.NewUploadScanCdxService(xs.client)
+	uploadScanCdxService.XrayDetails = xs.XrayDetails
+	uploadScanCdxService.ScopeProjectKey = xs.ScopeProjectKey
+	return uploadScanCdxService.Upload(params)
+}
