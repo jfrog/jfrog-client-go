@@ -174,7 +174,39 @@ type TokenPayload struct {
 // Artifactory's refresh token mechanism creates tokens that expire in 60 minutes. We want to refresh them when 10 minutes are left.
 var RefreshArtifactoryTokenBeforeExpiryMinutes = int64(10)
 
-// Platform's access token are created with 1 year expiry. We want to refresh the token a week before expiry.
+// Platform's access tokens are historically created with 1 year expiry, refreshed a week before expiry.
+// Kept as the upper cap for CalculateProportionalRefreshThreshold, so tokens with long lifetimes keep this behavior.
 var RefreshPlatformTokenBeforeExpiryMinutes = int64(7 * 24 * 60)
 
+// Never refresh a platform token more than this many minutes before it expires, regardless of its lifetime.
+const MinRefreshBeforeExpiryMinutes = int64(30)
+
+// Refresh a platform token once this fraction of its total lifetime remains.
+const refreshThresholdFraction = 0.10
+
 const WaitBeforeRefreshSeconds = 15
+
+// CalculateProportionalRefreshThreshold returns the number of minutes before expiry that a platform
+// access token should be refreshed, proportional to its total lifetime. This avoids refreshing on
+// every command for tokens issued with a shorter-than-1-year lifetime (e.g. 7 days), since the fixed
+// RefreshPlatformTokenBeforeExpiryMinutes threshold would otherwise exceed the token's entire lifetime.
+func CalculateProportionalRefreshThreshold(tokenLifetimeMinutes int64) int64 {
+	threshold := int64(float64(tokenLifetimeMinutes) * refreshThresholdFraction)
+	if threshold < MinRefreshBeforeExpiryMinutes {
+		return MinRefreshBeforeExpiryMinutes
+	}
+	if threshold > RefreshPlatformTokenBeforeExpiryMinutes {
+		return RefreshPlatformTokenBeforeExpiryMinutes
+	}
+	return threshold
+}
+
+// GetPlatformTokenRefreshThreshold extracts a platform access token's total lifetime (exp - iat) and
+// returns its proportional refresh threshold, in minutes. See CalculateProportionalRefreshThreshold.
+func GetPlatformTokenRefreshThreshold(token string) (int64, error) {
+	expirySeconds, err := ExtractExpiryFromAccessToken(token)
+	if err != nil {
+		return 0, err
+	}
+	return CalculateProportionalRefreshThreshold(int64(expirySeconds) / 60), nil
+}

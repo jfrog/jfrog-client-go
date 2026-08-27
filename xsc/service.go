@@ -15,10 +15,15 @@ type XscService interface {
 	UpdateAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEventFinalize) error
 	// GetAnalyticsGeneralEvent returns general event that match the msi provided.
 	GetAnalyticsGeneralEvent(msi string) (*services.XscAnalyticsGeneralEvent, error)
+	// GetScanResultsUIRoute returns the UI route for the Git context provided scan results.
+	GetScanResultsUIRoute(gitInfo *services.XscGitInfoContext) (*services.ScanResultsUIRouteResponse, error)
 	// GetConfigProfileByName returns the configuration profile that match the profile name provided.
 	GetConfigProfileByName(profileName string) (*services.ConfigProfile, error)
 	// GetConfigProfileByUrl returns the configuration profile related to the provided repository url.
 	GetConfigProfileByUrl(profileUrl string) (*services.ConfigProfile, error)
+	// GetConfigProfileByUrlAndWorkspace returns the configuration profile related to the provided repository url,
+	// optionally scoped to a specific workspace. An empty workspaceName is equivalent to GetConfigProfileByUrl.
+	GetConfigProfileByUrlAndWorkspace(profileUrl, workspaceName string) (*services.ConfigProfile, error)
 	// SendGitIntegrationEvent sends a git integration event to xray
 	SendGitIntegrationEvent(event services.GitIntegrationEvent, xrayVersion string) error
 }
