@@ -122,7 +122,6 @@ func (builder *httpClientBuilder) createDefaultHttpTransport() *http.Transport {
 		DialContext: (&net.Dialer{
 			Timeout:   builder.dialTimeout,
 			KeepAlive: 20 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,
