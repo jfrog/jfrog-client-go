@@ -21,10 +21,10 @@ type UploadScanCdxService struct {
 }
 
 type UploadScanCdxParams struct {
-	RepoName string          `json:"repo_name"`
-	RepoPath string          `json:"repo_path"`
-	FileName string          `json:"file_name"`
-	Bom      json.RawMessage `json:"bom"`
+	RepoName string `json:"repo_name"`
+	RepoPath string `json:"repo_path"`
+	FileName string `json:"file_name"`
+	Bom      string `json:"bom"`
 }
 
 type UploadScanCdxResponse struct {

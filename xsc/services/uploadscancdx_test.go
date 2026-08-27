@@ -50,7 +50,7 @@ func TestUploadScanCdx_SendsExpectedRequestAndParsesResponse(t *testing.T) {
 		RepoName: "frogbot",
 		RepoPath: "github.com/org/repo/main/commits",
 		FileName: "source_code_1.cdx.json",
-		Bom:      json.RawMessage(`{"bomFormat":"CycloneDX"}`),
+		Bom:      `{"bomFormat":"CycloneDX"}`,
 	})
 
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestUploadScanCdx_ServerError_ReturnsError(t *testing.T) {
 	defer server.Close()
 
 	service := newTestUploadScanCdxService(t, server.URL)
-	_, err := service.Upload(UploadScanCdxParams{RepoName: "frogbot", RepoPath: "p", FileName: "f.cdx.json", Bom: json.RawMessage(`{}`)})
+	_, err := service.Upload(UploadScanCdxParams{RepoName: "frogbot", RepoPath: "p", FileName: "f.cdx.json", Bom: `{}`})
 
 	assert.Error(t, err)
 }
@@ -83,7 +83,7 @@ func TestUploadScanCdx_NoScopeProjectKey_OmitsQueryParam(t *testing.T) {
 	defer server.Close()
 
 	service := newTestUploadScanCdxService(t, server.URL)
-	_, err := service.Upload(UploadScanCdxParams{RepoName: "frogbot", RepoPath: "p", FileName: "f.cdx.json", Bom: json.RawMessage(`{}`)})
+	_, err := service.Upload(UploadScanCdxParams{RepoName: "frogbot", RepoPath: "p", FileName: "f.cdx.json", Bom: `{}`})
 
 	require.NoError(t, err)
 	assert.Empty(t, gotQuery)
