@@ -306,9 +306,9 @@ func cveRemediationHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid CVE remediation request", http.StatusBadRequest)
 }
 
-func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
+func zeroTouchRemediationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid heal components request", http.StatusBadRequest)
+		http.Error(w, "Invalid zero touch remediation request", http.StatusBadRequest)
 		return
 	}
 	body, err := io.ReadAll(r.Body)
@@ -325,11 +325,11 @@ func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var response string
 	switch buildTool {
-	case "self-heal-disabled":
-		http.Error(w, "self-heal is disabled", http.StatusServiceUnavailable)
+	case "ztr-disabled":
+		http.Error(w, "zero-touch remediation is disabled", http.StatusServiceUnavailable)
 		return
 	case "maven":
-		response = HealComponentsMavenResponse
+		response = ZeroTouchRemediationMavenResponse
 	case "npm":
 		lockfile, err := jsonparser.GetString(body, "lockfile")
 		if err != nil {
@@ -343,7 +343,7 @@ func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		response = string(responseBytes)
 	default:
-		response = HealComponentsDefaultResponse
+		response = ZeroTouchRemediationDefaultResponse
 	}
 
 	_, err = fmt.Fprint(w, response)
@@ -381,7 +381,7 @@ func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers[fmt.Sprintf("/xray/api/v1/indexer-resources/download/%s/%s", runtime.GOOS, runtime.GOARCH)] = indexerDownloadHandler(t)
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers["/xray/api/v1/cveRemediationCDX"] = cveRemediationHandler
-	handlers["/xray/api/v1/lockfile/heal"] = healComponentsHandler
+	handlers["/xray/api/v1/ztr/lockfile/remediate"] = zeroTouchRemediationHandler
 	// Xsc handlers
 	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
 	handlers["/xray/api/v1/xsc/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)

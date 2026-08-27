@@ -15,7 +15,7 @@ import (
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
 )
 
-func initXrayHealComponentsTest(t *testing.T) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
+func initXrayZeroTouchRemediationTest(t *testing.T) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
 	var err error
 	initXrayTest(t)
 	xrayServerPort = xray.StartXrayMockServer(t)
@@ -29,13 +29,13 @@ func initXrayHealComponentsTest(t *testing.T) (xrayServerPort int, xrayDetails a
 	return
 }
 
-func TestHealComponentsService_Heal_NpmBuildTool_NoChanges(t *testing.T) {
-	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
+func TestZeroTouchRemediationService_Remediate_NpmBuildTool_NoChanges(t *testing.T) {
+	xrayServerPort, xrayDetails, client := initXrayZeroTouchRemediationTest(t)
 	input := `{"lockfileVersion":3}`
-	svc := xrayServices.NewComponentsHealService(client)
+	svc := xrayServices.NewZeroTouchRemediationService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
-	resp, disabled, err := svc.Heal(xrayServices.ComponentResolutionRequest{
+	resp, disabled, err := svc.Remediate(xrayServices.ComponentResolutionRequest{
 		BuildTool: "npm",
 		Repo:      "npm-virtual",
 		Lockfile:  input,
@@ -46,14 +46,14 @@ func TestHealComponentsService_Heal_NpmBuildTool_NoChanges(t *testing.T) {
 	assert.Empty(t, resp.Changes)
 }
 
-func TestHealComponentsService_Heal_SelfHealDisabled_NoChanges(t *testing.T) {
-	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
+func TestZeroTouchRemediationService_Remediate_Disabled_NoChanges(t *testing.T) {
+	xrayServerPort, xrayDetails, client := initXrayZeroTouchRemediationTest(t)
 	input := `{"lockfileVersion":3}`
-	svc := xrayServices.NewComponentsHealService(client)
+	svc := xrayServices.NewZeroTouchRemediationService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
-	resp, disabled, err := svc.Heal(xrayServices.ComponentResolutionRequest{
-		BuildTool: "self-heal-disabled",
+	resp, disabled, err := svc.Remediate(xrayServices.ComponentResolutionRequest{
+		BuildTool: "ztr-disabled",
 		Repo:      "npm-virtual",
 		Lockfile:  input,
 	})
@@ -63,13 +63,13 @@ func TestHealComponentsService_Heal_SelfHealDisabled_NoChanges(t *testing.T) {
 	assert.Empty(t, resp.Changes)
 }
 
-func TestHealComponentsService_Heal_MavenBuildTool_Changes(t *testing.T) {
-	xrayServerPort, xrayDetails, client := initXrayHealComponentsTest(t)
+func TestZeroTouchRemediationService_Remediate_MavenBuildTool_Changes(t *testing.T) {
+	xrayServerPort, xrayDetails, client := initXrayZeroTouchRemediationTest(t)
 	inputPom := `<?xml version="1.0"?><project><artifactId>app</artifactId></project>`
-	svc := xrayServices.NewComponentsHealService(client)
+	svc := xrayServices.NewZeroTouchRemediationService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
-	resp, disabled, err := svc.Heal(xrayServices.ComponentResolutionRequest{
+	resp, disabled, err := svc.Remediate(xrayServices.ComponentResolutionRequest{
 		BuildTool: "maven",
 		Repo:      "maven-virtual",
 		Lockfile:  inputPom,

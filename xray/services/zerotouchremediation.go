@@ -11,31 +11,31 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-const componentResolutionApi = "api/v1/lockfile/heal"
+const componentResolutionApi = "api/v1/ztr/lockfile/remediate"
 
-type ComponentsHealService struct {
+type ZeroTouchRemediationService struct {
 	client          *jfroghttpclient.JfrogHttpClient
 	XrayDetails     auth.ServiceDetails
 	ScopeProjectKey string
 }
 
-func NewComponentsHealService(client *jfroghttpclient.JfrogHttpClient) *ComponentsHealService {
-	return &ComponentsHealService{client: client}
+func NewZeroTouchRemediationService(client *jfroghttpclient.JfrogHttpClient) *ZeroTouchRemediationService {
+	return &ZeroTouchRemediationService{client: client}
 }
 
-func (chs *ComponentsHealService) getUrl() string {
-	return utils.AppendScopedProjectKeyParam(utils.AddTrailingSlashIfNeeded(chs.XrayDetails.GetUrl())+componentResolutionApi, chs.ScopeProjectKey)
+func (ztr *ZeroTouchRemediationService) getUrl() string {
+	return utils.AppendScopedProjectKeyParam(utils.AddTrailingSlashIfNeeded(ztr.XrayDetails.GetUrl())+componentResolutionApi, ztr.ScopeProjectKey)
 }
 
-func (chs *ComponentsHealService) Heal(req ComponentResolutionRequest) (*ComponentResolutionResponse, bool, error) {
-	httpDetails := chs.XrayDetails.CreateHttpClientDetails()
+func (ztr *ZeroTouchRemediationService) Remediate(req ComponentResolutionRequest) (*ComponentResolutionResponse, bool, error) {
+	httpDetails := ztr.XrayDetails.CreateHttpClientDetails()
 	// SendPost retries on 5xx, disable retries for this request
 	httpDetails.AddPreRetryInterceptor(func() bool { return false })
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, false, err
 	}
-	resp, body, err := chs.client.SendPost(chs.getUrl(), body, &httpDetails)
+	resp, body, err := ztr.client.SendPost(ztr.getUrl(), body, &httpDetails)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed while attempting to resolve component: %w", err)
 	}

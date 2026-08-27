@@ -4,7 +4,7 @@ import (
 	xscServices "github.com/jfrog/jfrog-client-go/xsc/services"
 )
 
-const HealComponentsMavenResponse = `{
+const ZeroTouchRemediationMavenResponse = `{
   "lockfile": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"><modelVersion>4.0.0</modelVersion><groupId>com.example</groupId><artifactId>demo-app</artifactId><version>1.0.0</version><dependencyManagement><dependencies><dependency><groupId>org.springframework</groupId><artifactId>spring-core</artifactId><version>5.3.39-0.cgr.4</version></dependency></dependencies></dependencyManagement></project>",
   "changes": [{
     "package": "org.springframework:spring-core:5.3.39-0.cgr.4",
@@ -13,7 +13,7 @@ const HealComponentsMavenResponse = `{
   }]
 }`
 
-const HealComponentsDefaultResponse = `{
+const ZeroTouchRemediationDefaultResponse = `{
   "lockfile": "{\"name\":\"xray-simple-npm-app\",\"version\":\"1.0.0\",\"lockfileVersion\":3,\"requires\":true,\"packages\":{\"\":{\"name\":\"xray-simple-npm-app\",\"version\":\"1.0.0\",\"dependencies\":{\"lodash\":\"4.17.21\"}},\"node_modules/lodash\":{\"version\":\"4.17.21\",\"resolved\":\"https://z0xraylnp2.jfrogdev.org/artifactory/api/npm/npm-virtual-chainguard/lodash/-/lodash-4.17.21.tgz\",\"integrity\":\"sha512-Hpyrx+puvIK8/81t1qrv51FEytpvZ78WB88A/NQYFttbH0nQGXQETXvVBK7R+meEGcdC2E8US4QLY6tMAIE2Vw==\"}}}",
   "changes": [{
     "package": "lodash",
