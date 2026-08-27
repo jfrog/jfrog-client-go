@@ -29,6 +29,7 @@ type DistributeReleaseBundleService struct {
 	MaxWaitMinutes   int
 	DistributeParams distribution.DistributionParams
 	ProjectKey       string
+	Priority         string
 	Modifications
 }
 
@@ -39,6 +40,7 @@ type DistributeReleaseBundleParams struct {
 	DistributionRules []*distribution.DistributionCommonParams
 	PathMappings      []PathMapping
 	ProjectKey        string
+	Priority          string
 }
 
 func (dr *DistributeReleaseBundleService) GetHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -93,8 +95,9 @@ func (dr *DistributeReleaseBundleService) Distribute() error {
 
 func (dr *DistributeReleaseBundleService) createDistributeBody() ReleaseBundleDistributeBody {
 	return ReleaseBundleDistributeBody{
-		ReleaseBundleDistributeV1Body: distribution.CreateDistributeV1Body(dr.DistributeParams.DistributionRules, dr.DryRun, dr.AutoCreateRepo),
-		Modifications:                 dr.Modifications,
+		ReleaseBundleDistributeV1Body: distribution.CreateDistributeV1BodyWithPriority(
+			dr.DistributeParams.DistributionRules, dr.DryRun, dr.AutoCreateRepo, dr.Priority),
+		Modifications: dr.Modifications,
 	}
 }
 
