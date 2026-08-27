@@ -313,7 +313,7 @@ func healComponentsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed reading request body", http.StatusInternalServerError)
 		return
 	}
 
