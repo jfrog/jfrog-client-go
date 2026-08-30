@@ -2735,14 +2735,14 @@ if disabled {
   // Zero Touch Remediation is disabled on the server; response.Lockfile is unchanged
 }
 
-// response.Lockfile contains the remediated lockfile text (JSON string for npm, XML string for maven)
+// response.Lockfile contains the remediated lockfile text
 // response.Changes lists packages whose integrity was updated
 for _, change := range response.Changes {
   fmt.Printf("Package: %s, before: %s, after: %s\n", change.Package, change.BeforeIntegrity, change.AfterIntegrity)
 }
 ```
 
-Supported `BuildTool` values include `npm` and `maven`.
+Supported `BuildTool` value: `npm`.
 
 ## XSC APIs
 

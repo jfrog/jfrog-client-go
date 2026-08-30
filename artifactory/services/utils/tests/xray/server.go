@@ -328,20 +328,22 @@ func zeroTouchRemediationHandler(w http.ResponseWriter, r *http.Request) {
 	case "ztr-disabled":
 		http.Error(w, "zero-touch remediation is disabled", http.StatusServiceUnavailable)
 		return
-	case "maven":
-		response = ZeroTouchRemediationMavenResponse
 	case "npm":
 		lockfile, err := jsonparser.GetString(body, "lockfile")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		responseBytes, err := json.Marshal(map[string]string{"lockfile": lockfile})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if lockfile == `{"lockfileVersion":3}` {
+			responseBytes, err := json.Marshal(map[string]string{"lockfile": lockfile})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			response = string(responseBytes)
+		} else {
+			response = ZeroTouchRemediationDefaultResponse
 		}
-		response = string(responseBytes)
 	default:
 		response = ZeroTouchRemediationDefaultResponse
 	}

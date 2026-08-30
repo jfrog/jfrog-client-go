@@ -63,22 +63,21 @@ func TestZeroTouchRemediationService_Remediate_Disabled_NoChanges(t *testing.T) 
 	assert.Empty(t, resp.Changes)
 }
 
-func TestZeroTouchRemediationService_Remediate_MavenBuildTool_Changes(t *testing.T) {
+func TestZeroTouchRemediationService_Remediate_NpmBuildTool_Changes(t *testing.T) {
 	xrayServerPort, xrayDetails, client := initXrayZeroTouchRemediationTest(t)
-	inputPom := `<?xml version="1.0"?><project><artifactId>app</artifactId></project>`
+	input := `{"name":"xray-simple-npm-app","lockfileVersion":3,"packages":{}}`
 	svc := xrayServices.NewZeroTouchRemediationService(client)
 	svc.XrayDetails = xrayDetails
 	svc.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
 	resp, disabled, err := svc.Remediate(xrayServices.ComponentResolutionRequest{
-		BuildTool: "maven",
-		Repo:      "maven-virtual",
-		Lockfile:  inputPom,
+		BuildTool: "npm",
+		Repo:      "npm-virtual",
+		Lockfile:  input,
 	})
 	require.NoError(t, err)
 	assert.False(t, disabled)
-	assert.NotEqual(t, inputPom, resp.Lockfile)
+	assert.NotEqual(t, input, resp.Lockfile)
 	assert.NotEmpty(t, resp.Changes)
-	assert.Contains(t, resp.Lockfile, "<?xml")
-	assert.Contains(t, resp.Lockfile, "spring-core")
-	assert.Contains(t, resp.Lockfile, "5.3.39-0.cgr.4")
+	assert.Contains(t, resp.Lockfile, "lodash")
+	assert.Equal(t, "lodash", resp.Changes[0].Package)
 }
