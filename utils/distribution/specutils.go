@@ -4,6 +4,7 @@ type DistributionCommonParams struct {
 	SiteName     string
 	CityName     string
 	CountryCodes []string
+	Priority     string
 }
 
 type DistributionGetter interface {
@@ -13,6 +14,8 @@ type DistributionGetter interface {
 	SetCityName(cityName string)
 	GetCountryCodes() []string
 	SetCountryCodes(countryCodes []string)
+	GetPriority() string
+	SetPriority(priority string)
 }
 
 func (params *DistributionCommonParams) GetSiteName() string {
@@ -37,4 +40,12 @@ func (params *DistributionCommonParams) GetCountryCodes() []string {
 
 func (params *DistributionCommonParams) SetCountryCodes(countryCodes []string) {
 	params.CountryCodes = countryCodes
+}
+
+func (params *DistributionCommonParams) GetPriority() string {
+	return params.Priority
+}
+
+func (params *DistributionCommonParams) SetPriority(priority string) {
+	params.Priority = priority
 }
