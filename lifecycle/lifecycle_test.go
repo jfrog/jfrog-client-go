@@ -3,16 +3,20 @@ package lifecycle
 import (
 	"encoding/json"
 	"fmt"
-	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
-	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
+	distributionUtils "github.com/jfrog/jfrog-client-go/utils/distribution"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -246,6 +250,43 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 	defer mockServer.Close()
 
 	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}))
+}
+
+func TestRemoteDeleteReleaseBundleSendsPriority(t *testing.T) {
+	var capturedBody []byte
+	var capturedMethod string
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		expectedPath := "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, true)
+		if r.URL.Path == expectedPath {
+			capturedMethod = r.Method
+			body, err := io.ReadAll(r.Body)
+			assert.NoError(t, err)
+			capturedBody = body
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	})
+	defer mockServer.Close()
+
+	params := lifecycle.ReleaseBundleRemoteDeleteParams{
+		DistributionRules: []*distributionUtils.DistributionCommonParams{{SiteName: "edge1", Priority: "medium"}},
+		Priority:          "high",
+		DryRun:            true,
+	}
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, params))
+	assert.Equal(t, http.MethodPost, capturedMethod)
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(capturedBody, &body))
+	assert.Equal(t, "high", body["priority"])
+	rules, ok := body["distribution_rules"].([]any)
+	require.True(t, ok)
+	require.Len(t, rules, 1)
+	rule, ok := rules[0].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "edge1", rule["site_name"])
+	assert.Equal(t, "medium", rule["priority"])
 }
 
 func TestGetReleaseBundleVersionPromotions(t *testing.T) {
