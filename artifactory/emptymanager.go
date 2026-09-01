@@ -114,7 +114,7 @@ type ArtifactoryServicesManager interface {
 	ImportReleaseBundle(string) error
 	GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error)
 	UploadTrustedKey(params services.TrustedKeyParams) (*services.TrustedKeyResponse, error)
-	ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error)
+	ListSkillVersions(repoKey, slug string, limit int, cursor string) ([]services.SkillVersion, string, error)
 	ListSkills(repoKey string, limit int, cursor, sortBy string) ([]services.SkillListItem, string, error)
 	SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error)
 	SkillVersionExists(repoKey, slug, version string) (bool, error)
@@ -532,7 +532,7 @@ func (esm *EmptyArtifactoryServicesManager) GetTokenDetails(string, string) ([]b
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) ListSkillVersions(string, string) ([]services.SkillVersion, error) {
+func (esm *EmptyArtifactoryServicesManager) ListSkillVersions(string, string, int, string) ([]services.SkillVersion, string, error) {
 	panic("Failed: Method is not implemented")
 }
 

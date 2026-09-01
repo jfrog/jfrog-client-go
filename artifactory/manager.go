@@ -681,10 +681,10 @@ func (sm *ArtifactoryServicesManagerImp) ListSkills(repoKey string, limit int, c
 	return skillsService.ListSkills(repoKey, limit, cursor, sortBy)
 }
 
-func (sm *ArtifactoryServicesManagerImp) ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error) {
+func (sm *ArtifactoryServicesManagerImp) ListSkillVersions(repoKey, slug string, limit int, cursor string) ([]services.SkillVersion, string, error) {
 	skillsService := services.NewSkillsService(sm.client)
 	skillsService.ArtDetails = sm.config.GetServiceDetails()
-	return skillsService.ListVersions(repoKey, slug)
+	return skillsService.ListVersions(repoKey, slug, limit, cursor)
 }
 
 func (sm *ArtifactoryServicesManagerImp) SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error) {
