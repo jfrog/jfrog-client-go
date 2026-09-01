@@ -25,10 +25,10 @@ const (
 	SkillSortByUpdated   = "updated"
 	SkillSortByDownloads = "downloads"
 
-	// DefaultSkillVersionsLimit is the per-call page size ListVersions/VersionExists
-	// fall back to when the caller doesn't specify one (limit <= 0). Callers that want
-	// a different page size - e.g. jfrog-cli-artifactory - should pass their own limit
-	// explicitly rather than relying on this value.
+	// DefaultSkillVersionsLimit is the per-call page size ListVersions falls back to
+	// when the caller doesn't specify one (limit <= 0). Callers that want a different
+	// page size - e.g. jfrog-cli-artifactory - should pass their own limit explicitly
+	// rather than relying on this value.
 	DefaultSkillVersionsLimit = 200
 )
 
@@ -105,24 +105,27 @@ func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]Skill
 	return wrapper.Results, nil
 }
 
-// VersionExists reports whether version is published for repoKey/slug, paginating through all pages.
+// VersionExists reports whether version is published for repoKey/slug.
+// It hits the version-detail endpoint directly (a single request, 200 or 404)
+// rather than listing versions and paginating through them.
 func (ss *SkillsService) VersionExists(repoKey, slug, version string) (bool, error) {
-	cursor := ""
-	for {
-		versions, nextCursor, err := ss.ListVersions(repoKey, slug, DefaultSkillVersionsLimit, cursor)
-		if err != nil {
-			return false, err
-		}
-		for _, v := range versions {
-			if v.Version == version {
-				return true, nil
-			}
-		}
-		if nextCursor == "" || nextCursor == cursor {
-			return false, nil
-		}
-		cursor = nextCursor
+	log.Debug(fmt.Sprintf("Checking whether version '%s' exists for skill '%s' in repo '%s'...", version, slug, repoKey))
+	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
+	requestURL := fmt.Sprintf("%sapi/skills/%s/api/v1/skills/%s/versions/%s", baseURL, repoKey, url.PathEscape(slug), url.PathEscape(version))
+	log.Debug("Skills API request:", requestURL)
+
+	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet(requestURL, true, &httpDetails)
+	if err != nil {
+		return false, err
 	}
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // SearchByProperty uses the Artifactory property search API to find skills

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -216,9 +217,37 @@ func TestSkillsService_ListVersions_NotFound(t *testing.T) {
 	assert.Empty(t, nextCursor)
 }
 
+// versionDetailHandler serves the single-version detail endpoint
+// (skills/{slug}/versions/{version}): 200 with the version body when it's in `all`,
+// 404 otherwise - matching live behavior confirmed against
+// agent-skills/readme-standard on bukgradlefix.jfrogdev.org.
+func versionDetailHandler(t *testing.T, all []SkillVersion) (http.HandlerFunc, *[]*recordedRequest) {
+	t.Helper()
+	var requests []*recordedRequest
+	return func(w http.ResponseWriter, r *http.Request) {
+		requests = append(requests, &recordedRequest{RawQuery: r.URL.RawQuery})
+
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		requested := parts[len(parts)-1]
+		for _, v := range all {
+			if v.Version == requested {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				require.NoError(t, json.NewEncoder(w).Encode(v))
+				return
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{
+			"errors": []map[string]any{{"status": http.StatusNotFound, "message": "Not found"}},
+		}))
+	}, &requests
+}
+
 func TestSkillsService_VersionExists(t *testing.T) {
 	all := []SkillVersion{{Version: "1.0.2"}, {Version: "1.0.1"}}
-	handler, _ := pagedVersionsHandler(t, all)
+	handler, requests := versionDetailHandler(t, all)
 	server, svc := newMockSkillsServer(t, handler)
 	defer server.Close()
 
@@ -229,74 +258,34 @@ func TestSkillsService_VersionExists(t *testing.T) {
 	exists, err = svc.VersionExists("repo", "my-skill", "9.9.9")
 	require.NoError(t, err)
 	assert.False(t, exists)
+
+	// A single targeted request per check - no pagination/listing involved.
+	assert.Len(t, *requests, 2)
 }
 
-// fixedPageSizeVersionsHandler ignores the requested limit and always serves exactly
-// one item per call, regardless of DefaultSkillVersionsLimit. This simulates a server
-// whose real version count exceeds a single page, so VersionExists is forced to
-// follow nextCursor across multiple calls to find (or rule out) the target version.
-func fixedPageSizeVersionsHandler(t *testing.T, all []SkillVersion) http.HandlerFunc {
-	t.Helper()
-	return func(w http.ResponseWriter, r *http.Request) {
-		cursor := r.URL.Query().Get("cursor")
-		start := 0
-		if cursor != "" {
-			for i, v := range all {
-				if v.Version == cursor {
-					start = i + 1
-					break
-				}
-			}
-		}
-		resp := skillVersionsResponse{}
-		if start < len(all) {
-			resp.Items = all[start : start+1]
-			if start+1 < len(all) {
-				resp.NextCursor = resp.Items[0].Version
-			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		require.NoError(t, json.NewEncoder(w).Encode(resp))
-	}
-}
-
-func TestSkillsService_VersionExists_SearchesBeyondFirstPage(t *testing.T) {
-	all := []SkillVersion{{Version: "1.0.3"}, {Version: "1.0.2"}, {Version: "1.0.1"}}
-	server, svc := newMockSkillsServer(t, fixedPageSizeVersionsHandler(t, all))
-	defer server.Close()
-
-	exists, err := svc.VersionExists("repo", "my-skill", "1.0.1")
-	require.NoError(t, err, "must not stop after the first (single-item) page")
-	assert.True(t, exists)
-
-	exists, err = svc.VersionExists("repo", "my-skill", "9.9.9")
-	require.NoError(t, err)
-	assert.False(t, exists, "must exhaust all pages before concluding the version is absent")
-}
-
-func TestSkillsService_VersionExists_StopsOnNonAdvancingCursor(t *testing.T) {
-	// A server bug returning the same cursor forever must not hang the caller.
-	calls := 0
+func TestSkillsService_VersionExists_ServerError(t *testing.T) {
 	server, svc := newMockSkillsServer(t, func(w http.ResponseWriter, r *http.Request) {
-		calls++
-		if calls > 3 {
-			t.Fatalf("VersionExists did not stop on a non-advancing cursor")
-		}
-		resp := skillVersionsResponse{
-			Items:      []SkillVersion{{Version: "1.0.1"}},
-			NextCursor: "stuck-cursor",
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		require.NoError(t, json.NewEncoder(w).Encode(resp))
+		w.WriteHeader(http.StatusInternalServerError)
 	})
 	defer server.Close()
 
-	exists, err := svc.VersionExists("repo", "my-skill", "9.9.9")
-	require.NoError(t, err)
+	exists, err := svc.VersionExists("repo", "my-skill", "1.0.1")
+	require.Error(t, err)
 	assert.False(t, exists)
-	assert.LessOrEqual(t, calls, 2, "must stop as soon as the cursor repeats")
+}
+
+func TestSkillsService_VersionExists_EscapesSlugAndVersionInRequestPath(t *testing.T) {
+	var capturedRequestURI string
+	server, svc := newMockSkillsServer(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedRequestURI = r.RequestURI
+		w.WriteHeader(http.StatusNotFound)
+	})
+	defer server.Close()
+
+	_, err := svc.VersionExists("repo", "weird/slug name", "weird/version")
+	require.NoError(t, err)
+	assert.Contains(t, capturedRequestURI, url.PathEscape("weird/slug name"))
+	assert.Contains(t, capturedRequestURI, url.PathEscape("weird/version"))
 }
 
 func TestSkillsService_ListVersions_EscapesSlugInRequestPath(t *testing.T) {
