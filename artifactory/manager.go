@@ -699,6 +699,12 @@ func (sm *ArtifactoryServicesManagerImp) SkillVersionExists(repoKey, slug, versi
 	return skillsService.VersionExists(repoKey, slug, version)
 }
 
+func (sm *ArtifactoryServicesManagerImp) SkillExists(repoKey, slug string) (bool, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.SkillExists(repoKey, slug)
+}
+
 func (sm *ArtifactoryServicesManagerImp) SearchSkillsByProperty(query string) ([]services.SkillPropertySearchResult, error) {
 	skillsService := services.NewSkillsService(sm.client)
 	skillsService.ArtDetails = sm.config.GetServiceDetails()

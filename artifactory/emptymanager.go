@@ -118,6 +118,7 @@ type ArtifactoryServicesManager interface {
 	ListSkills(repoKey string, limit int, cursor, sortBy string) ([]services.SkillListItem, string, error)
 	SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error)
 	SkillVersionExists(repoKey, slug, version string) (bool, error)
+	SkillExists(repoKey, slug string) (bool, error)
 	SearchSkillsByProperty(query string) ([]services.SkillPropertySearchResult, error)
 	GetSkillXrayStatus(repoKey, artifactPath string) (*services.SkillXrayStatusResponse, error)
 }
@@ -545,6 +546,10 @@ func (esm *EmptyArtifactoryServicesManager) SearchSkills(string, string, int) ([
 }
 
 func (esm *EmptyArtifactoryServicesManager) SkillVersionExists(string, string, string) (bool, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) SkillExists(string, string) (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 

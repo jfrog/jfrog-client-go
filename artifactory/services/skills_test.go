@@ -288,6 +288,54 @@ func TestSkillsService_VersionExists_EscapesSlugAndVersionInRequestPath(t *testi
 	assert.Contains(t, capturedRequestURI, url.PathEscape("weird/version"))
 }
 
+func TestSkillsService_SkillExists(t *testing.T) {
+	var requests int
+	server, svc := newMockSkillsServer(t, func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		if strings.HasSuffix(r.URL.Path, "/my-skill") {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	})
+	defer server.Close()
+
+	exists, err := svc.SkillExists("repo", "my-skill")
+	require.NoError(t, err)
+	assert.True(t, exists)
+
+	exists, err = svc.SkillExists("repo", "missing-skill")
+	require.NoError(t, err)
+	assert.False(t, exists)
+
+	// A single targeted request per check.
+	assert.Equal(t, 2, requests)
+}
+
+func TestSkillsService_SkillExists_ServerError(t *testing.T) {
+	server, svc := newMockSkillsServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+	defer server.Close()
+
+	exists, err := svc.SkillExists("repo", "my-skill")
+	require.Error(t, err)
+	assert.False(t, exists)
+}
+
+func TestSkillsService_SkillExists_EscapesSlugInRequestPath(t *testing.T) {
+	var capturedRequestURI string
+	server, svc := newMockSkillsServer(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedRequestURI = r.RequestURI
+		w.WriteHeader(http.StatusNotFound)
+	})
+	defer server.Close()
+
+	_, err := svc.SkillExists("repo", "weird/slug name")
+	require.NoError(t, err)
+	assert.Contains(t, capturedRequestURI, url.PathEscape("weird/slug name"))
+}
+
 func TestSkillsService_ListVersions_EscapesSlugInRequestPath(t *testing.T) {
 	// r.URL.Path is decoded by net/http before the handler sees it, so the raw wire
 	// form (r.RequestURI) is what actually proves the slug was escaped on the way out.

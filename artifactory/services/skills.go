@@ -128,6 +128,29 @@ func (ss *SkillsService) VersionExists(repoKey, slug, version string) (bool, err
 	return true, nil
 }
 
+// SkillExists reports whether slug is published in repoKey.
+// It hits the skill-metadata endpoint directly (a single request, 200 or 404)
+// rather than listing versions to infer existence.
+func (ss *SkillsService) SkillExists(repoKey, slug string) (bool, error) {
+	log.Debug(fmt.Sprintf("Checking whether skill '%s' exists in repo '%s'...", slug, repoKey))
+	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
+	requestURL := fmt.Sprintf("%sapi/skills/%s/api/v1/skills/%s", baseURL, repoKey, url.PathEscape(slug))
+	log.Debug("Skills API request:", requestURL)
+
+	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet(requestURL, true, &httpDetails)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // SearchByProperty uses the Artifactory property search API to find skills
 // by their skill.name property across all repositories.
 func (ss *SkillsService) SearchByProperty(query string) ([]SkillPropertySearchResult, error) {
