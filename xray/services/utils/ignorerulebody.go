@@ -3,8 +3,11 @@ package utils
 import "time"
 
 const (
-	SecretExposureType ExposureType = "secrets"
-	IacExposureType    ExposureType = "iac"
+	SecretExposureType        ExposureType = "secrets"
+	IacExposureType           ExposureType = "iac"
+	ServicesExposureType      ExposureType = "services"
+	ApplicationsExposureType  ExposureType = "applications"
+	MaliciousCodeExposureType ExposureType = "malicious_code"
 )
 
 type ExposureType string

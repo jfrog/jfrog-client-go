@@ -3,6 +3,8 @@
 package tests
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -24,7 +26,7 @@ func TestGetConfigurationProfileByName(t *testing.T) {
 	xrayVersion, err := GetXrayDetails().GetVersion()
 	require.NoError(t, err)
 
-	mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion)
+	mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion, nil)
 	defer mockServer.Close()
 
 	configProfile, err := configProfileService.GetConfigurationProfileByName(configProfileWithoutRepo)
@@ -38,13 +40,38 @@ func TestGetConfigurationProfileByUrl(t *testing.T) {
 	xrayVersion, err := GetXrayDetails().GetVersion()
 	require.NoError(t, err)
 
-	mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion)
-	defer mockServer.Close()
+	t.Run("without workspace", func(t *testing.T) {
+		observed := &observedProfileByUrlRequest{}
+		mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion, observed)
+		defer mockServer.Close()
 
-	configProfile, err := configProfileService.GetConfigurationProfileByUrl(mockServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, getComparisonConfigProfile(), configProfile)
+		configProfile, err := configProfileService.GetConfigurationProfileByUrl(mockServer.URL)
+		assert.NoError(t, err)
+		assert.Equal(t, getComparisonConfigProfile(), configProfile)
 
+		assert.Equal(t, mockServer.URL, observed.body.RepoUrl)
+		assert.Empty(t, observed.body.WorkspaceName)
+		assert.NotContains(t, observed.rawBody, "workspace_name")
+	})
+
+	t.Run("with workspace", func(t *testing.T) {
+		observed := &observedProfileByUrlRequest{}
+		mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion, observed)
+		defer mockServer.Close()
+
+		const workspaceName = "my-workspace"
+		configProfile, err := configProfileService.GetConfigurationProfileByUrlAndWorkspace(mockServer.URL, workspaceName)
+		assert.NoError(t, err)
+		assert.Equal(t, getComparisonConfigProfile(), configProfile)
+
+		assert.Equal(t, mockServer.URL, observed.body.RepoUrl)
+		assert.Equal(t, workspaceName, observed.body.WorkspaceName)
+	})
+}
+
+type observedProfileByUrlRequest struct {
+	body    services.GetRepoConfigurationProfileRequest
+	rawBody string
 }
 
 func getComparisonConfigProfile() *services.ConfigProfile {
@@ -67,8 +94,8 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 		},
 		Modules: []services.Module{
 			{
-				ModuleName:   "default-module",
-				PathFromRoot: ".",
+				ModuleName:      "default-module",
+				PathFromRoot:    ".",
 				IncludePatterns: []string{"*.go"},
 				ExcludePatterns: []string{"*.log*", "*.tmp*"},
 				ScanConfig: services.ScanConfig{
@@ -96,6 +123,10 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 						EnableIacScan:   true,
 						ExcludePatterns: []string{"*.tfstate"},
 					},
+					ServicesScannerConfig: services.ServicesScannerConfig{
+						EnableServicesScan: false,
+						ExcludePatterns:    []string{"**/docs/**"},
+					},
 				},
 			},
 		},
@@ -103,7 +134,7 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 }
 
 // TODO backwards compatability can be removed once old Xsc service is removed from all servers
-func createXscMockServerForConfigProfile(t *testing.T, xrayVersion string) (mockServer *httptest.Server, configProfileService *services.ConfigurationProfileService) {
+func createXscMockServerForConfigProfile(t *testing.T, xrayVersion string, observed *observedProfileByUrlRequest) (mockServer *httptest.Server, configProfileService *services.ConfigurationProfileService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiUrlPart := "api/v1/"
 		var isXrayAfterXscMigration bool
@@ -114,6 +145,12 @@ func createXscMockServerForConfigProfile(t *testing.T, xrayVersion string) (mock
 		switch {
 		case (strings.Contains(r.RequestURI, "/xsc/"+apiUrlPart+"profile/"+configProfileWithoutRepo) && r.Method == http.MethodGet) ||
 			strings.Contains(r.RequestURI, "xray/api/v1/xsc/profile_repos") && r.Method == http.MethodPost && isXrayAfterXscMigration:
+			if observed != nil && r.Method == http.MethodPost {
+				raw, readErr := io.ReadAll(r.Body)
+				assert.NoError(t, readErr)
+				observed.rawBody = string(raw)
+				assert.NoError(t, json.Unmarshal(raw, &observed.body))
+			}
 			w.WriteHeader(http.StatusOK)
 			content, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
 			assert.NoError(t, err)

@@ -21,12 +21,19 @@ type DistributeReleaseBundleExecutor interface {
 }
 
 func CreateDistributeV1Body(distCommonParams []*DistributionCommonParams, dryRun, isAutoCreateRepo bool) ReleaseBundleDistributeV1Body {
+	return CreateDistributeV1BodyWithPriority(distCommonParams, dryRun, isAutoCreateRepo, "")
+}
+
+// CreateDistributeV1BodyWithPriority builds the Dist request body and sets an optional base priority
+// (low|medium|high). Empty priority is omitted from JSON.
+func CreateDistributeV1BodyWithPriority(distCommonParams []*DistributionCommonParams, dryRun, isAutoCreateRepo bool, priority string) ReleaseBundleDistributeV1Body {
 	var distributionRules []DistributionRulesBody
 	for i := range distCommonParams {
 		distributionRule := DistributionRulesBody{
 			SiteName:     distCommonParams[i].GetSiteName(),
 			CityName:     distCommonParams[i].GetCityName(),
 			CountryCodes: distCommonParams[i].GetCountryCodes(),
+			Priority:     distCommonParams[i].GetPriority(),
 		}
 		distributionRules = append(distributionRules, distributionRule)
 	}
@@ -34,6 +41,7 @@ func CreateDistributeV1Body(distCommonParams []*DistributionCommonParams, dryRun
 		DryRun:            dryRun,
 		DistributionRules: distributionRules,
 		AutoCreateRepo:    isAutoCreateRepo,
+		Priority:          priority,
 	}
 	return body
 }
@@ -97,12 +105,14 @@ type ReleaseBundleDistributeV1Body struct {
 	DryRun            bool                    `json:"dry_run"`
 	DistributionRules []DistributionRulesBody `json:"distribution_rules"`
 	AutoCreateRepo    bool                    `json:"auto_create_missing_repositories,omitempty"`
+	Priority          string                  `json:"priority,omitempty"`
 }
 
 type DistributionRulesBody struct {
 	SiteName     string   `json:"site_name,omitempty"`
 	CityName     string   `json:"city_name,omitempty"`
 	CountryCodes []string `json:"country_codes,omitempty"`
+	Priority     string   `json:"priority,omitempty"`
 }
 
 type DistributionResponseBody struct {

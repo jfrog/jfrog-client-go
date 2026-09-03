@@ -20,8 +20,12 @@ const (
 	xscConfigProfileByNameApi                 = "profile"
 	xscConfigProfileByUrlApi                  = "profile_repos"
 	xscDeprecatedConfigProfileByNameApiSuffix = "api/v1/" + xscConfigProfileByNameApi
-	getProfileByUrlBody                       = "{\"repo_url\":\"%s\"}"
 )
+
+type GetRepoConfigurationProfileRequest struct {
+	RepoUrl       string `json:"repo_url"`
+	WorkspaceName string `json:"workspace_name,omitempty"`
+}
 
 type ConfigurationProfileService struct {
 	client          *jfroghttpclient.JfrogHttpClient
@@ -68,11 +72,12 @@ type Module struct {
 }
 
 type ScanConfig struct {
-	ScaScannerConfig                ScaScannerConfig     `json:"sca_scanner_config,omitempty"`
-	ContextualAnalysisScannerConfig CaScannerConfig      `json:"contextual_analysis_scanner_config,omitempty"`
-	SastScannerConfig               SastScannerConfig    `json:"sast_scanner_config,omitempty"`
-	SecretsScannerConfig            SecretsScannerConfig `json:"secrets_scanner_config,omitempty"`
-	IacScannerConfig                IacScannerConfig     `json:"iac_scanner_config,omitempty"`
+	ScaScannerConfig                ScaScannerConfig      `json:"sca_scanner_config,omitempty"`
+	ContextualAnalysisScannerConfig CaScannerConfig       `json:"contextual_analysis_scanner_config,omitempty"`
+	SastScannerConfig               SastScannerConfig     `json:"sast_scanner_config,omitempty"`
+	SecretsScannerConfig            SecretsScannerConfig  `json:"secrets_scanner_config,omitempty"`
+	IacScannerConfig                IacScannerConfig      `json:"iac_scanner_config,omitempty"`
+	ServicesScannerConfig           ServicesScannerConfig `json:"services_scanner_config,omitempty"`
 }
 
 type ScaScannerConfig struct {
@@ -105,6 +110,11 @@ type IacScannerConfig struct {
 	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
 }
 
+type ServicesScannerConfig struct {
+	EnableServicesScan bool     `json:"enable_services_scan,omitempty"`
+	ExcludePatterns    []string `json:"exclude_patterns,omitempty"`
+}
+
 func (cp *ConfigurationProfileService) sendConfigProfileByNameRequest(profileName string) (url string, resp *http.Response, body []byte, err error) {
 	if cp.XrayDetails != nil {
 		httpDetails := cp.XrayDetails.CreateHttpClientDetails()
@@ -133,20 +143,28 @@ func (cp *ConfigurationProfileService) GetConfigurationProfileByName(profileName
 	return &profile, err
 }
 
-func (cp *ConfigurationProfileService) sendConfigProfileByUrlRequest(repoUrl string) (url string, resp *http.Response, body []byte, err error) {
+func (cp *ConfigurationProfileService) sendConfigProfileByUrlRequest(req GetRepoConfigurationProfileRequest) (url string, resp *http.Response, body []byte, err error) {
 	if cp.XrayDetails == nil {
 		err = errors.New("received empty Xray details")
 		return
 	}
 	httpDetails := cp.XrayDetails.CreateHttpClientDetails()
 	url = fmt.Sprintf("%s%s%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscutils.XscInXraySuffix, xscConfigProfileByUrlApi)
-	requestContent := []byte(fmt.Sprintf(getProfileByUrlBody, repoUrl))
+	requestContent, err := json.Marshal(req)
+	if err = errorutils.CheckError(err); err != nil {
+		return
+	}
 	resp, body, err = cp.client.SendPost(utils.AppendScopedProjectKeyParam(url, cp.ScopeProjectKey), requestContent, &httpDetails)
 	return
 }
 
-func (cp *ConfigurationProfileService) GetConfigurationProfileByUrl(url string) (*ConfigProfile, error) {
-	url, res, body, err := cp.sendConfigProfileByUrlRequest(url)
+func (cp *ConfigurationProfileService) GetConfigurationProfileByUrl(repoUrl string) (*ConfigProfile, error) {
+	return cp.GetConfigurationProfileByUrlAndWorkspace(repoUrl, "")
+}
+
+func (cp *ConfigurationProfileService) GetConfigurationProfileByUrlAndWorkspace(repoUrl, workspaceName string) (*ConfigProfile, error) {
+	req := GetRepoConfigurationProfileRequest{RepoUrl: repoUrl, WorkspaceName: workspaceName}
+	url, res, body, err := cp.sendConfigProfileByUrlRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send POST query to '%s': %q", url, err)
 	}

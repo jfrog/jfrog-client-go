@@ -60,6 +60,13 @@ func (xs *XscInnerService) GetAnalyticsGeneralEvent(msi string) (*services.XscAn
 	return eventService.GetGeneralEvent(msi)
 }
 
+func (xs *XscInnerService) GetScanResultsUIRoute(gitInfo *services.XscGitInfoContext) (*services.ScanResultsUIRouteResponse, error) {
+	scanResultsService := services.NewScanResultsRouteService(xs.client)
+	scanResultsService.XrayDetails = xs.XrayDetails
+	scanResultsService.ScopeProjectKey = xs.ScopeProjectKey
+	return scanResultsService.GetScanResultsUIRoute(gitInfo)
+}
+
 func (xs *XscInnerService) GetConfigProfileByName(profileName string) (*services.ConfigProfile, error) {
 	configProfileService := services.NewConfigurationProfileService(xs.client)
 	configProfileService.XrayDetails = xs.XrayDetails
@@ -72,6 +79,13 @@ func (xs *XscInnerService) GetConfigProfileByUrl(repoUrl string) (*services.Conf
 	configProfileService.XrayDetails = xs.XrayDetails
 	configProfileService.ScopeProjectKey = xs.ScopeProjectKey
 	return configProfileService.GetConfigurationProfileByUrl(repoUrl)
+}
+
+func (xs *XscInnerService) GetConfigProfileByUrlAndWorkspace(repoUrl, workspaceName string) (*services.ConfigProfile, error) {
+	configProfileService := services.NewConfigurationProfileService(xs.client)
+	configProfileService.XrayDetails = xs.XrayDetails
+	configProfileService.ScopeProjectKey = xs.ScopeProjectKey
+	return configProfileService.GetConfigurationProfileByUrlAndWorkspace(repoUrl, workspaceName)
 }
 
 func (xs *XscInnerService) GetResourceWatches(gitRepo, project string) (watches *utils.ResourcesWatchesBody, err error) {

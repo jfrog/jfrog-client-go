@@ -24,6 +24,12 @@ const (
 
 	SkillSortByUpdated   = "updated"
 	SkillSortByDownloads = "downloads"
+
+	// DefaultSkillVersionsLimit is the per-call page size ListVersions falls back to
+	// when the caller doesn't specify one (limit <= 0). Callers that want a different
+	// page size - e.g. jfrog-cli-artifactory - should pass their own limit explicitly
+	// rather than relying on this value.
+	DefaultSkillVersionsLimit = 200
 )
 
 // SkillXrayStatusResponse is the response from the Skills Xray gate status endpoint.
@@ -46,18 +52,24 @@ func (ss *SkillsService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return ss.client
 }
 
-func (ss *SkillsService) ListVersions(repoKey, slug string) ([]SkillVersion, error) {
+// ListVersions lists the versions published for repoKey/slug.
+// limit <= 0 falls back to DefaultSkillVersionsLimit; cursor resumes from previous page ("" starts from beginning).
+func (ss *SkillsService) ListVersions(repoKey, slug string, limit int, cursor string) ([]SkillVersion, string, error) {
 	log.Debug(fmt.Sprintf("Listing versions for skill '%s' in repo '%s'...", slug, repoKey))
-	body, err := ss.sendGet(repoKey, fmt.Sprintf("skills/%s/versions", slug))
+	if limit <= 0 {
+		limit = DefaultSkillVersionsLimit
+	}
+	endpoint := fmt.Sprintf("skills/%s/versions?limit=%d&cursor=%s", url.PathEscape(slug), limit, url.QueryEscape(cursor))
+	body, err := ss.sendGet(repoKey, endpoint)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	var wrapper skillVersionsResponse
 	if err = json.Unmarshal(body, &wrapper); err != nil {
-		return nil, errorutils.CheckErrorf("failed to parse skill versions response: %s", err.Error())
+		return nil, "", errorutils.CheckErrorf("failed to parse skill versions response: %s", err.Error())
 	}
-	return wrapper.Items, nil
+	return wrapper.Items, wrapper.NextCursor, nil
 }
 
 func (ss *SkillsService) ListSkills(repoKey string, limit int, cursor, sortBy string) ([]SkillListItem, string, error) {
@@ -93,17 +105,50 @@ func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]Skill
 	return wrapper.Results, nil
 }
 
+// VersionExists reports whether version is published for repoKey/slug.
+// It hits the version-detail endpoint directly (a single request, 200 or 404)
+// rather than listing versions and paginating through them.
 func (ss *SkillsService) VersionExists(repoKey, slug, version string) (bool, error) {
-	versions, err := ss.ListVersions(repoKey, slug)
+	log.Debug(fmt.Sprintf("Checking whether version '%s' exists for skill '%s' in repo '%s'...", version, slug, repoKey))
+	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
+	requestURL := fmt.Sprintf("%sapi/skills/%s/api/v1/skills/%s/versions/%s", baseURL, repoKey, url.PathEscape(slug), url.PathEscape(version))
+	log.Debug("Skills API request:", requestURL)
+
+	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet(requestURL, true, &httpDetails)
 	if err != nil {
 		return false, err
 	}
-	for _, v := range versions {
-		if v.Version == version {
-			return true, nil
-		}
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
 	}
-	return false, nil
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// SkillExists reports whether slug is published in repoKey.
+// It hits the skill-metadata endpoint directly (a single request, 200 or 404)
+// rather than listing versions to infer existence.
+func (ss *SkillsService) SkillExists(repoKey, slug string) (bool, error) {
+	log.Debug(fmt.Sprintf("Checking whether skill '%s' exists in repo '%s'...", slug, repoKey))
+	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
+	requestURL := fmt.Sprintf("%sapi/skills/%s/api/v1/skills/%s", baseURL, repoKey, url.PathEscape(slug))
+	log.Debug("Skills API request:", requestURL)
+
+	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet(requestURL, true, &httpDetails)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // SearchByProperty uses the Artifactory property search API to find skills
@@ -201,6 +246,7 @@ func (ss *SkillsService) sendGet(repoKey, endpoint string) ([]byte, error) {
 	return body, nil
 }
 
+// SkillVersion describes one published version of a skill.
 type SkillVersion struct {
 	Version   string `json:"version"`
 	CreatedAt int64  `json:"createdAt,omitempty"`
@@ -236,7 +282,8 @@ type skillListResponse struct {
 }
 
 type skillVersionsResponse struct {
-	Items []SkillVersion `json:"items"`
+	Items      []SkillVersion `json:"items"`
+	NextCursor string         `json:"nextCursor,omitempty"`
 }
 
 type skillSearchResponse struct {

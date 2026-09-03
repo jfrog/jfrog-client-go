@@ -210,9 +210,10 @@ type XscAnalyticsGeneralEvent struct {
 
 type XscGitInfoContext struct {
 	GitDiffContext
-	Source       CommitContext `json:"source"`
-	GitProvider  string        `json:"git_provider,omitempty"`
-	Technologies []string      `json:"technologies,omitempty"`
+	Source        CommitContext `json:"source"`
+	GitProvider   string        `json:"git_provider,omitempty"`
+	Technologies  []string      `json:"technologies,omitempty"`
+	WorkspaceName string        `json:"workspace_name,omitempty"`
 }
 
 // Optional fields for git diff context
@@ -249,8 +250,11 @@ type GitIntegrationEvent struct {
 
 type XscAnalyticsGeneralEventFinalize struct {
 	XscAnalyticsBasicGeneralEvent
-	MultiScanId string `json:"multi_scan_id,omitempty"`
-	GitRepoUrl  string `json:"git_repository,omitempty"`
+	MultiScanId          string   `json:"multi_scan_id,omitempty"`
+	GitRepoUrl           string   `json:"git_repository,omitempty"`
+	ScanTypesExecuted    []string `json:"scan_types_executed,omitempty"`
+	ProjectKey           string   `json:"project_key,omitempty"`
+	UploadedArtifactPath string   `json:"uploaded_artifact_path,omitempty"`
 }
 
 type XscAnalyticsBasicGeneralEvent struct {

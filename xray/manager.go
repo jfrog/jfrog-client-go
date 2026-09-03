@@ -291,3 +291,10 @@ func (sm *XrayServicesManager) RemediationByCve(bom *cyclonedx.BOM) (xrayUtils.C
 	remediationService.ScopeProjectKey = sm.scopeProjectKey
 	return remediationService.RemediationByCve(bom)
 }
+
+func (sm *XrayServicesManager) ZeroTouchRemediation(req services.ComponentResolutionRequest) (*services.ComponentResolutionResponse, bool, error) {
+	svc := services.NewZeroTouchRemediationService(sm.client)
+	svc.XrayDetails = sm.config.GetServiceDetails()
+	svc.ScopeProjectKey = sm.scopeProjectKey
+	return svc.Remediate(req)
+}
