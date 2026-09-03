@@ -191,6 +191,7 @@
       - [Creating New XSC Service Manager](#creating-new-xsc-service-manager)
       - [Using XSC Services](#using-xsc-services)
       - [Fetching XSC's Version](#fetching-xscs-version)
+      - [Upload Scan CDX](#upload-scan-cdx)
       - [Report XSC analytics metrics](#report-xsc-analytics-metrics)
         - [Add Analytics General Event](#add-analytics-general-event)
         - [Update Analytics General Event](#update-analytics-general-event)
@@ -2786,6 +2787,19 @@ xscManager, err := xsc.New(serviceConfig)
 
 ```go
 version, err := xscManager.GetVersion()
+```
+
+#### Upload Scan CDX
+
+Upload a CycloneDx SBOM directly to Xray for scanning, without requiring an Artifactory upload.
+
+```go
+resp, err := xrayManager.Xsc().UploadScanCdx(services.UploadScanCdxParams{
+    RepoName: "my-repo",
+    RepoPath: "path/in/repo",
+    FileName: "results.cdx.json",
+    Bom:      bomJson,
+})
 ```
 
 #### Report XSC Analytics Metrics
