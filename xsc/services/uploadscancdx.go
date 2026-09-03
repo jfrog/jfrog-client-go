@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -37,7 +38,12 @@ func NewUploadScanCdxService(client *jfroghttpclient.JfrogHttpClient) *UploadSca
 }
 
 func (us *UploadScanCdxService) getUploadScanCdxURL() string {
-	return utils.AppendScopedProjectKeyParam(utils.AddTrailingSlashIfNeeded(us.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+uploadScanCdxAPIUrl, us.ScopeProjectKey)
+	uploadUrl, err := url.JoinPath(us.XrayDetails.GetUrl(), xscutils.XscInXraySuffix, uploadScanCdxAPIUrl)
+	if err != nil {
+		// Fall back to the previous concatenation if the configured Xray URL is not a valid URL.
+		uploadUrl = utils.AddTrailingSlashIfNeeded(us.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + uploadScanCdxAPIUrl
+	}
+	return utils.AppendScopedProjectKeyParam(uploadUrl, us.ScopeProjectKey)
 }
 
 func (us *UploadScanCdxService) Upload(params UploadScanCdxParams) (response *UploadScanCdxResponse, err error) {

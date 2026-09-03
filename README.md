@@ -2794,7 +2794,7 @@ version, err := xscManager.GetVersion()
 Upload a CycloneDx SBOM directly to Xray for scanning, without requiring an Artifactory upload.
 
 ```go
-resp, err := xscManager.UploadScanCdx(services.UploadScanCdxParams{
+resp, err := xrayManager.Xsc().UploadScanCdx(services.UploadScanCdxParams{
     RepoName: "my-repo",
     RepoPath: "path/in/repo",
     FileName: "results.cdx.json",
