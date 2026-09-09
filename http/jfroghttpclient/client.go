@@ -39,6 +39,14 @@ func (rtc *JfrogHttpClient) SendPost(url string, content []byte, httpClientsDeta
 	return rtc.httpClient.SendPost(url, content, *httpClientsDetails, "")
 }
 
+func (rtc *JfrogHttpClient) SendPostFromReader(url string, reader io.Reader, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
+	if err != nil {
+		return
+	}
+	return rtc.httpClient.SendPostFromReader(url, reader, *httpClientsDetails)
+}
+
 func (rtc *JfrogHttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (*http.Response, error) {
 	if err := rtc.runPreRequestInterceptors(httpClientsDetails); err != nil {
 		return nil, err
