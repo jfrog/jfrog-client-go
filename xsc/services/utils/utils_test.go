@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestXrayUrlToXscUrl(t *testing.T) {
@@ -26,18 +27,24 @@ func TestXrayUrlToXscUrl(t *testing.T) {
 }
 
 func TestGetGitRepoUrlKey(t *testing.T) {
-	expected := "git.com/jfrog/jfrog-client-go.git"
 	tests := []struct {
 		testName   string
 		gitRepoUrl string
+		expected   string
 	}{
-		{"with_http", "http://git.com/jfrog/jfrog-client-go.git"},
-		{"with_https", "https://git.com/jfrog/jfrog-client-go.git"},
-		{"without_protocol", "git.com/jfrog/jfrog-client-go"},
+		{"with_http", "http://git.com/jfrog/jfrog-client-go.git", "git.com/jfrog/jfrog-client-go.git"},
+		{"with_https", "https://git.com/jfrog/jfrog-client-go.git", "git.com/jfrog/jfrog-client-go.git"},
+		{"with_https_preserves_existing_case", "https://Git.COM/JFrog/jfrog-client-go.git", "Git.COM/JFrog/jfrog-client-go.git"},
+		{"without_protocol", "git.com/jfrog/jfrog-client-go", "git.com/jfrog/jfrog-client-go.git"},
+		{"without_protocol_and_port", "Git.COM:7999/JFrog/jfrog-client-go.git", "Git.COM:7999/JFrog/jfrog-client-go.git"},
+		{"host_and_numeric_value", "github.com:443", "github.com:443.git"},
+		{"scp", "git@Git.COM:JFrog/jfrog-client-go.git", "Git.COM/JFrog/jfrog-client-go.git"},
+		{"ssh_with_port", "ssh://git@Git.COM:7999/JFrog/jfrog-client-go.git", "Git.COM/JFrog/jfrog-client-go.git"},
+		{"azure_ssh", "git@ssh.dev.azure.com:v3/Org/Project/Repo", "dev.azure.com/Org/Project/_git/Repo.git"},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			assert.Equal(t, expected, GetGitRepoUrlKey(test.gitRepoUrl))
+			assert.Equal(t, test.expected, GetGitRepoUrlKey(test.gitRepoUrl))
 		})
 	}
 }
