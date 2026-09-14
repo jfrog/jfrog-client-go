@@ -34,6 +34,7 @@ func TestGetGitRepoUrlKey(t *testing.T) {
 	}{
 		{"with_http", "http://git.com/jfrog/jfrog-client-go.git", "git.com/jfrog/jfrog-client-go.git"},
 		{"with_https", "https://git.com/jfrog/jfrog-client-go.git", "git.com/jfrog/jfrog-client-go.git"},
+		{"with_https_uppercase_scheme", "HTTPS://github.com/org/repo.git", "github.com/org/repo.git"},
 		{"with_https_preserves_existing_case", "https://Git.COM/JFrog/jfrog-client-go.git", "Git.COM/JFrog/jfrog-client-go.git"},
 		{"without_protocol", "git.com/jfrog/jfrog-client-go", "git.com/jfrog/jfrog-client-go.git"},
 		{"without_protocol_and_port", "Git.COM:7999/JFrog/jfrog-client-go.git", "Git.COM:7999/JFrog/jfrog-client-go.git"},
@@ -41,6 +42,8 @@ func TestGetGitRepoUrlKey(t *testing.T) {
 		{"scp", "git@Git.COM:JFrog/jfrog-client-go.git", "Git.COM/JFrog/jfrog-client-go.git"},
 		{"ssh_with_port", "ssh://git@Git.COM:7999/JFrog/jfrog-client-go.git", "Git.COM/JFrog/jfrog-client-go.git"},
 		{"azure_ssh", "git@ssh.dev.azure.com:v3/Org/Project/Repo", "dev.azure.com/Org/Project/_git/Repo.git"},
+		{"azure_dev_azure_scp", "Org@dev.azure.com:v3/Org/Project/Repo", "dev.azure.com/Org/Project/_git/Repo.git"},
+		{"azure_vs_ssh", "Org@vs-ssh.visualstudio.com:v3/Org/Project/Repo", "dev.azure.com/Org/Project/_git/Repo.git"},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {

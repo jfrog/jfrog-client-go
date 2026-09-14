@@ -45,9 +45,8 @@ func GetGitRepoUrlKey(gitRepoUrl string) string {
 	}
 	if gitRepoKey, ok := sshGitRepoUrlKey(gitRepoUrl); ok {
 		gitRepoUrl = gitRepoKey
-	} else if strings.HasPrefix(gitRepoUrl, "http") {
-		// Preserve the historical behavior for HTTP(S) URLs.
-		gitRepoUrl = strings.TrimPrefix(strings.TrimPrefix(gitRepoUrl, "https://"), "http://")
+	} else {
+		gitRepoUrl = stripHTTPScheme(gitRepoUrl)
 	}
 	if !strings.HasSuffix(gitRepoUrl, ".git") {
 		gitRepoUrl += ".git"
@@ -61,7 +60,7 @@ func sshGitRepoUrlKey(raw string) (string, bool) {
 		if err != nil || parsed.Hostname() == "" {
 			return "", false
 		}
-		return azureDevOpsGitRepoKey(parsed.Hostname(), strings.TrimPrefix(parsed.Path, "/")), true
+		return gitRepoKeyFromHostPath(parsed.Hostname(), strings.TrimPrefix(parsed.Path, "/")), true
 	}
 	if strings.Contains(raw, "://") {
 		return "", false
@@ -76,16 +75,42 @@ func sshGitRepoUrlKey(raw string) (string, bool) {
 	if colon <= 0 || colon == len(value)-1 {
 		return "", false
 	}
-	return azureDevOpsGitRepoKey(value[:colon], value[colon+1:]), true
+	return gitRepoKeyFromHostPath(value[:colon], value[colon+1:]), true
 }
 
-func azureDevOpsGitRepoKey(host, repoPath string) string {
-	if strings.EqualFold(host, "ssh.dev.azure.com") {
-		host = "dev.azure.com"
-		parts := strings.Split(repoPath, "/")
-		if len(parts) >= 4 && strings.EqualFold(parts[0], "v3") {
-			repoPath = parts[1] + "/" + parts[2] + "/_git/" + strings.Join(parts[3:], "/")
-		}
+func stripHTTPScheme(raw string) string {
+	lower := strings.ToLower(raw)
+	switch {
+	case strings.HasPrefix(lower, "https://"):
+		return raw[len("https://"):]
+	case strings.HasPrefix(lower, "http://"):
+		return raw[len("http://"):]
+	default:
+		return raw
 	}
-	return host + "/" + strings.Trim(repoPath, "/")
+}
+
+func gitRepoKeyFromHostPath(host, repoPath string) string {
+	repoPath = strings.Trim(repoPath, "/")
+	if rewritten, ok := azureDevOpsHTTPSGitRepoPath(host, repoPath); ok {
+		return rewritten
+	}
+	return host + "/" + repoPath
+}
+
+func azureDevOpsHTTPSGitRepoPath(host, repoPath string) (string, bool) {
+	if !isAzureDevOpsSSHHost(host) {
+		return "", false
+	}
+	parts := strings.Split(repoPath, "/")
+	if len(parts) < 4 || !strings.EqualFold(parts[0], "v3") {
+		return "", false
+	}
+	return "dev.azure.com/" + parts[1] + "/" + parts[2] + "/_git/" + strings.Join(parts[3:], "/"), true
+}
+
+func isAzureDevOpsSSHHost(host string) bool {
+	return strings.EqualFold(host, "ssh.dev.azure.com") ||
+		strings.EqualFold(host, "vs-ssh.visualstudio.com") ||
+		strings.EqualFold(host, "dev.azure.com")
 }
