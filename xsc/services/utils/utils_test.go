@@ -44,10 +44,39 @@ func TestGetGitRepoUrlKey(t *testing.T) {
 		{"azure_ssh", "git@ssh.dev.azure.com:v3/Org/Project/Repo", "dev.azure.com/Org/Project/_git/Repo.git"},
 		{"azure_dev_azure_scp", "Org@dev.azure.com:v3/Org/Project/Repo", "dev.azure.com/Org/Project/_git/Repo.git"},
 		{"azure_vs_ssh", "Org@vs-ssh.visualstudio.com:v3/Org/Project/Repo", "dev.azure.com/Org/Project/_git/Repo.git"},
+		{"empty", "", ""},
+		{"malformed_scp_missing_path", "git@github.com:", ""},
+		{"malformed_ssh_missing_path", "ssh://git@github.com", ""},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
 			assert.Equal(t, test.expected, GetGitRepoUrlKey(test.gitRepoUrl))
+		})
+	}
+}
+
+func TestGitCloneHostPath(t *testing.T) {
+	tests := []struct {
+		testName     string
+		raw          string
+		expectedHost string
+		expectedPath string
+		ok           bool
+	}{
+		{"https", "https://github.com/jfrog/jfrog-client-go.git", "github.com", "jfrog/jfrog-client-go.git", true},
+		{"https_credentials_and_port", "https://user:token@git.example.com:8443/jfrog/repo.git", "git.example.com:8443", "jfrog/repo.git", true},
+		{"scp", "git@Git.COM:JFrog/jfrog-client-go.git", "Git.COM", "JFrog/jfrog-client-go.git", true},
+		{"ssh_with_port", "ssh://git@Git.COM:7999/JFrog/jfrog-client-go.git", "Git.COM", "JFrog/jfrog-client-go.git", true},
+		{"azure_ssh_no_xray_rewrite", "git@ssh.dev.azure.com:v3/Org/Project/Repo", "ssh.dev.azure.com", "v3/Org/Project/Repo", true},
+		{"malformed_scp", "git@github.com:", "", "", false},
+		{"malformed_ssh", "ssh://git@github.com", "", "", false},
+	}
+	for _, test := range tests {
+		t.Run(test.testName, func(t *testing.T) {
+			host, repoPath, ok := GitCloneHostPath(test.raw)
+			assert.Equal(t, test.ok, ok)
+			assert.Equal(t, test.expectedHost, host)
+			assert.Equal(t, test.expectedPath, repoPath)
 		})
 	}
 }

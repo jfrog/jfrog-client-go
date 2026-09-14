@@ -38,44 +38,98 @@ func IsXscXrayInnerService(xrayVersion string) bool {
 
 // GetGitRepoUrlKey returns the repository URL in the legacy graph-scan key
 // format expected by Xray. Existing HTTP(S) behavior is preserved, while SSH
-// and SCP clone URLs are converted to the equivalent host/path key.
+// and SCP clone URLs are converted to the equivalent host/path key, including
+// Azure DevOps v3 → _git rewriting. Malformed SSH/SCP input returns "".
 func GetGitRepoUrlKey(gitRepoUrl string) string {
 	if gitRepoUrl == "" {
 		return ""
 	}
 	if gitRepoKey, ok := sshGitRepoUrlKey(gitRepoUrl); ok {
-		gitRepoUrl = gitRepoKey
-	} else {
-		gitRepoUrl = stripHTTPScheme(gitRepoUrl)
+		return ensureGitSuffix(gitRepoKey)
 	}
-	if !strings.HasSuffix(gitRepoUrl, ".git") {
-		gitRepoUrl += ".git"
+	if isSSHCloneURL(gitRepoUrl) {
+		return ""
 	}
-	return gitRepoUrl
+	return ensureGitSuffix(stripHTTPScheme(gitRepoUrl))
+}
+
+// GitCloneHostPath returns host and repository path for HTTP(S), ssh://, and
+// SCP clone URLs without Xray git-repo-key rewrites (Azure v3 → _git).
+func GitCloneHostPath(raw string) (host, repoPath string, ok bool) {
+	return parseGitCloneHostPath(raw)
 }
 
 func sshGitRepoUrlKey(raw string) (string, bool) {
-	if strings.HasPrefix(strings.ToLower(raw), "ssh://") {
+	if !isSSHCloneURL(raw) {
+		return "", false
+	}
+	host, repoPath, ok := parseGitCloneHostPath(raw)
+	if !ok {
+		return "", false
+	}
+	return gitRepoKeyFromHostPath(host, repoPath), true
+}
+
+func parseGitCloneHostPath(raw string) (host, repoPath string, ok bool) {
+	lower := strings.ToLower(raw)
+	switch {
+	case strings.HasPrefix(lower, "http://"), strings.HasPrefix(lower, "https://"):
+		parsed, err := url.Parse(raw)
+		if err != nil || parsed.Host == "" {
+			return "", "", false
+		}
+		return parsed.Host, strings.Trim(parsed.EscapedPath(), "/"), true
+	case strings.HasPrefix(lower, "ssh://"):
 		parsed, err := url.Parse(raw)
 		if err != nil || parsed.Hostname() == "" {
-			return "", false
+			return "", "", false
 		}
-		return gitRepoKeyFromHostPath(parsed.Hostname(), strings.TrimPrefix(parsed.Path, "/")), true
+		repoPath = strings.Trim(parsed.Path, "/")
+		if repoPath == "" {
+			return "", "", false
+		}
+		return parsed.Hostname(), repoPath, true
 	}
 	if strings.Contains(raw, "://") {
-		return "", false
+		return "", "", false
 	}
 	at := strings.LastIndex(raw, "@")
 	if at < 0 {
-		return "", false
+		return "", "", false
 	}
-	value := raw
-	value = value[at+1:]
+	value := raw[at+1:]
 	colon := strings.Index(value, ":")
 	if colon <= 0 || colon == len(value)-1 {
-		return "", false
+		return "", "", false
 	}
-	return gitRepoKeyFromHostPath(value[:colon], value[colon+1:]), true
+	repoPath = strings.Trim(value[colon+1:], "/")
+	if repoPath == "" {
+		return "", "", false
+	}
+	return value[:colon], repoPath, true
+}
+
+func isSSHCloneURL(raw string) bool {
+	lower := strings.ToLower(raw)
+	if strings.HasPrefix(lower, "ssh://") {
+		return true
+	}
+	if strings.Contains(raw, "://") {
+		return false
+	}
+	at := strings.LastIndex(raw, "@")
+	if at < 0 {
+		return false
+	}
+	colon := strings.Index(raw[at+1:], ":")
+	return colon > 0
+}
+
+func ensureGitSuffix(gitRepoUrl string) string {
+	if !strings.HasSuffix(gitRepoUrl, ".git") {
+		return gitRepoUrl + ".git"
+	}
+	return gitRepoUrl
 }
 
 func stripHTTPScheme(raw string) string {
