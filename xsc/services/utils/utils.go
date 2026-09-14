@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -35,19 +36,131 @@ func IsXscXrayInnerService(xrayVersion string) bool {
 	return true
 }
 
-// The platform expects the git repo key to be in the format of the https/http clone Git URL without the protocol.
-func GetGitRepoUrlKey(gitRepoHttpUrl string) string {
-	if len(gitRepoHttpUrl) == 0 {
-		// No git context was provided
+// GetGitRepoUrlKey returns the repository URL in the legacy graph-scan key
+// format expected by Xray. Existing HTTP(S) behavior is preserved, while SSH
+// and SCP clone URLs are converted to the equivalent host/path key, including
+// Azure DevOps v3 → _git rewriting. Malformed SSH/SCP input returns "".
+func GetGitRepoUrlKey(gitRepoUrl string) string {
+	if gitRepoUrl == "" {
 		return ""
 	}
-	if !strings.HasSuffix(gitRepoHttpUrl, ".git") {
-		// Append .git to the URL if not included
-		gitRepoHttpUrl += ".git"
+	if gitRepoKey, ok := sshGitRepoUrlKey(gitRepoUrl); ok {
+		return ensureGitSuffix(gitRepoKey)
 	}
-	// Remove the Http/s protocol from the URL
-	if strings.HasPrefix(gitRepoHttpUrl, "http") {
-		return strings.TrimPrefix(strings.TrimPrefix(gitRepoHttpUrl, "https://"), "http://")
+	if isSSHCloneURL(gitRepoUrl) {
+		return ""
 	}
-	return gitRepoHttpUrl
+	return ensureGitSuffix(stripHTTPScheme(gitRepoUrl))
+}
+
+func sshGitRepoUrlKey(raw string) (string, bool) {
+	if !isSSHCloneURL(raw) {
+		return "", false
+	}
+	host, repoPath, ok := GitCloneHostPath(raw)
+	if !ok {
+		return "", false
+	}
+	return gitRepoKeyFromHostPath(host, repoPath), true
+}
+
+// GitCloneHostPath returns host and repository path for HTTP(S), ssh://, and
+// SCP clone URLs without Xray git-repo-key rewrites (Azure v3 → _git).
+func GitCloneHostPath(raw string) (host, repoPath string, ok bool) {
+	lower := strings.ToLower(raw)
+	switch {
+	case strings.HasPrefix(lower, "http://"), strings.HasPrefix(lower, "https://"):
+		parsed, err := url.Parse(raw)
+		if err != nil || parsed.Host == "" {
+			return "", "", false
+		}
+		return parsed.Host, strings.Trim(parsed.EscapedPath(), "/"), true
+	case strings.HasPrefix(lower, "ssh://"):
+		parsed, err := url.Parse(raw)
+		if err != nil || parsed.Hostname() == "" {
+			return "", "", false
+		}
+		repoPath = strings.Trim(parsed.Path, "/")
+		if repoPath == "" {
+			return "", "", false
+		}
+		return parsed.Hostname(), repoPath, true
+	}
+	if strings.Contains(raw, "://") {
+		return "", "", false
+	}
+	at := strings.LastIndex(raw, "@")
+	if at < 0 {
+		return "", "", false
+	}
+	value := raw[at+1:]
+	colon := strings.Index(value, ":")
+	if colon <= 0 || colon == len(value)-1 {
+		return "", "", false
+	}
+	repoPath = strings.Trim(value[colon+1:], "/")
+	if repoPath == "" {
+		return "", "", false
+	}
+	return value[:colon], repoPath, true
+}
+
+func isSSHCloneURL(raw string) bool {
+	lower := strings.ToLower(raw)
+	if strings.HasPrefix(lower, "ssh://") {
+		return true
+	}
+	if strings.Contains(raw, "://") {
+		return false
+	}
+	at := strings.LastIndex(raw, "@")
+	if at < 0 {
+		return false
+	}
+	colon := strings.Index(raw[at+1:], ":")
+	return colon > 0
+}
+
+func ensureGitSuffix(gitRepoUrl string) string {
+	if !strings.HasSuffix(gitRepoUrl, ".git") {
+		return gitRepoUrl + ".git"
+	}
+	return gitRepoUrl
+}
+
+func stripHTTPScheme(raw string) string {
+	lower := strings.ToLower(raw)
+	switch {
+	case strings.HasPrefix(lower, "https://"):
+		return raw[len("https://"):]
+	case strings.HasPrefix(lower, "http://"):
+		return raw[len("http://"):]
+	default:
+		return raw
+	}
+}
+
+func gitRepoKeyFromHostPath(host, repoPath string) string {
+	repoPath = strings.Trim(repoPath, "/")
+	if rewritten, ok := azureDevOpsHTTPSGitRepoPath(host, repoPath); ok {
+		return rewritten
+	}
+	return host + "/" + repoPath
+}
+
+func azureDevOpsHTTPSGitRepoPath(host, repoPath string) (string, bool) {
+	if !isAzureDevOpsSSHHost(host) {
+		return "", false
+	}
+	parts := strings.Split(repoPath, "/")
+	if len(parts) < 4 || !strings.EqualFold(parts[0], "v3") {
+		return "", false
+	}
+	return "dev.azure.com/" + parts[1] + "/" + parts[2] + "/_git/" + strings.Join(parts[3:], "/"), true
+}
+
+func isAzureDevOpsSSHHost(host string) bool {
+	return strings.EqualFold(host, "ssh.dev.azure.com") ||
+		strings.EqualFold(host, "vs-ssh.visualstudio.com") ||
+		strings.EqualFold(host, "dev.azure.com")
 }
