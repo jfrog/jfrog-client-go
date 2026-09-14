@@ -53,24 +53,20 @@ func GetGitRepoUrlKey(gitRepoUrl string) string {
 	return ensureGitSuffix(stripHTTPScheme(gitRepoUrl))
 }
 
-// GitCloneHostPath returns host and repository path for HTTP(S), ssh://, and
-// SCP clone URLs without Xray git-repo-key rewrites (Azure v3 → _git).
-func GitCloneHostPath(raw string) (host, repoPath string, ok bool) {
-	return parseGitCloneHostPath(raw)
-}
-
 func sshGitRepoUrlKey(raw string) (string, bool) {
 	if !isSSHCloneURL(raw) {
 		return "", false
 	}
-	host, repoPath, ok := parseGitCloneHostPath(raw)
+	host, repoPath, ok := GitCloneHostPath(raw)
 	if !ok {
 		return "", false
 	}
 	return gitRepoKeyFromHostPath(host, repoPath), true
 }
 
-func parseGitCloneHostPath(raw string) (host, repoPath string, ok bool) {
+// GitCloneHostPath returns host and repository path for HTTP(S), ssh://, and
+// SCP clone URLs without Xray git-repo-key rewrites (Azure v3 → _git).
+func GitCloneHostPath(raw string) (host, repoPath string, ok bool) {
 	lower := strings.ToLower(raw)
 	switch {
 	case strings.HasPrefix(lower, "http://"), strings.HasPrefix(lower, "https://"):
