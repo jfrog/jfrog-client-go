@@ -9,34 +9,26 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	xrayutils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
 const indirectContextualApi = "api/v1/dependencies/contextual"
 
-// PackageVersionKey identifies a package by type, name, namespace, version and ecosystem.
-type PackageVersionKey struct {
-	Type      string `json:"type"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Version   string `json:"version"`
-	Ecosystem string `json:"ecosystem"`
-}
-
 type indirectContextualRequest struct {
-	Cves     []string            `json:"cves"`
-	Packages []PackageVersionKey `json:"packages"`
+	Cves     []string                      `json:"cves"`
+	Packages []xrayutils.PackageVersionKey `json:"packages"`
 }
 
 // IndirectContextualPathEntry is a single node in a dependency path leading to a vulnerable package.
 type IndirectContextualPathEntry struct {
-	PackageVersionKey
+	xrayutils.PackageVersionKey
 	Function string `json:"function"`
 }
 
 // IndirectContextualResponse is the per-CVE contextual analysis result: the vulnerable
 // package, the function(s) involved, and the dependency path(s) reaching it.
 type IndirectContextualResponse struct {
-	PackageVersionKey
+	xrayutils.PackageVersionKey
 	Functions []string                        `json:"functions"`
 	Paths     [][]IndirectContextualPathEntry `json:"paths"`
 }
@@ -57,7 +49,7 @@ func (tc *IndirectContextualService) getUrl() string {
 
 // GetContextualPaths requests, per CVE, the indirect dependency path(s) that make it reachable
 // given the provided set of package keys.
-func (tc *IndirectContextualService) GetContextualPaths(cves []string, packages []PackageVersionKey) (map[string]IndirectContextualResponse, error) {
+func (tc *IndirectContextualService) GetContextualPaths(cves []string, packages []xrayutils.PackageVersionKey) (map[string]IndirectContextualResponse, error) {
 	httpDetails := tc.CatalogDetails.CreateHttpClientDetails()
 	httpDetails.SetContentTypeApplicationJson()
 

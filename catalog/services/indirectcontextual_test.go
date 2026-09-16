@@ -8,6 +8,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	xrayutils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +43,7 @@ func TestGetContextualPaths_SendsExpectedRequestAndParsesResponse(t *testing.T) 
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]IndirectContextualResponse{
 			"CVE-2024-1234": {
-				PackageVersionKey: PackageVersionKey{
+				PackageVersionKey: xrayutils.PackageVersionKey{
 					Type:      "npm",
 					Name:      "lodash",
 					Namespace: "",
@@ -53,11 +54,11 @@ func TestGetContextualPaths_SendsExpectedRequestAndParsesResponse(t *testing.T) 
 				Paths: [][]IndirectContextualPathEntry{
 					{
 						{
-							PackageVersionKey: PackageVersionKey{Type: "npm", Name: "app", Version: "1.0.0", Ecosystem: "generic"},
+							PackageVersionKey: xrayutils.PackageVersionKey{Type: "npm", Name: "app", Version: "1.0.0", Ecosystem: "generic"},
 							Function:          "main",
 						},
 						{
-							PackageVersionKey: PackageVersionKey{Type: "npm", Name: "lodash", Version: "4.17.20", Ecosystem: "generic"},
+							PackageVersionKey: xrayutils.PackageVersionKey{Type: "npm", Name: "lodash", Version: "4.17.20", Ecosystem: "generic"},
 							Function:          "merge",
 						},
 					},
@@ -69,7 +70,7 @@ func TestGetContextualPaths_SendsExpectedRequestAndParsesResponse(t *testing.T) 
 
 	service := newTestIndirectContextualService(t, server.URL)
 	service.ScopeProjectKey = "myproj"
-	packages := []PackageVersionKey{
+	packages := []xrayutils.PackageVersionKey{
 		{Type: "npm", Name: "app", Version: "1.0.0", Ecosystem: "generic"},
 		{Type: "npm", Name: "lodash", Version: "4.17.20", Ecosystem: "generic"},
 	}
@@ -96,7 +97,7 @@ func TestGetContextualPaths_ServerError_ReturnsError(t *testing.T) {
 	defer server.Close()
 
 	service := newTestIndirectContextualService(t, server.URL)
-	_, err := service.GetContextualPaths([]string{"CVE-2024-1234"}, []PackageVersionKey{{Type: "npm", Name: "lodash", Version: "4.17.20"}})
+	_, err := service.GetContextualPaths([]string{"CVE-2024-1234"}, []xrayutils.PackageVersionKey{{Type: "npm", Name: "lodash", Version: "4.17.20"}})
 
 	assert.Error(t, err)
 }
@@ -112,7 +113,7 @@ func TestGetContextualPaths_NoScopeProjectKey_OmitsQueryParam(t *testing.T) {
 	defer server.Close()
 
 	service := newTestIndirectContextualService(t, server.URL)
-	_, err := service.GetContextualPaths([]string{"CVE-2024-1234"}, []PackageVersionKey{{Type: "npm", Name: "lodash", Version: "4.17.20"}})
+	_, err := service.GetContextualPaths([]string{"CVE-2024-1234"}, []xrayutils.PackageVersionKey{{Type: "npm", Name: "lodash", Version: "4.17.20"}})
 
 	require.NoError(t, err)
 	assert.Empty(t, gotQuery)
