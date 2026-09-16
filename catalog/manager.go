@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/catalog/services"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	xrayutils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
 // CatalogServicesManager defines the http client and general configuration
@@ -64,4 +65,13 @@ func (cm *CatalogServicesManager) Enrich(bom *cyclonedx.BOM) (*cyclonedx.BOM, er
 	enrichService.CatalogDetails = cm.config.GetServiceDetails()
 	enrichService.ScopeProjectKey = cm.scopeProjectKey
 	return enrichService.Enrich(bom)
+}
+
+// GetContextualPaths requests, per CVE, the indirect dependency path(s) that make it reachable
+// given the provided set of package keys.
+func (cm *CatalogServicesManager) GetContextualPaths(cves []string, packages []xrayutils.PackageVersionKey) (map[string]services.IndirectContextualResponse, error) {
+	icService := services.NewIndirectContextualService(cm.client)
+	icService.CatalogDetails = cm.config.GetServiceDetails()
+	icService.ScopeProjectKey = cm.scopeProjectKey
+	return icService.GetContextualPaths(cves, packages)
 }
