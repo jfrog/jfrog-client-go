@@ -13,21 +13,13 @@ import (
 
 const transitiveContextualApi = "api/v1/dependencies/contextual"
 
-type Ecosystem string
-
-const (
-	GenericEcosystem Ecosystem = "generic"
-	DebianEcosystem  Ecosystem = "debian"
-	UbuntuEcosystem  Ecosystem = "ubuntu"
-)
-
 // PackageVersionKey identifies a package by type, name, namespace, version and ecosystem.
 type PackageVersionKey struct {
-	Type      string    `json:"type"`
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	Version   string    `json:"version"`
-	Ecosystem Ecosystem `json:"ecosystem"`
+	Type      string `json:"type"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Version   string `json:"version"`
+	Ecosystem string `json:"ecosystem"`
 }
 
 type transitiveContextualRequest struct {

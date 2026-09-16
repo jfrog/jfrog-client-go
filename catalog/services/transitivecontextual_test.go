@@ -47,17 +47,17 @@ func TestGetContextualPaths_SendsExpectedRequestAndParsesResponse(t *testing.T) 
 					Name:      "lodash",
 					Namespace: "",
 					Version:   "4.17.20",
-					Ecosystem: GenericEcosystem,
+					Ecosystem: "generic",
 				},
 				Functions: []string{"merge"},
 				Paths: [][]TransitiveContextualPathEntry{
 					{
 						{
-							PackageVersionKey: PackageVersionKey{Type: "npm", Name: "app", Version: "1.0.0", Ecosystem: GenericEcosystem},
+							PackageVersionKey: PackageVersionKey{Type: "npm", Name: "app", Version: "1.0.0", Ecosystem: "generic"},
 							Function:          "main",
 						},
 						{
-							PackageVersionKey: PackageVersionKey{Type: "npm", Name: "lodash", Version: "4.17.20", Ecosystem: GenericEcosystem},
+							PackageVersionKey: PackageVersionKey{Type: "npm", Name: "lodash", Version: "4.17.20", Ecosystem: "generic"},
 							Function:          "merge",
 						},
 					},
@@ -70,8 +70,8 @@ func TestGetContextualPaths_SendsExpectedRequestAndParsesResponse(t *testing.T) 
 	service := newTestTransitiveContextualService(t, server.URL)
 	service.ScopeProjectKey = "myproj"
 	packages := []PackageVersionKey{
-		{Type: "npm", Name: "app", Version: "1.0.0", Ecosystem: GenericEcosystem},
-		{Type: "npm", Name: "lodash", Version: "4.17.20", Ecosystem: GenericEcosystem},
+		{Type: "npm", Name: "app", Version: "1.0.0", Ecosystem: "generic"},
+		{Type: "npm", Name: "lodash", Version: "4.17.20", Ecosystem: "generic"},
 	}
 	result, err := service.GetContextualPaths([]string{"CVE-2024-1234"}, packages)
 
