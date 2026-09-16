@@ -66,11 +66,11 @@ func (cm *CatalogServicesManager) Enrich(bom *cyclonedx.BOM) (*cyclonedx.BOM, er
 	return enrichService.Enrich(bom)
 }
 
-// GetContextualPaths requests, per CVE, the transitive dependency path(s) that make it reachable
+// GetContextualPaths requests, per CVE, the indirect dependency path(s) that make it reachable
 // given the provided set of package keys.
-func (cm *CatalogServicesManager) GetContextualPaths(cves []string, packages []services.PackageVersionKey) (map[string]services.TransitiveContextualResponse, error) {
-	tcService := services.NewTransitiveContextualService(cm.client)
-	tcService.CatalogDetails = cm.config.GetServiceDetails()
-	tcService.ScopeProjectKey = cm.scopeProjectKey
-	return tcService.GetContextualPaths(cves, packages)
+func (cm *CatalogServicesManager) GetContextualPaths(cves []string, packages []services.PackageVersionKey) (map[string]services.IndirectContextualResponse, error) {
+	icService := services.NewIndirectContextualService(cm.client)
+	icService.CatalogDetails = cm.config.GetServiceDetails()
+	icService.ScopeProjectKey = cm.scopeProjectKey
+	return icService.GetContextualPaths(cves, packages)
 }
