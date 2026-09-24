@@ -143,9 +143,33 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 	return
 }
 
+func isDir(path string) (bool, error) {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false, nil // does not exist
+	}
+	if err != nil {
+		return false, err // some other error
+	}
+	return info.IsDir(), nil // check if it's a directory
+}
+
 // Get the local path and filename from original file name and path according to targetPath
-func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool, placeholdersUsed bool) (localTargetPath, fileName string) {
-	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
+func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool, placeholdersUsed bool) (localTargetPath, fileName string, err error) {
+	dir, err := isDir(targetPath)
+	if err != nil {
+		return
+	}
+
+	var targetFileName string
+	var targetDirPath string
+	if dir {
+		targetFileName = ""
+		targetDirPath = targetPath
+	} else {
+		targetFileName, targetDirPath = GetFileAndDirFromPath(targetPath)
+	}
+
 	// Remove double slashes and double backslashes that may appear in the path
 	localTargetPath = filepath.Clean(targetDirPath)
 	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
