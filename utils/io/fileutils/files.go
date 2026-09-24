@@ -569,6 +569,28 @@ func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
 	return localFileDetails.Checksum.Md5 == md5 && localFileDetails.Checksum.Sha1 == sha1, nil
 }
 
+// Compares provided Sha256 (and optional size) to those of a local file.
+func IsEqualToLocalFileBySha256(localFilePath, sha256 string, size int64) (bool, error) {
+	if sha256 == "" {
+		return false, nil
+	}
+	exists, err := IsFileExists(localFilePath, false)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, nil
+	}
+	localFileDetails, err := GetFileDetails(localFilePath, true)
+	if err != nil {
+		return false, err
+	}
+	if size > 0 && localFileDetails.Size != size {
+		return false, nil
+	}
+	return localFileDetails.Checksum.Sha256 == sha256, nil
+}
+
 // Move directory content from one path to another.
 func MoveDir(fromPath, toPath string) error {
 	err := CreateDirIfNotExist(toPath)
