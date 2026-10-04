@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	summaryAPI = "api/v2/summary/"
+	summaryAPI       = "api/v2/summary/"
+	cliCommandHeader = "X-Jfrog-Cli-Command"
 )
 
 func (ss *SummaryService) getSummaryUrl() string {
@@ -54,8 +55,20 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 }
 
 func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error) {
+	return ss.getArtifactSummary(params, "")
+}
+
+// GetArtifactSummaryForCommand is GetArtifactSummary tagged with the calling CLI command name.
+func (ss *SummaryService) GetArtifactSummaryForCommand(params ArtifactSummaryParams, cliCommand string) (*ArtifactSummaryResponse, error) {
+	return ss.getArtifactSummary(params, cliCommand)
+}
+
+func (ss *SummaryService) getArtifactSummary(params ArtifactSummaryParams, cliCommand string) (*ArtifactSummaryResponse, error) {
 	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
 	httpDetails.SetContentTypeApplicationJson()
+	if cliCommand != "" {
+		httpDetails.AddHeader(cliCommandHeader, cliCommand)
+	}
 	requestBody, err := json.Marshal(params)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
