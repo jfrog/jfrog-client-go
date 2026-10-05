@@ -455,6 +455,16 @@ func (item ResultItem) GetItemRelativeLocation() string {
 }
 
 func (item *ResultItem) ToArtifact() buildinfo.Artifact {
+	// Multi-arch container push callers (jfrog-cli-artifactory OCI
+	// buildinfo.createPushBuildProperties) reach ToArtifact on the
+	// zero-value element of a nil ResultItem pointer when the
+	// manifest-digest SHA lookup misses in Artifactory. The previous
+	// code then SIGSEGV'd on item.Name and took the whole build down.
+	// Return a zero Artifact instead so the caller sees an empty
+	// result and can handle it as "no matching artifact" upstream.
+	if item == nil {
+		return buildinfo.Artifact{}
+	}
 	return buildinfo.Artifact{
 		Name: item.Name,
 		Checksum: buildinfo.Checksum{
