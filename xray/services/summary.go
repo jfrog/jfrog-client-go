@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	summaryAPI = "api/v2/summary/"
+	summaryAPI       = "api/v2/summary/"
+	cliCommandHeader = "X-Jfrog-Cli-Command"
 )
 
 func (ss *SummaryService) getSummaryUrl() string {
@@ -56,6 +57,9 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error) {
 	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
 	httpDetails.SetContentTypeApplicationJson()
+	if params.CliCommand != "" {
+		httpDetails.AddHeader(cliCommandHeader, params.CliCommand)
+	}
 	requestBody, err := json.Marshal(params)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
@@ -81,8 +85,9 @@ func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*Art
 }
 
 type ArtifactSummaryParams struct {
-	Checksums []string `json:"checksums,omitempty"`
-	Paths     []string `json:"paths,omitempty"`
+	Checksums  []string `json:"checksums,omitempty"`
+	Paths      []string `json:"paths,omitempty"`
+	CliCommand string   `json:"-"`
 }
 
 type ArtifactSummaryResponse struct {
