@@ -85,10 +85,9 @@ func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*Art
 }
 
 type ArtifactSummaryParams struct {
-	Checksums []string `json:"checksums,omitempty"`
-	Paths     []string `json:"paths,omitempty"`
-	// CliCommand is excluded from the request body, it only sets cliCommandHeader.
-	CliCommand string `json:"-"`
+	Checksums  []string `json:"checksums,omitempty"`
+	Paths      []string `json:"paths,omitempty"`
+	CliCommand string   `json:"-"`
 }
 
 type ArtifactSummaryResponse struct {

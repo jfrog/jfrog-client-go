@@ -2,6 +2,7 @@ package xray
 
 import (
 	"github.com/CycloneDX/cyclonedx-go"
+
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -247,7 +248,6 @@ func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryPa
 	summaryService.XrayDetails = sm.config.GetServiceDetails()
 	return summaryService.GetArtifactSummary(params)
 }
-
 
 // IsEntitled returns true if the user is entitled for the requested feature ID
 func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
