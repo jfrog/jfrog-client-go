@@ -248,12 +248,6 @@ func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryPa
 	return summaryService.GetArtifactSummary(params)
 }
 
-// ArtifactSummaryForCommand is ArtifactSummary tagged with the calling CLI command name
-func (sm *XrayServicesManager) ArtifactSummaryForCommand(params services.ArtifactSummaryParams, cliCommand string) (*services.ArtifactSummaryResponse, error) {
-	summaryService := services.NewSummaryService(sm.client)
-	summaryService.XrayDetails = sm.config.GetServiceDetails()
-	return summaryService.GetArtifactSummaryForCommand(params, cliCommand)
-}
 
 // IsEntitled returns true if the user is entitled for the requested feature ID
 func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
