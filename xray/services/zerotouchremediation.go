@@ -62,6 +62,17 @@ type ComponentResolutionRequest struct {
 	BuildTool string `json:"build-tool"`
 	Repo      string `json:"repo"`
 	Lockfile  string `json:"lockfile"`
+	// Vcs is the repository the lockfile came from. Xray records it on the
+	// remediation, which is what lets a fix pull request be opened against that
+	// repository later. Omitted when the project is not in a git checkout.
+	Vcs *ComponentResolutionVcs `json:"vcs,omitempty"`
+}
+
+// ComponentResolutionVcs identifies the git repository and commit a lockfile was read from.
+type ComponentResolutionVcs struct {
+	Url      string `json:"url"`
+	Branch   string `json:"branch,omitempty"`
+	Revision string `json:"revision,omitempty"`
 }
 
 type ComponentResolutionResponse struct {
