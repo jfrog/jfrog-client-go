@@ -46,6 +46,11 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 			params:        XrayGraphScanParams{GitRepoHttpsCloneUrl: "http://some-url", ScanType: Dependency, XrayVersion: MinXrayVersionGitRepoKey},
 			expectedQuery: fmt.Sprintf("?%s%s&%s%s", scanTypeQueryParam, Dependency, gitRepoKeyQueryParam, "some-url.git"),
 		},
+		{
+			testName:      "with_scp_git_repo_url",
+			params:        XrayGraphScanParams{GitRepoHttpsCloneUrl: "git@github.com:JFROG/repo.git", ScanType: Dependency, XrayVersion: MinXrayVersionGitRepoKey},
+			expectedQuery: fmt.Sprintf("?%s%s&%s%s", scanTypeQueryParam, Dependency, gitRepoKeyQueryParam, "github.com/JFROG/repo.git"),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
