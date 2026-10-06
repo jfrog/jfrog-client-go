@@ -23,6 +23,11 @@ func TestComponentResolutionRequestVcs(t *testing.T) {
 			wantVcs:  map[string]any{"url": "https://github.com/org/repo.git", "branch": "main", "revision": "abc123"},
 		},
 		{
+			testName: "empty_vcs_sends_no_empty_url",
+			vcs:      &ComponentResolutionVcs{},
+			wantVcs:  map[string]any{},
+		},
+		{
 			testName: "detached_head_has_no_branch",
 			vcs:      &ComponentResolutionVcs{Url: "https://github.com/org/repo.git", Revision: "abc123"},
 			wantVcs:  map[string]any{"url": "https://github.com/org/repo.git", "revision": "abc123"},

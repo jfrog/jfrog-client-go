@@ -70,7 +70,7 @@ type ComponentResolutionRequest struct {
 
 // ComponentResolutionVcs identifies the git repository and commit a lockfile was read from.
 type ComponentResolutionVcs struct {
-	Url      string `json:"url"`
+	Url      string `json:"url,omitempty"`
 	Branch   string `json:"branch,omitempty"`
 	Revision string `json:"revision,omitempty"`
 }
