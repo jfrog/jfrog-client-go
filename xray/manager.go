@@ -256,6 +256,14 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	return entitlementsService.IsEntitled(featureId)
 }
 
+// GetApplicabilityInput returns the contextual analysis input of the given vulnerabilities
+func (sm *XrayServicesManager) GetApplicabilityInput(vulnerabilityIds []string) (*services.ApplicabilityInput, error) {
+	applicabilityService := services.NewApplicabilityService(sm.client)
+	applicabilityService.XrayDetails = sm.config.GetServiceDetails()
+	applicabilityService.ScopeProjectKey = sm.scopeProjectKey
+	return applicabilityService.GetApplicabilityInput(vulnerabilityIds)
+}
+
 // Xsc returns the Xsc service inside Xray
 func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService := xsc.NewXscService(sm.client)
