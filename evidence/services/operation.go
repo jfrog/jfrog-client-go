@@ -52,6 +52,18 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated)
 }
 
+func (es *EvidenceService) uploadEvidenceBody(requestURL string, evidenceBody []byte) ([]byte, error) {
+	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
+	httpClientDetails.SetContentTypeApplicationJson()
+
+	log.Debug("Uploading Evidence")
+	resp, body, err := es.client.SendPost(requestURL, evidenceBody, &httpClientDetails)
+	if err != nil {
+		return nil, err
+	}
+	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated)
+}
+
 type EvidenceDetails struct {
 	SubjectUri  string              `json:"subject_uri"`
 	DSSEFileRaw []byte              `json:"dsse_file_raw"`

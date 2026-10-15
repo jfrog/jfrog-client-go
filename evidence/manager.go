@@ -39,3 +39,13 @@ func (esm *EvidenceServicesManager) UploadEvidence(evidenceDetails services.Evid
 	evidenceService := services.NewEvidenceService(esm.config.GetServiceDetails(), esm.client)
 	return evidenceService.UploadEvidence(evidenceDetails)
 }
+
+func (esm *EvidenceServicesManager) PrepareEvidence(request services.PrepareEvidenceRequest, includePAE bool) (*services.PrepareEvidenceResponse, error) {
+	evidenceService := services.NewEvidenceService(esm.config.GetServiceDetails(), esm.client)
+	return evidenceService.PrepareEvidence(request, includePAE)
+}
+
+func (esm *EvidenceServicesManager) UploadPreparedSignedEvidence(postURL string, signedEnvelope []byte) ([]byte, error) {
+	evidenceService := services.NewEvidenceService(esm.config.GetServiceDetails(), esm.client)
+	return evidenceService.UploadPreparedSignedEvidence(postURL, signedEnvelope)
+}
