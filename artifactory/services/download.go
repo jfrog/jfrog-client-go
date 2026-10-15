@@ -594,6 +594,12 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 	if err != nil {
 		return err
 	}
+	if !isEqual && downloadData.Dependency.Sha256 != "" {
+		isEqual, err = fileutils.IsEqualToLocalFileBySha256(localFilePath, downloadData.Dependency.Sha256, downloadData.Dependency.Size)
+		if err != nil {
+			return err
+		}
+	}
 	if isEqual {
 		log.Debug(logMsgPrefix+"File already exists locally:", localFilePath)
 		if ds.Progress != nil {
