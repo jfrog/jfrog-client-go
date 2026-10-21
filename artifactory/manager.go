@@ -681,10 +681,10 @@ func (sm *ArtifactoryServicesManagerImp) ListSkills(repoKey string, limit int, c
 	return skillsService.ListSkills(repoKey, limit, cursor, sortBy)
 }
 
-func (sm *ArtifactoryServicesManagerImp) ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error) {
+func (sm *ArtifactoryServicesManagerImp) ListSkillVersions(repoKey, slug string, limit int, cursor string) ([]services.SkillVersion, string, error) {
 	skillsService := services.NewSkillsService(sm.client)
 	skillsService.ArtDetails = sm.config.GetServiceDetails()
-	return skillsService.ListVersions(repoKey, slug)
+	return skillsService.ListVersions(repoKey, slug, limit, cursor)
 }
 
 func (sm *ArtifactoryServicesManagerImp) SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error) {
@@ -697,6 +697,12 @@ func (sm *ArtifactoryServicesManagerImp) SkillVersionExists(repoKey, slug, versi
 	skillsService := services.NewSkillsService(sm.client)
 	skillsService.ArtDetails = sm.config.GetServiceDetails()
 	return skillsService.VersionExists(repoKey, slug, version)
+}
+
+func (sm *ArtifactoryServicesManagerImp) SkillExists(repoKey, slug string) (bool, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.SkillExists(repoKey, slug)
 }
 
 func (sm *ArtifactoryServicesManagerImp) SearchSkillsByProperty(query string) ([]services.SkillPropertySearchResult, error) {

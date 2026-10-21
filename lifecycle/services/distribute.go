@@ -30,6 +30,9 @@ type DistributeReleaseBundleService struct {
 	DistributeParams distribution.DistributionParams
 	ProjectKey       string
 	Priority         string
+	// IncludeEvidence tells the Distribution service to also move Evidence attached
+	// to the Release Bundle (and to the artifacts in its hierarchy) to the target.
+	IncludeEvidence bool
 	Modifications
 }
 
@@ -41,6 +44,7 @@ type DistributeReleaseBundleParams struct {
 	PathMappings      []PathMapping
 	ProjectKey        string
 	Priority          string
+	IncludeEvidence   bool
 }
 
 func (dr *DistributeReleaseBundleService) GetHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -97,13 +101,17 @@ func (dr *DistributeReleaseBundleService) createDistributeBody() ReleaseBundleDi
 	return ReleaseBundleDistributeBody{
 		ReleaseBundleDistributeV1Body: distribution.CreateDistributeV1BodyWithPriority(
 			dr.DistributeParams.DistributionRules, dr.DryRun, dr.AutoCreateRepo, dr.Priority),
-		Modifications: dr.Modifications,
+		Modifications:   dr.Modifications,
+		IncludeEvidence: dr.IncludeEvidence,
 	}
 }
 
 type ReleaseBundleDistributeBody struct {
 	distribution.ReleaseBundleDistributeV1Body
 	Modifications `json:"modifications"`
+	// IncludeEvidence, when true, instructs the Distribution service to move the
+	// Release Bundle's Evidence (and Evidence on its artifacts) to the target.
+	IncludeEvidence bool `json:"include_evidence,omitempty"`
 }
 
 type Modifications struct {

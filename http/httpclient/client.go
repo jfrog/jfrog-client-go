@@ -109,6 +109,35 @@ func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails htt
 	return
 }
 
+// SendPostFromReader sends a POST with an io.Reader body.
+// The body is not retried; a consumed stream cannot be replayed.
+func (jc *HttpClient) SendPostFromReader(url string, reader io.Reader, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
+	req, err := jc.newRequest(http.MethodPost, url, reader)
+	if err != nil {
+		return
+	}
+	req.Close = true
+
+	copyHeaders(httpClientsDetails, req)
+	setAuthentication(req, httpClientsDetails)
+	addUserAgentHeader(req)
+	addUberTraceIdHeaderIfSet(req)
+
+	log.Debug(fmt.Sprintf("Sending HTTP POST request to: %s", url))
+	resp, err = jc.client.Do(req) // #nosec G704 -- CLI/library; URL from user/config, runs in user environment
+	if errorutils.CheckError(err) != nil || resp == nil {
+		return
+	}
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
+		}
+	}()
+	body, err = io.ReadAll(resp.Body)
+	err = errorutils.CheckError(err)
+	return
+}
+
 func (jc *HttpClient) newRequest(method, url string, body io.Reader) (req *http.Request, err error) {
 	if jc.ctx != nil {
 		req, err = http.NewRequestWithContext(jc.ctx, method, url, body)
