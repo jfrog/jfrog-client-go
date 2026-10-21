@@ -266,6 +266,43 @@ func TestIsEqualToLocalFile(t *testing.T) {
 	}
 }
 
+func TestIsEqualToLocalFileBySha256(t *testing.T) {
+	localFilePath := filepath.Join("testdata", "files", "comparisonFile")
+
+	localFileDetails, err := GetFileDetails(localFilePath, true)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+
+	actualSha256 := localFileDetails.Checksum.Sha256
+	actualSize := localFileDetails.Size
+	tests := []struct {
+		name           string
+		localPath      string
+		remoteSha256   string
+		size           int64
+		expectedResult bool
+	}{
+		{"realEquality", localFilePath, actualSha256, actualSize, true},
+		{"unequalPath", "non/existing/path", actualSha256, actualSize, false},
+		{"unequalChecksum", localFilePath, "wrongSha256", actualSize, false},
+		{"unequalSize", localFilePath, actualSha256, actualSize + 1, false},
+		{"emptySha256", localFilePath, "", actualSize, false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			isEqual, err := IsEqualToLocalFileBySha256(test.localPath, test.remoteSha256, test.size)
+			if err != nil {
+				assert.NoError(t, err)
+				return
+			}
+			assert.Equal(t, test.expectedResult, isEqual)
+		})
+	}
+}
+
 func TestListFilesByFilterFunc(t *testing.T) {
 	testDir := filepath.Join("testdata", "listextension")
 	expected := []string{filepath.Join(testDir, "a.proj"),
