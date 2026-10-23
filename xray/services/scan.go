@@ -293,6 +293,8 @@ type Cve struct {
 	CvssV2Vector string         `json:"cvss_v2_vector,omitempty"`
 	CvssV3Score  string         `json:"cvss_v3_score,omitempty"`
 	CvssV3Vector string         `json:"cvss_v3_vector,omitempty"`
+	CvssV4Score  string         `json:"cvss_v4_score,omitempty"`
+	CvssV4Vector string         `json:"cvss_v4_vector,omitempty"`
 	Cwe          []string       `json:"cwe,omitempty"`
 	CweDetails   map[string]Cwe `json:"cwe_details,omitempty"`
 }
