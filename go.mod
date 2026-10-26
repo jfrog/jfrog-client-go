@@ -1,6 +1,6 @@
 module github.com/jfrog/jfrog-client-go
 
-go 1.25.5
+go 1.26.10
 
 require (
 	github.com/CycloneDX/cyclonedx-go v0.11.0
