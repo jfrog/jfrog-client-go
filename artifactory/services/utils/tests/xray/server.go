@@ -118,7 +118,11 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	case http.MethodDelete:
-		if numSegments == 0 {
+		if numSegments == 1 {
+			if _, err := strconv.Atoi(addlSegments[0]); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 			_, err := fmt.Fprint(w, XrayReportDeleteResponse)
 			if err != nil {
 				log.Error(err)

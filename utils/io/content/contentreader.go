@@ -135,7 +135,7 @@ func (cr *ContentReader) Reset() {
 func removeFile(filePath string) error {
 	// Check if file exists before attempting to remove
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		log.Debug("File does not exist: %s", filePath)
+		log.Debug(fmt.Sprintf("File does not exist: %s", filePath))
 		return nil
 	}
 	log.Debug(fmt.Sprintf("Attempting to remove file: %s", filePath))
