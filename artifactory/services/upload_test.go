@@ -1,11 +1,20 @@
 package services
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDebianProperties(t *testing.T) {
@@ -129,4 +138,89 @@ func TestSkipDirUpload(t *testing.T) {
 		got := skipDirUpload(d.targetFiles, d.sourceDirs, d.targetDir, d.sourceDir, d.includeDirs)
 		assert.Equal(t, d.result, got)
 	}
+}
+
+// The checksum-deploy PUT that finalizes a multipart upload must carry the token returned by Artifactory,
+// also when /api/v1/uploads/complete was retried after a RETRYABLE_ERROR status.
+func TestMultipartUploadChecksumDeployTokenAfterRetriedComplete(t *testing.T) {
+	const (
+		checksumDeployToken = "checksum-deploy-token"
+		targetPath          = "repo/file.bin"
+	)
+	var completeCalls, statusCalls, abortCalls, deployCalls atomic.Int32
+
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/uploads/config":
+			_, err := w.Write([]byte(`{"supported":true}`))
+			assert.NoError(t, err)
+		case "/api/v1/uploads/create":
+			_, err := w.Write([]byte(`{"token":"multipart-token"}`))
+			assert.NoError(t, err)
+		case "/api/v1/uploads/urlPart":
+			_, err := w.Write([]byte(`{"url":"` + server.URL + `/storage/part"}`))
+			assert.NoError(t, err)
+		case "/storage/part":
+			w.WriteHeader(http.StatusOK)
+		case "/api/v1/uploads/complete":
+			completeCalls.Add(1)
+			w.WriteHeader(http.StatusAccepted)
+		case "/api/v1/uploads/status":
+			// The first status is a retryable error without a token, the status after the retried complete is finished with a token.
+			response := `{"status":"RETRYABLE_ERROR","error":"Injected S3 SlowDown","progress":0}`
+			if statusCalls.Add(1) > 1 {
+				response = `{"status":"FINISHED","progress":100,"checksumToken":"` + checksumDeployToken + `"}`
+			}
+			_, err := w.Write([]byte(response))
+			assert.NoError(t, err)
+		case "/api/v1/uploads/abort":
+			abortCalls.Add(1)
+			w.WriteHeader(http.StatusOK)
+		case "/" + targetPath:
+			deployCalls.Add(1)
+			assert.Equal(t, http.MethodPut, r.Method)
+			assert.Equal(t, "true", r.Header.Get("X-Checksum-Deploy"))
+			assert.Equal(t, checksumDeployToken, r.Header.Get("X-Checksum-Deploy-Token"), "the checksum deploy must carry the token returned after the retried complete")
+			w.WriteHeader(http.StatusCreated)
+		default:
+			assert.Fail(t, "unexpected request", r.Method+" "+r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	localPath := filepath.Join(t.TempDir(), "file.bin")
+	require.NoError(t, os.WriteFile(localPath, []byte("multipart upload content"), 0o600))
+
+	// The retries value sets the attempts budget of the multipart upload, so it must be above zero.
+	client, err := jfroghttpclient.JfrogClientBuilder().SetRetries(3).Build()
+	require.NoError(t, err)
+	uploadService := NewUploadService(client)
+	uploadService.SetServiceDetails(&dummyServiceDetails{version: "7.133.0"})
+	uploadService.MultipartUpload = utils.NewMultipartUpload(client, &httputils.HttpClientDetails{}, server.URL)
+
+	uploadParams := NewUploadParams()
+	uploadParams.MinChecksumDeploy = 1 << 30
+	uploadParams.MinSplitSize = 1
+	uploadParams.SplitCount = 1
+
+	resp, _, _, checksumDeployed, err := uploadService.doUpload(clientutils.Artifact{LocalPath: localPath, TargetPath: targetPath},
+		server.URL+"/"+targetPath, "", httputils.HttpClientDetails{Headers: map[string]string{}}, uploadParams)
+	require.NoError(t, err)
+	assert.False(t, checksumDeployed)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	assert.EqualValues(t, 2, completeCalls.Load(), "complete should be retried once")
+	assert.EqualValues(t, 2, statusCalls.Load())
+	assert.EqualValues(t, 1, deployCalls.Load())
+	assert.Zero(t, abortCalls.Load())
+}
+
+// A service details stub with a fixed Artifactory version, so the version is not requested from the server.
+type dummyServiceDetails struct {
+	auth.CommonConfigFields
+	version string
+}
+
+func (d *dummyServiceDetails) GetVersion() (string, error) {
+	return d.version, nil
 }
