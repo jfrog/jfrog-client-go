@@ -354,6 +354,8 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 					return false, errorutils.CheckErrorf("multipart upload failed after %d attempts", mu.client.GetHttpClient().GetRetries())
 				}
 				checksumToken, err = mu.completeAndPollForStatus(logMsgPrefix, completionAttemptsLeft-1, sha1, multipartUploadClient, progressReader)
+				// The nested call already polled to a final status. Return its token, so the stale status above won't overwrite it.
+				return false, err
 			}
 
 			// Log status
@@ -370,7 +372,9 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 			return
 		},
 	}
-	return checksumToken, pollingExecutor.Execute()
+	// Execute first, since the handler sets checksumToken and Go doesn't define the evaluation order of a variable and a call in a return statement.
+	err = pollingExecutor.Execute()
+	return checksumToken, err
 }
 
 func (mu *MultipartUpload) completeMultipartUpload(logMsgPrefix, sha1 string, multipartUploadClient *httputils.HttpClientDetails) error {

@@ -268,6 +268,43 @@ func TestStatusServiceUnavailable(t *testing.T) {
 	assert.Equal(t, statusResponse{Status: retryableError, Error: "Artifactory is unavailable."}, status)
 }
 
+// RTECO-2726: the checksum token returned after a retried /complete must not be overwritten by the earlier RETRYABLE_ERROR status.
+func TestCompleteAndPollForStatusRetryableError(t *testing.T) {
+	statusCalls := 0
+	completeCalls := 0
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		switch r.URL.Path {
+		case "/api/v1/uploads/complete":
+			completeCalls++
+			w.WriteHeader(http.StatusAccepted)
+		case "/api/v1/uploads/status":
+			statusCalls++
+			// First status is a retryable error without a token, the status after the retried /complete is finished with a token
+			status := statusResponse{Status: retryableError, Error: "Injected S3 SlowDown", Progress: utils.Pointer(0)}
+			if statusCalls > 1 {
+				status = statusResponse{Status: finished, Progress: utils.Pointer(100), ChecksumToken: checksumToken}
+			}
+			response, err := json.Marshal(status)
+			assert.NoError(t, err)
+			w.WriteHeader(http.StatusOK)
+			_, err = w.Write(response)
+			assert.NoError(t, err)
+		default:
+			assert.Fail(t, "unexpected request", r.URL.Path)
+		}
+	})
+
+	multipartUpload, cleanUp := createMockMultipartUpload(t, handler)
+	defer cleanUp()
+
+	token, err := multipartUpload.completeAndPollForStatus("", 1, sha1, &httputils.HttpClientDetails{}, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, checksumToken, token)
+	assert.Equal(t, 2, completeCalls)
+	assert.Equal(t, 2, statusCalls)
+}
+
 func TestAbort(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check method
