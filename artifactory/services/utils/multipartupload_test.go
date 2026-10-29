@@ -268,41 +268,69 @@ func TestStatusServiceUnavailable(t *testing.T) {
 	assert.Equal(t, statusResponse{Status: retryableError, Error: "Artifactory is unavailable."}, status)
 }
 
-// RTECO-2726: the checksum token returned after a retried /complete must not be overwritten by the earlier RETRYABLE_ERROR status.
-func TestCompleteAndPollForStatusRetryableError(t *testing.T) {
-	statusCalls := 0
-	completeCalls := 0
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, http.MethodPost, r.Method)
-		switch r.URL.Path {
-		case "/api/v1/uploads/complete":
-			completeCalls++
-			w.WriteHeader(http.StatusAccepted)
-		case "/api/v1/uploads/status":
-			statusCalls++
-			// First status is a retryable error without a token, the status after the retried /complete is finished with a token
-			status := statusResponse{Status: retryableError, Error: "Injected S3 SlowDown", Progress: utils.Pointer(0)}
-			if statusCalls > 1 {
-				status = statusResponse{Status: finished, Progress: utils.Pointer(100), ChecksumToken: checksumToken}
+// The checksum token returned after a retried /complete must not be overwritten by the earlier RETRYABLE_ERROR status.
+func TestCompleteAndPollForStatus(t *testing.T) {
+	retryable := statusResponse{Status: retryableError, Error: "Injected S3 SlowDown", Progress: utils.Pointer(0)}
+	done := statusResponse{Status: finished, Progress: utils.Pointer(100), ChecksumToken: checksumToken}
+	nonRetryable := statusResponse{Status: nonRetryableError, Error: "fatal"}
+
+	testCases := []struct {
+		name                   string
+		attemptsLeft           uint
+		statuses               []statusResponse
+		expectedToken          string
+		expectedErr            string
+		expectedCompleteCalls  int
+		expectedStatusRequests int
+	}{
+		{name: "finished immediately", attemptsLeft: 1, statuses: []statusResponse{done}, expectedToken: checksumToken, expectedCompleteCalls: 1, expectedStatusRequests: 1},
+		{name: "retry then finished", attemptsLeft: 1, statuses: []statusResponse{retryable, done}, expectedToken: checksumToken, expectedCompleteCalls: 2, expectedStatusRequests: 2},
+		{name: "two retries then finished", attemptsLeft: 2, statuses: []statusResponse{retryable, retryable, done}, expectedToken: checksumToken, expectedCompleteCalls: 3, expectedStatusRequests: 3},
+		{name: "retries exhausted", attemptsLeft: 0, statuses: []statusResponse{retryable}, expectedErr: "multipart upload failed after", expectedCompleteCalls: 1, expectedStatusRequests: 1},
+		{name: "retries exhausted after a retry", attemptsLeft: 1, statuses: []statusResponse{retryable, retryable}, expectedErr: "multipart upload failed after", expectedCompleteCalls: 2, expectedStatusRequests: 2},
+		{name: "retry then non retryable error", attemptsLeft: 1, statuses: []statusResponse{retryable, nonRetryable}, expectedErr: "received non retryable error", expectedCompleteCalls: 2, expectedStatusRequests: 2},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			completeCalls := 0
+			statusRequests := 0
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, http.MethodPost, r.Method)
+				switch r.URL.Path {
+				case "/api/v1/uploads/complete":
+					completeCalls++
+					w.WriteHeader(http.StatusAccepted)
+				case "/api/v1/uploads/status":
+					if !assert.Less(t, statusRequests, len(testCase.statuses), "unexpected extra status request") {
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+					response, err := json.Marshal(testCase.statuses[statusRequests])
+					assert.NoError(t, err)
+					statusRequests++
+					w.WriteHeader(http.StatusOK)
+					_, err = w.Write(response)
+					assert.NoError(t, err)
+				default:
+					assert.Fail(t, "unexpected request", r.URL.Path)
+				}
+			})
+
+			multipartUpload, cleanUp := createMockMultipartUpload(t, handler)
+			defer cleanUp()
+
+			actualToken, err := multipartUpload.completeAndPollForStatus("", testCase.attemptsLeft, sha1, &httputils.HttpClientDetails{}, nil)
+			if testCase.expectedErr != "" {
+				assert.ErrorContains(t, err, testCase.expectedErr)
+			} else {
+				assert.NoError(t, err)
 			}
-			response, err := json.Marshal(status)
-			assert.NoError(t, err)
-			w.WriteHeader(http.StatusOK)
-			_, err = w.Write(response)
-			assert.NoError(t, err)
-		default:
-			assert.Fail(t, "unexpected request", r.URL.Path)
-		}
-	})
-
-	multipartUpload, cleanUp := createMockMultipartUpload(t, handler)
-	defer cleanUp()
-
-	token, err := multipartUpload.completeAndPollForStatus("", 1, sha1, &httputils.HttpClientDetails{}, nil)
-	assert.NoError(t, err)
-	assert.Equal(t, checksumToken, token)
-	assert.Equal(t, 2, completeCalls)
-	assert.Equal(t, 2, statusCalls)
+			assert.Equal(t, testCase.expectedToken, actualToken)
+			assert.Equal(t, testCase.expectedCompleteCalls, completeCalls)
+			assert.Equal(t, testCase.expectedStatusRequests, statusRequests)
+		})
+	}
 }
 
 func TestAbort(t *testing.T) {
