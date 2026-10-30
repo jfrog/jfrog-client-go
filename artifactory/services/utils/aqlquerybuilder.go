@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"golang.org/x/exp/slices"
 
@@ -12,23 +11,9 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-const spaceEncoding = "%20"
-
 // errTransitiveMultiRepoMsg is shared by both pattern-based and build-with-pattern AQL
 // builders so the validation and its error text stay in lockstep.
 const errTransitiveMultiRepoMsg = "when searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash"
-
-var specialAqlCharacters = map[rune]string{
-	'/':  "%2F",
-	'\\': "%5C",
-	'|':  "%7C",
-	'*':  "%2A",
-	'?':  "%3F",
-	'\'': "%22",
-	':':  "%3A",
-	';':  "%3B",
-	'%':  "%25",
-}
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
@@ -250,7 +235,7 @@ func CreateAqlQueryForBuildInfoJson(project, buildName, buildNumber, timestamp s
 	if project == "" {
 		project = "artifactory"
 	} else {
-		project = encodeForBuildInfoRepository(project)
+		project = EncodeForBuildInfoRepository(project)
 	}
 	itemsPart :=
 		`items.find({
@@ -262,25 +247,7 @@ func CreateAqlQueryForBuildInfoJson(project, buildName, buildNumber, timestamp s
 				"$match": "%s-%s.json"
 			}
 		})%s`
-	return fmt.Sprintf(itemsPart, project+"-build-info", encodeForBuildInfoRepository(buildName), encodeForBuildInfoRepository(buildNumber), timestamp, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
-}
-
-func encodeForBuildInfoRepository(value string) string {
-	results := ""
-	for _, char := range value {
-		if unicode.IsSpace(char) {
-			char = ' '
-		}
-		if encoding, exist := specialAqlCharacters[char]; exist {
-			results += encoding
-		} else {
-			results += string(char)
-		}
-	}
-	slashEncoding := specialAqlCharacters['/']
-	results = strings.ReplaceAll(results, slashEncoding+" ", slashEncoding+spaceEncoding)
-	results = strings.ReplaceAll(results, " "+slashEncoding, spaceEncoding+slashEncoding)
-	return results
+	return fmt.Sprintf(itemsPart, project+"-build-info", EncodeForBuildInfoRepository(buildName), EncodeForBuildInfoRepository(buildNumber), timestamp, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
 }
 
 func CreateAqlQueryForLatestCreated(repo, path string) string {
