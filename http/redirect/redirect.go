@@ -58,6 +58,11 @@ func (b EndpointBoundary) Validate(rawURL string) error {
 	return nil
 }
 
+// sameOrigin reports whether u shares the boundary's scheme and host (path ignored).
+func (b EndpointBoundary) sameOrigin(u *url.URL) bool {
+	return strings.EqualFold(u.Scheme, b.scheme) && normalizedHost(u) == b.host
+}
+
 func normalizedBoundaryPath(rawPath string) (string, bool) {
 	if rawPath == "" {
 		rawPath = "/"
@@ -96,10 +101,9 @@ func normalizedHost(u *url.URL) string {
 	return strings.ToLower(u.Hostname()) + ":" + port
 }
 
-// SendWithBoundedRedirects sends requestURL and follows any redirect the server returns, but only
-// if each hop (including the initial URL) validates against boundary. Credentials are only ever
-// re-attached to a hop once it has been validated. Callers decide what boundary means to them -
-// this function only compares URLs against it.
+// SendWithBoundedRedirects sends requestURL and follows redirects: same-origin hops must still
+// satisfy boundary (path prefix included), cross-origin https hops are followed with
+// credentials/custom headers stripped (e.g. Artifactory -> S3), anything else is rejected.
 func SendWithBoundedRedirects(client *jfroghttpclient.JfrogHttpClient, method, requestURL string,
 	details *httputils.HttpClientDetails, boundary EndpointBoundary, maxRedirects int,
 ) (*http.Response, []byte, error) {
@@ -111,21 +115,46 @@ func SendWithBoundedRedirects(client *jfroghttpclient.JfrogHttpClient, method, r
 	if retries := client.GetHttpClient().GetRetries(); retries != 0 {
 		return nil, nil, fmt.Errorf("bounded redirects require a zero-retry client, got %d retries configured", retries)
 	}
+	if err := boundary.Validate(requestURL); err != nil {
+		return nil, nil, err
+	}
 	currentURL := requestURL
+	currentDetails := details
 	for redirects := 0; ; redirects++ {
-		if err := boundary.Validate(currentURL); err != nil {
-			return nil, nil, err
-		}
-		resp, body, redirectURL, err := client.Send(method, currentURL, nil, false, true, details.Clone(), "")
+		resp, body, redirectURL, err := client.Send(method, currentURL, nil, false, true, currentDetails.Clone(), "")
 		if redirectURL == "" {
 			return resp, body, err
 		}
 		if redirects == maxRedirects {
 			return resp, body, fmt.Errorf("redirect limit of %d exceeded", maxRedirects)
 		}
-		if err := boundary.Validate(redirectURL); err != nil {
-			return resp, body, fmt.Errorf("unsafe redirect: %w", err)
+		u, parseErr := url.Parse(redirectURL)
+		if parseErr != nil || u.Scheme == "" || u.Host == "" || u.User != nil || hasAmbiguousPathEscape(u.EscapedPath()) {
+			return resp, body, fmt.Errorf("unsafe redirect: invalid redirect target")
+		}
+		if boundary.sameOrigin(u) {
+			if err := boundary.Validate(redirectURL); err != nil {
+				return resp, body, fmt.Errorf("unsafe redirect: %w", err)
+			}
+			currentURL = redirectURL
+			continue
+		}
+		if !strings.EqualFold(u.Scheme, "https") {
+			return resp, body, fmt.Errorf("unsafe redirect: refusing to follow a cross-origin redirect to a non-https URL")
 		}
 		currentURL = redirectURL
+		currentDetails = stripCredentials(currentDetails)
 	}
+}
+
+// stripCredentials returns a copy of details with auth (user/password/API key/token) and
+// custom headers removed. Connection-level settings (transport, timeouts) are kept.
+func stripCredentials(details *httputils.HttpClientDetails) *httputils.HttpClientDetails {
+	sanitized := details.Clone()
+	sanitized.User = ""
+	sanitized.Password = ""
+	sanitized.ApiKey = ""
+	sanitized.AccessToken = ""
+	sanitized.Headers = nil
+	return sanitized
 }

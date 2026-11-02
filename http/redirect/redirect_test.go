@@ -19,6 +19,13 @@ func newZeroRetryClient(t *testing.T) *jfroghttpclient.JfrogHttpClient {
 	return client
 }
 
+// newZeroRetryTLSClient is like newZeroRetryClient, but trusts self-signed TLS test certs.
+func newZeroRetryTLSClient(t *testing.T) *jfroghttpclient.JfrogHttpClient {
+	client, err := jfroghttpclient.JfrogClientBuilder().SetRetries(0).SetInsecureTls(true).Build()
+	require.NoError(t, err)
+	return client
+}
+
 func TestNewEndpointBoundary(t *testing.T) {
 	t.Run("bare host covers root", func(t *testing.T) {
 		boundary, err := NewEndpointBoundary("https://example.com")
@@ -162,4 +169,82 @@ func TestSendWithBoundedRedirectsRejectsLateHopEscape(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unsafe redirect")
 	assert.Equal(t, int32(2), requests.Load(), "must stop at the escaping hop, not follow it")
+}
+
+// TestSendWithBoundedRedirectsFollowsCrossOriginStorageRedirect: a redirect to cloud storage
+// (e.g. S3) must be followed, without carrying credentials or custom headers to it.
+func TestSendWithBoundedRedirectsFollowsCrossOriginStorageRedirect(t *testing.T) {
+	var storageAuth, storageCustomHeader string
+	var storageRequests atomic.Int32
+	storage := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		storageRequests.Add(1)
+		storageAuth = r.Header.Get("Authorization")
+		storageCustomHeader = r.Header.Get("X-Artifactory-Curation-Request-Waiver")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte("binary-content")); err != nil {
+			t.Errorf("failed writing response: %v", err)
+		}
+	}))
+	defer storage.Close()
+
+	var artifactoryAuth, artifactoryCustomHeader string
+	var artifactoryRequests atomic.Int32
+	artifactory := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		artifactoryRequests.Add(1)
+		artifactoryAuth = r.Header.Get("Authorization")
+		artifactoryCustomHeader = r.Header.Get("X-Artifactory-Curation-Request-Waiver")
+		http.Redirect(w, r, storage.URL+"/presigned?sig=abc", http.StatusFound)
+	}))
+	defer artifactory.Close()
+
+	client := newZeroRetryTLSClient(t)
+	boundary, err := NewEndpointBoundary(artifactory.URL + "/api/pypi/repo/")
+	require.NoError(t, err)
+	details := httputils.HttpClientDetails{
+		AccessToken: "super-secret-token",
+		Headers:     map[string]string{"X-Artifactory-Curation-Request-Waiver": "syn"},
+	}
+
+	resp, body, err := SendWithBoundedRedirects(client, http.MethodGet,
+		artifactory.URL+"/api/pypi/repo/pkg.whl", &details, boundary, MaxAuthenticatedRedirects)
+
+	require.NoError(t, err, "a redirect to a different host must be followed, not rejected")
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "binary-content", string(body))
+	assert.Equal(t, int32(1), artifactoryRequests.Load())
+	assert.Equal(t, int32(1), storageRequests.Load())
+
+	assert.Equal(t, "Bearer super-secret-token", artifactoryAuth, "the configured server must still receive our credentials")
+	assert.Equal(t, "syn", artifactoryCustomHeader)
+
+	assert.Empty(t, storageAuth, "credentials must never be forwarded to a cross-origin redirect target")
+	assert.Empty(t, storageCustomHeader, "custom headers must never be forwarded to a cross-origin redirect target")
+}
+
+// TestSendWithBoundedRedirectsRejectsCrossOriginDowngrade: a cross-origin redirect to plain HTTP must be rejected.
+func TestSendWithBoundedRedirectsRejectsCrossOriginDowngrade(t *testing.T) {
+	var otherRequested atomic.Bool
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		otherRequested.Store(true)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer other.Close()
+
+	artifactory := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", other.URL+"/pkg.whl")
+		w.WriteHeader(http.StatusFound)
+	}))
+	defer artifactory.Close()
+
+	client := newZeroRetryClient(t)
+	boundary, err := NewEndpointBoundary(artifactory.URL + "/api/pypi/repo/")
+	require.NoError(t, err)
+	details := httputils.HttpClientDetails{}
+
+	_, _, err = SendWithBoundedRedirects(client, http.MethodGet,
+		artifactory.URL+"/api/pypi/repo/pkg.whl", &details, boundary, MaxAuthenticatedRedirects)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unsafe redirect")
+	assert.False(t, otherRequested.Load())
 }
