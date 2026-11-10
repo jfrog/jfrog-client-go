@@ -12,8 +12,12 @@ import (
 )
 
 func newTestSystemService(t *testing.T, serverUrl string) *SystemService {
+	return newTestSystemServiceWithRetries(t, serverUrl, 0)
+}
+
+func newTestSystemServiceWithRetries(t *testing.T, serverUrl string, retries int) *SystemService {
 	t.Helper()
-	client, err := jfroghttpclient.JfrogClientBuilder().SetRetries(0).Build()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetRetries(retries).SetRetryWaitMilliSecs(0).Build()
 	require.NoError(t, err)
 	details := accessAuth.NewAccessDetails()
 	details.SetUrl(serverUrl + "/access/")
@@ -74,6 +78,25 @@ func TestCheckReadiness_ReturnsRejectStatus(t *testing.T) {
 		assert.Equal(t, code, status)
 		assert.Equal(t, 1, hits)
 	}
+}
+
+func TestSystemService_ServerErrorKeepsStatusAfterRetries(t *testing.T) {
+	hits := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits++
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+	service := newTestSystemServiceWithRetries(t, server.URL, 2)
+
+	status, err := service.CheckReadiness()
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusServiceUnavailable, status)
+	assert.Equal(t, 3, hits)
+
+	_, err = service.GetRootCertificate()
+	assert.ErrorContains(t, err, "503")
+	assert.ErrorContains(t, err, "api/v1/cert/root")
 }
 
 func TestCheckReadiness_TransportError(t *testing.T) {

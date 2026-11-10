@@ -27,7 +27,7 @@ func NewSystemService(client *jfroghttpclient.JfrogHttpClient) *SystemService {
 func (ss *SystemService) GetRootCertificate() (string, error) {
 	anonymous := httputils.HttpClientDetails{}
 	resp, body, _, err := ss.client.SendGet(ss.ServiceDetails.GetUrl()+rootCertificateApi, true, &anonymous)
-	if err != nil {
+	if resp == nil {
 		return "", err
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
@@ -39,7 +39,7 @@ func (ss *SystemService) GetRootCertificate() (string, error) {
 func (ss *SystemService) CheckReadiness() (int, error) {
 	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
 	resp, _, _, err := ss.client.SendGet(ss.ServiceDetails.GetUrl()+readinessApi, true, &httpDetails)
-	if err != nil {
+	if resp == nil {
 		return 0, err
 	}
 	return resp.StatusCode, nil
