@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -73,6 +74,16 @@ func TestExtractSubjectFromAccessToken(t *testing.T) {
 	}
 }
 
+func TestExtractSubjectFromAccessToken_Base64URLPayload(t *testing.T) {
+	payload := `{"sub":"jfac@01h/users/דנה","scp":"applied-permissions/user"}`
+	segment := base64.RawURLEncoding.EncodeToString([]byte(payload))
+	require.True(t, strings.ContainsAny(segment, "-_"))
+
+	subject, err := ExtractSubjectFromAccessToken("e30." + segment + ".sig")
+	assert.NoError(t, err)
+	assert.Equal(t, "jfac@01h/users/דנה", subject)
+}
+
 func TestCalculateProportionalRefreshThreshold(t *testing.T) {
 	testCases := []struct {
 		name                  string
@@ -124,6 +135,6 @@ func TestGetPlatformTokenRefreshThreshold(t *testing.T) {
 func buildTestAccessToken(t *testing.T, iat, exp int64) string {
 	payload, err := json.Marshal(map[string]int64{"iat": iat, "exp": exp})
 	require.NoError(t, err)
-	encodedPayload := base64.RawStdEncoding.EncodeToString(payload)
+	encodedPayload := base64.RawURLEncoding.EncodeToString(payload)
 	return "header." + encodedPayload + ".signature"
 }
