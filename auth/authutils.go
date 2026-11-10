@@ -43,7 +43,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	if len(tokenParts) != 3 {
 		return TokenPayload{}, errorutils.CheckErrorf("couldn't extract payload from Access Token")
 	}
-	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
+	payload, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(tokenParts[1], "="))
 	if err != nil {
 		return TokenPayload{}, errorutils.CheckError(err)
 	}
