@@ -42,6 +42,18 @@ func (sm *AccessServicesManager) Ping() ([]byte, error) {
 	return projectService.Ping()
 }
 
+func (sm *AccessServicesManager) GetRootCertificate() (string, error) {
+	systemService := services.NewSystemService(sm.client)
+	systemService.ServiceDetails = sm.config.GetServiceDetails()
+	return systemService.GetRootCertificate()
+}
+
+func (sm *AccessServicesManager) CheckReadiness() (int, error) {
+	systemService := services.NewSystemService(sm.client)
+	systemService.ServiceDetails = sm.config.GetServiceDetails()
+	return systemService.CheckReadiness()
+}
+
 func (sm *AccessServicesManager) CreateProject(params services.ProjectParams) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
