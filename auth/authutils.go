@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"strings"
 	"time"
 
+	"github.com/jfrog/jfrog-client-go/auth/accesstoken"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -43,7 +43,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	if len(tokenParts) != 3 {
 		return TokenPayload{}, errorutils.CheckErrorf("couldn't extract payload from Access Token")
 	}
-	payload, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(tokenParts[1], "="))
+	payload, err := accesstoken.DecodeSegment(tokenParts[1])
 	if err != nil {
 		return TokenPayload{}, errorutils.CheckError(err)
 	}
