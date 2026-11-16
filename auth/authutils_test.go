@@ -84,6 +84,16 @@ func TestExtractSubjectFromAccessToken_Base64URLPayload(t *testing.T) {
 	assert.Equal(t, "jfac@01h/users/דנה", subject)
 }
 
+func TestExtractSubjectFromAccessToken_PaddedBase64URLPayload(t *testing.T) {
+	payload := `{"sub":"jfac@01h/users/דנה","scp":"applied-permissions/user"}`
+	segment := base64.URLEncoding.EncodeToString([]byte(payload))
+	require.True(t, strings.HasSuffix(segment, "="))
+
+	subject, err := ExtractSubjectFromAccessToken("e30." + segment + ".sig")
+	assert.NoError(t, err)
+	assert.Equal(t, "jfac@01h/users/דנה", subject)
+}
+
 func TestCalculateProportionalRefreshThreshold(t *testing.T) {
 	testCases := []struct {
 		name                  string
