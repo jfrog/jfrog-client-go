@@ -80,8 +80,13 @@ func TestGetQueryReturnFields(t *testing.T) {
 	minimalFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "created", "modified"}
 
 	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "property"))
-	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "property"))
+	// Download fetches the symlink properties in a separate query.
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, SYMLINK), minimalFields)
 	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, NONE), minimalFields)
+	// Build filtering reads the build properties of the results, so they stay in the main query.
+	artifactoryParams.Build = "build/1"
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "property"))
+	artifactoryParams.Build = ""
 
 	artifactoryParams.SortBy = []string{"Vava"}
 	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, NONE), append(minimalFields, "Vava"))
@@ -554,4 +559,32 @@ func TestCreateAqlBodyForBuildArtifactsWithPattern(t *testing.T) {
 		})
 		assert.Error(t, err, "malformed exclusion must propagate, not be silently swallowed")
 	})
+}
+
+func TestIncludePropertiesInAql(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   CommonParams
+		props    RequiredArtifactProps
+		expected bool
+	}{
+		{"all", CommonParams{}, ALL, true},
+		{"none", CommonParams{}, NONE, false},
+		{"symlink", CommonParams{}, SYMLINK, false},
+		{"symlink with build", CommonParams{Build: "build/1"}, SYMLINK, true},
+		{"all with sort", CommonParams{SortBy: []string{"name"}}, ALL, false},
+		{"symlink with build and limit", CommonParams{Build: "build/1", Limit: 1}, SYMLINK, false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, includePropertiesInAql(&test.params, test.props))
+		})
+	}
+}
+
+func TestCreateSymlinkPropsQuery(t *testing.T) {
+	aqlBody := `{"repo":"repo-local","path":{"$match":"a/*"}}`
+	expected := `items.find({"$and":[{"repo":"repo-local","path":{"$match":"a/*"}},{"$or":[{"@symlink.dest":{"$match":"*"}},{"@symlink.destsha1":{"$match":"*"}}]}]})` +
+		`.include("name","repo","path","actual_md5","actual_sha1","sha256","size","property")`
+	assert.Equal(t, expected, createSymlinkPropsQuery(aqlBody))
 }

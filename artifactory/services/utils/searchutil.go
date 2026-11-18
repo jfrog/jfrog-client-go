@@ -278,8 +278,8 @@ func FilterResultsByBuild(specFile *CommonParams, flags CommonConf, requiredArti
 		return nil, err
 	}
 	if specFile.Build != "" && length > 0 {
-		// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
-		resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
+		// If 'includePropertiesInAql' returned true, results contains properties for artifacts.
+		resultsArtifactsIncludeProperties := includePropertiesInAql(specFile, requiredArtifactProps)
 		return filterAqlSearchResultsByBuild(specFile, reader, flags, resultsArtifactsIncludeProperties)
 	}
 	return nil, nil
@@ -291,13 +291,13 @@ func FilterResultsByBuild(specFile *CommonParams, flags CommonConf, requiredArti
 // 2. Properties weren't fetched during 'build' filtering
 // Otherwise, nil will be returned
 func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (r *content.ContentReader, err error) {
-	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" && requiredArtifactProps != NONE {
+	if specFile.Build == "" && requiredArtifactProps != NONE && !includePropertiesInAql(specFile, requiredArtifactProps) {
 		var readerWithProps *content.ContentReader
 		switch requiredArtifactProps {
 		case ALL:
 			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", []string{"*"}, flags)
 		case SYMLINK:
-			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", []string{"*"}, flags)
+			readerWithProps, err = ExecAqlSaveToFile(createSymlinkPropsQuery(specFile.Aql.ItemsFind), flags)
 		}
 		if err != nil {
 			return
