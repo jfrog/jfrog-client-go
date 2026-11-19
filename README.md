@@ -254,6 +254,7 @@
       - [Creating Evidence Service Config](#creating-evidence-service-config)
       - [Creating New Evidence Service Manager](#creating-new-evidence-service-manager)
     - [Using Evidence Services](#using-evidence-services)
+      - [Prepare Evidence](#prepare-evidence)
       - [Upload Evidence](#upload-evidence)
   - [Metadata APIs](#metadata-apis)
     - [Creating Metadata Service Manager](#creating-metadata-service-manager)
@@ -3436,6 +3437,27 @@ evidenceManager, err := evidence.New(serviceConfig)
 
 ### Using Evidence Services
 
+#### Prepare Evidence
+
+Prepare an in-toto statement for external signing. The response contains the base64-encoded DSSE payload and the URL to which the signed envelope should be posted.
+
+```go
+request := evidenceService.PrepareEvidenceRequest{
+    Predicate:     json.RawMessage(`{"result":"passed"}`),
+    PredicateType: "https://example.com/predicate/v1",
+    Subject: evidenceService.PrepareEvidenceSubject{
+        SubjectType: evidenceService.SubjectTypeEntity,
+        EntityType:  "gitCommit",
+        EntityID:    "57bb812f3733b80e270272ba063274e52c34bd23",
+    },
+    ProjectKey: "my-project",
+}
+
+response, err := evidenceManager.PrepareEvidence(request, true)
+// Sign response.DSSEPayload and construct the DSSE envelope.
+body, err := evidenceManager.UploadPreparedSignedEvidence(response.PostURL, signedEnvelope)
+```
+
 #### Upload Evidence
 
 ```go
@@ -3448,6 +3470,7 @@ evidenceDetails := evidenceService.EvidenceDetails{
 }
 body, err = evideceManager.UploadEvidence(evidenceDetails)
 ```
+
 ## Metadata APIs
 
 ### Creating Metadata Service Manager
