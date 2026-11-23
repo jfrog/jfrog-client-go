@@ -102,6 +102,8 @@ type XrayViolation struct {
 	ExposureDetails          *ExposureDetails          `json:"details,omitempty"`
 	SastDetails              *BaseJasDetails           `json:"sast_details,omitempty"`
 	LineNumber               int                       `json:"line_number"`
+	// Set by Xray only when the request had filters.include_ignored=true. Nil means "not reported".
+	IsIgnored *bool `json:"is_ignored,omitempty"`
 }
 
 type ViolationPolicy struct {
@@ -111,7 +113,7 @@ type ViolationPolicy struct {
 	FailPullRequest   bool   `json:"fail_pull_request,omitempty"`
 	SkipNotApplicable bool   `json:"is_skip_not_applicable,omitempty"`
 	IsBlocking        bool   `json:"is_blocking"`
-	IsIgnored         bool   `json:"is_ignored,omitempty"`
+	IsIgnored         bool   `json:"is_ignored,omitempty"` // Populated with matched_policies (include_details=true).
 	BlockingMask      int    `json:"blocking_mask,omitempty"`
 }
 
