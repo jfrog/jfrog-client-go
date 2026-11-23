@@ -54,7 +54,7 @@ func (vs *ViolationsService) GetViolations(params utils.ViolationsRequest) (resp
 	}
 
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		err = errorutils.CheckErrorf("got unexpected server response while attempting to get violations:\n%s", err.Error())
+		err = errorutils.CheckErrorf("got unexpected server response while attempting to get violations:\n%w", err)
 		return nil, err
 	}
 

@@ -2,12 +2,15 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -158,6 +161,25 @@ func TestGetViolations_ParsesIgnoreRuleInfo(t *testing.T) {
 	assert.Equal(t, "accepted risk", info.Notes)
 	assert.False(t, info.IsExpired)
 	assert.Equal(t, "2027-01-01T00:00:00Z", info.ExpirationDate)
+}
+
+func TestGetViolations_UnexpectedStatusPreservesHttpResponseError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, err := w.Write([]byte(`{"error":"bad request body"}`))
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	response, err := newTestViolationsService(t, server.URL).GetViolations(utils.NewViolationsRequest())
+
+	require.Error(t, err)
+	assert.Nil(t, response)
+	var httpErr *errorutils.HttpResponseError
+	require.True(t, errors.As(err, &httpErr), "expected *errorutils.HttpResponseError in the error chain, got: %v", err)
+	assert.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
+	// The message text must stay unchanged.
+	assert.True(t, strings.HasPrefix(err.Error(), "got unexpected server response while attempting to get violations:\nserver response: 400 Bad Request"), "unexpected error message: %s", err.Error())
 }
 
 // Serves the given JSON as the violations response and returns the parsed result.
