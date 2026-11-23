@@ -49,6 +49,9 @@ type ViolationsFilters struct {
 	CveId string `json:"cve_id,omitempty"`
 	// Filter for violations found in specific resources.
 	Resources ViolationResourceFilters `json:"resources,omitempty"`
+	// Also return violations whose matched policies are all ignored (by an ignore rule or a grace period).
+	// Xray adds an is_ignored flag to each violation and matched policy. Default (false) keeps today's behavior.
+	IncludeIgnored bool `json:"include_ignored,omitempty"`
 }
 
 type ViolationResourceFilters struct {
@@ -178,6 +181,11 @@ func (vr ViolationsRequest) FilterByGitRepositories(gitRepositories ...GitReposi
 
 func (vr ViolationsRequest) IncludeDetails(include bool) ViolationsRequest {
 	vr.Filters.IncludeDetails = include
+	return vr
+}
+
+func (vr ViolationsRequest) IncludeIgnored(include bool) ViolationsRequest {
+	vr.Filters.IncludeIgnored = include
 	return vr
 }
 
