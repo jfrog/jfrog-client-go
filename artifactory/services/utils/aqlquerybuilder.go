@@ -439,8 +439,7 @@ func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 }
 
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.
-// If requiredArtifactProps is NONE or 'includePropertiesInAqlForSpec' return false,
-// "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
+// If 'includePropertiesInAql' returns false, the "property" field won't be included.
 func getQueryReturnFields(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) []string {
 	var returnFields []string
 	if len(specFile.Include) > 0 {
@@ -452,11 +451,23 @@ func getQueryReturnFields(specFile *CommonParams, requiredArtifactProps Required
 		// Sort does not work when property is in the include section. in this case we will append properties in later stage.
 		return appendMissingFields(specFile.SortBy, returnFields)
 	}
-	if requiredArtifactProps != NONE {
+	if includePropertiesInAql(specFile, requiredArtifactProps) {
 		// If any prop is needed we just add all the properties to the result.
 		return append(returnFields, "property")
 	}
 	return returnFields
+}
+
+// Returns true if the main AQL query should include all the properties of the found items.
+// When it returns false and properties are required, they are fetched by a separate query.
+func includePropertiesInAql(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) bool {
+	if requiredArtifactProps == NONE || !includePropertiesInAqlForSpec(specFile) {
+		return false
+	}
+	// A download needs only the symlink properties. Including "property" makes Artifactory join the item
+	// properties table into the main query, which can be very slow on large instances (RTECO-1596), so they are
+	// fetched separately. Build filtering reads the build properties of the results, so it keeps them.
+	return requiredArtifactProps != SYMLINK || specFile.Build != ""
 }
 
 func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
@@ -555,6 +566,20 @@ func createPropsQuery(aqlBody, propKey string, propValues []string) string {
 			`"$and":[%s,{%s}]` +
 			`})%s`
 	return fmt.Sprintf(propsQuery, aqlBody, propKeyValQueryPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "property"}))
+}
+
+// Creates a query for the symlink properties of the items found by the spec's AQL body. It lists both symlink keys, so
+// the result holds them both, also if Artifactory returns only the properties that match the criteria.
+// It includes "property" because loadMissingProperties copies the properties from these results. This is cheap here,
+// because the query returns only the items that have symlink properties, usually few or none.
+// It is transitive when the main query is, so symlinks that only the transitive search finds also get their properties.
+func createSymlinkPropsQuery(specFile *CommonParams) string {
+	symlinkPropsQuery :=
+		`items.find({` +
+			`"$and":[%s,{"$or":[{"@%s":{"$match":"*"}},{"@%s":{"$match":"*"}}]}]` +
+			`})%s`
+	query := fmt.Sprintf(symlinkPropsQuery, specFile.Aql.ItemsFind, ArtifactorySymlink, SymlinkSha1, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "property"}))
+	return appendTransitiveQueryPart(specFile, query)
 }
 
 func buildIncludeQueryPart(fieldsToInclude []string) string {

@@ -378,7 +378,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 			writeOrder = make([]*ResultItem, 0)
 		}
 	}
-	if reader.GetError() != nil {
+	if err = reader.GetError(); err != nil {
 		return nil, err
 	}
 	reader.Reset()
