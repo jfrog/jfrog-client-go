@@ -409,6 +409,10 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 		excludeTriples = append(excludeTriples, repoPathFileTriples...)
 	}
 
+	if params.ExcludedOnly {
+		return buildExcludedOnlyQueryPart(excludeTriples, useLocalPath), nil
+	}
+
 	for _, excludeTriple := range excludeTriples {
 		excludePath := excludeTriple.path
 		if !useLocalPath && excludePath == "." {
@@ -423,6 +427,31 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 		excludeQuery += fmt.Sprintf(`"$or":[{%s"path":{"$nmatch":"%s"},"name":{"$nmatch":"%s"}}],`, excludeRepoStr, excludePath, excludeTriple.file)
 	}
 	return excludeQuery, nil
+}
+
+// buildExcludedOnlyQueryPart is the positive twin of the exclusion query: it keeps only the items
+// that match at least one exclusion. Each condition is wrapped in an explicit "$and", because AQL
+// does not treat several fields in one "$or" element as a logical AND.
+func buildExcludedOnlyQueryPart(excludeTriples []RepoPathFile, useLocalPath bool) string {
+	if len(excludeTriples) == 0 {
+		return ""
+	}
+	elements := make([]string, 0, len(excludeTriples))
+	for _, triple := range excludeTriples {
+		path := triple.path
+		if !useLocalPath && path == "." {
+			path = "*"
+		}
+		conditions := make([]string, 0, 3)
+		if triple.repo != "" && triple.repo != "*" {
+			conditions = append(conditions, fmt.Sprintf(`{"repo":{"$match":"%s"}}`, triple.repo))
+		}
+		conditions = append(conditions,
+			fmt.Sprintf(`{"path":{"$match":"%s"}}`, path),
+			fmt.Sprintf(`{"name":{"$match":"%s"}}`, triple.file))
+		elements = append(elements, fmt.Sprintf(`{"$and":[%s]}`, strings.Join(conditions, ",")))
+	}
+	return fmt.Sprintf(`"$and":[{"$or":[%s]}],`, strings.Join(elements, ","))
 }
 
 func buildReleaseBundleQuery(params *CommonParams) (string, error) {

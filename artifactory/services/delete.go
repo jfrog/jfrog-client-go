@@ -77,7 +77,19 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		defer func() {
 			err = errors.Join(err, toBeDeletedDirs.Close())
 		}()
-		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, toBeDeletedDirs)
+		// Folders that hold an excluded item must not be deleted as one unit.
+		var keptDirs *content.ContentReader
+		keptDirs, err = utils.RemoveDirsHoldingExcludedItems(deleteParams.GetFile(), ds, toBeDeletedDirs)
+		if err != nil {
+			return
+		}
+		defer func() {
+			// When nothing was removed the same reader comes back and is closed by the defer above.
+			if keptDirs != toBeDeletedDirs {
+				err = errors.Join(err, keptDirs.Close())
+			}
+		}()
+		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, keptDirs)
 		if err != nil {
 			return
 		}

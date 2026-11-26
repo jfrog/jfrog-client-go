@@ -115,7 +115,18 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 			err = errors.Join(err, tempResultItems.Close())
 		}()
 
-		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.IsPlaceholdersUsed(moveSpec.Pattern, moveSpec.Target))
+		// Folders that hold an excluded item must not be moved or copied as one unit.
+		var keptItems *content.ContentReader
+		keptItems, err = utils.RemoveDirsHoldingExcludedItems(moveSpec.GetFile(), mc, tempResultItems)
+		if err != nil {
+			return
+		}
+		defer func() {
+			if keptItems != tempResultItems {
+				err = errors.Join(err, keptItems.Close())
+			}
+		}()
+		resultItems, err = reduceMovePaths(utils.ResultItem{}, keptItems, moveSpec.IsFlat(), clientutils.IsPlaceholdersUsed(moveSpec.Pattern, moveSpec.Target))
 		if err != nil {
 			return
 		}

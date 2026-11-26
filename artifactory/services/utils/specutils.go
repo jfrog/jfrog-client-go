@@ -48,6 +48,9 @@ type CommonParams struct {
 	ArchiveEntries   string
 	Transitive       bool
 	Include          []string
+	// ExcludedOnly turns the Exclusions into a positive filter: only items that match them are returned.
+	// Used internally to find which folders hold excluded items. Not a spec-file field.
+	ExcludedOnly bool `json:"-"`
 }
 
 func (params CommonParams) GetArchiveEntries() string {
