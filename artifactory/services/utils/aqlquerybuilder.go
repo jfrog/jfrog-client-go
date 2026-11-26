@@ -568,14 +568,18 @@ func createPropsQuery(aqlBody, propKey string, propValues []string) string {
 	return fmt.Sprintf(propsQuery, aqlBody, propKeyValQueryPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "property"}))
 }
 
-// Creates a query for the symlink properties of the items found by aqlBody. It lists both symlink keys, so the result
-// holds them both, also if Artifactory returns only the properties that match the criteria.
-func createSymlinkPropsQuery(aqlBody string) string {
+// Creates a query for the symlink properties of the items found by the spec's AQL body. It lists both symlink keys, so
+// the result holds them both, also if Artifactory returns only the properties that match the criteria.
+// It includes "property" because loadMissingProperties copies the properties from these results. This is cheap here,
+// because the query returns only the items that have symlink properties, usually few or none.
+// It is transitive when the main query is, so symlinks that only the transitive search finds also get their properties.
+func createSymlinkPropsQuery(specFile *CommonParams) string {
 	symlinkPropsQuery :=
 		`items.find({` +
 			`"$and":[%s,{"$or":[{"@%s":{"$match":"*"}},{"@%s":{"$match":"*"}}]}]` +
 			`})%s`
-	return fmt.Sprintf(symlinkPropsQuery, aqlBody, ArtifactorySymlink, SymlinkSha1, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "property"}))
+	query := fmt.Sprintf(symlinkPropsQuery, specFile.Aql.ItemsFind, ArtifactorySymlink, SymlinkSha1, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "property"}))
+	return appendTransitiveQueryPart(specFile, query)
 }
 
 func buildIncludeQueryPart(fieldsToInclude []string) string {

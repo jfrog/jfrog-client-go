@@ -586,5 +586,7 @@ func TestCreateSymlinkPropsQuery(t *testing.T) {
 	aqlBody := `{"repo":"repo-local","path":{"$match":"a/*"}}`
 	expected := `items.find({"$and":[{"repo":"repo-local","path":{"$match":"a/*"}},{"$or":[{"@symlink.dest":{"$match":"*"}},{"@symlink.destsha1":{"$match":"*"}}]}]})` +
 		`.include("name","repo","path","actual_md5","actual_sha1","sha256","size","property")`
-	assert.Equal(t, expected, createSymlinkPropsQuery(aqlBody))
+	assert.Equal(t, expected, createSymlinkPropsQuery(&CommonParams{Aql: Aql{ItemsFind: aqlBody}}))
+	// The query is transitive when the main query is.
+	assert.Equal(t, expected+".transitive()", createSymlinkPropsQuery(&CommonParams{Aql: Aql{ItemsFind: aqlBody}, Transitive: true}))
 }

@@ -289,17 +289,30 @@ func FilterResultsByBuild(specFile *CommonParams, flags CommonConf, requiredArti
 // 1. Properties weren't included in 'results'.
 // AND
 // 2. Properties weren't fetched during 'build' filtering
-// Otherwise, nil will be returned
+// AND
+// 3. 'reader' has items, and the properties query finds some of them.
+// Otherwise, nil will be returned and the caller keeps using 'reader'.
 func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (r *content.ContentReader, err error) {
 	if specFile.Build == "" && requiredArtifactProps != NONE && !includePropertiesInAql(specFile, requiredArtifactProps) {
+		var length int
+		if length, err = reader.Length(); err != nil || length == 0 {
+			// No items, so no properties to fetch.
+			return
+		}
 		var readerWithProps *content.ContentReader
 		switch requiredArtifactProps {
 		case ALL:
 			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", []string{"*"}, flags)
 		case SYMLINK:
-			readerWithProps, err = ExecAqlSaveToFile(createSymlinkPropsQuery(specFile.Aql.ItemsFind), flags)
+			readerWithProps, err = ExecAqlSaveToFile(createSymlinkPropsQuery(specFile), flags)
 		}
 		if err != nil {
+			return
+		}
+		if length, err = readerWithProps.Length(); err != nil || length == 0 {
+			// No item has the properties (the common case for symlinks), so the original reader is kept as is.
+			// Only readerWithProps is closed here: the caller still uses reader.
+			err = errors.Join(err, errorutils.CheckError(readerWithProps.Close()))
 			return
 		}
 		defer func() {
