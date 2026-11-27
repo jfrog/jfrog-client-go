@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"fmt"
+	"os"
 	"sort"
 	"testing"
+	"time"
 
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -240,4 +243,50 @@ func TestLimitItems(t *testing.T) {
 			assert.Equal(t, test.expected, exNames(t, result))
 		})
 	}
+}
+
+// A reader with more records than the channel buffer must be read to its end by copyItems.
+// Otherwise the reading goroutine blocks, and Reset (which waits for it) never returns.
+func TestCopyItemsLetsTheReaderFinishOnLargeInput(t *testing.T) {
+	items := make([]ResultItem, 0, clientutils.MaxBufferSize+100)
+	for i := 0; i < clientutils.MaxBufferSize+100; i++ {
+		items = append(items, exItem(File, "a", fmt.Sprintf("%06d.txt", i)))
+	}
+	reader := exReader(t, items...)
+	defer func() { assert.NoError(t, reader.Close()) }()
+	result, err := copyItems(reader, 5)
+	assert.NoError(t, err)
+	defer func() { assert.NoError(t, result.Close()) }()
+	assert.Len(t, exNames(t, result), 5)
+
+	resetDone := make(chan struct{})
+	go func() {
+		reader.Reset()
+		close(resetDone)
+	}()
+	select {
+	case <-resetDone:
+	case <-time.After(30 * time.Second):
+		t.Fatal("the reading goroutine of the input reader did not finish")
+	}
+}
+
+// A reader that was closed first removes the file of the writer. Discarding the writer must not report this as an error.
+func TestDiscardWriterIgnoresFileThatIsAlreadyRemoved(t *testing.T) {
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	assert.NoError(t, err)
+	writer.Write(exItem(File, "a", "1.txt"))
+	assert.NoError(t, writer.Close())
+	reader := content.NewContentReader(writer.GetFilePath(), content.DefaultKey)
+	assert.NoError(t, reader.Close())
+	assert.NoError(t, discardWriter(writer, true))
+}
+
+func TestDiscardWriterRemovesFile(t *testing.T) {
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	assert.NoError(t, err)
+	writer.Write(exItem(File, "a", "1.txt"))
+	assert.NoError(t, discardWriter(writer, false))
+	_, statErr := os.Stat(writer.GetFilePath())
+	assert.True(t, os.IsNotExist(statErr))
 }

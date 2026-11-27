@@ -2,10 +2,10 @@ package utils
 
 import (
 	"errors"
+	"io/fs"
 	"strings"
 
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -36,6 +36,11 @@ func RemoveDirsHoldingExcludedItems(params *CommonParams, flags CommonConf, cand
 	}
 	defer func() {
 		err = errors.Join(err, excluded.Close())
+		if err != nil && result != nil && result != candidates {
+			// The caller does not close a result that comes with an error.
+			err = errors.Join(err, result.Close())
+			result = nil
+		}
 	}()
 	if length, lengthErr := excluded.Length(); lengthErr != nil || length == 0 {
 		return candidates, lengthErr
@@ -49,6 +54,13 @@ func RemoveDirsHoldingExcludedItems(params *CommonParams, flags CommonConf, cand
 		log.Warn("These folders hold excluded items. Their other files are not handled, because the pattern uses placeholders:", strings.Join(dirsToExpand, ", "))
 		return kept, nil
 	}
+	if params.Offset > 0 || (params.Limit > 0 && len(params.SortBy) > 0) {
+		// The first search cut its result by this offset, limit or order. The files of a removed folder cannot be placed in
+		// that result exactly: they could be handled twice, more than the limit could be handled, or the order could be lost.
+		// Not handling them is safer than handling too many.
+		log.Warn("These folders hold excluded items. Their other files are not handled, because the spec uses an offset, or a limit with a sort order:", strings.Join(dirsToExpand, ", "))
+		return kept, nil
+	}
 	result, err = addFilesOfDirs(params, flags, kept, dirsToExpand)
 	if err = errors.Join(err, kept.Close()); err != nil {
 		if result != nil {
@@ -56,10 +68,9 @@ func RemoveDirsHoldingExcludedItems(params *CommonParams, flags CommonConf, cand
 		}
 		return nil, err
 	}
-	// The result is ordered by path. It cannot be cut by the limit when the user asks for another order,
-	// because the cut would keep other items than the user's order selects.
-	if params.Limit > 0 && len(params.SortBy) == 0 {
+	if params.Limit > 0 {
 		// The searched files are not cut by the limit, so cut the final list once. The command never handles more than the limit.
+		// Here the spec has no offset and no sort order, so the order by path is the order of the result.
 		return limitItems(result, params.Limit)
 	}
 	return result, nil
@@ -302,7 +313,10 @@ func discardWriter(writer *content.ContentWriter, closed bool) (err error) {
 	}
 	// The output file is created with the first write.
 	if writer.GetFilePath() != "" {
-		err = errors.Join(err, errorutils.CheckError(writer.RemoveOutputFilePath()))
+		// The file can be gone already, because a reader on it was closed first.
+		if removeErr := writer.RemoveOutputFilePath(); !errors.Is(removeErr, fs.ErrNotExist) {
+			err = errors.Join(err, removeErr)
+		}
 	}
 	return err
 }
