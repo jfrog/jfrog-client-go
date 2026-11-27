@@ -56,7 +56,9 @@ func RemoveDirsHoldingExcludedItems(params *CommonParams, flags CommonConf, cand
 		}
 		return nil, err
 	}
-	if params.Limit > 0 {
+	// The result is ordered by path. It cannot be cut by the limit when the user asks for another order,
+	// because the cut would keep other items than the user's order selects.
+	if params.Limit > 0 && len(params.SortBy) == 0 {
 		// The searched files are not cut by the limit, so cut the final list once. The command never handles more than the limit.
 		return limitItems(result, params.Limit)
 	}
@@ -88,9 +90,12 @@ func copyItems(items *content.ContentReader, max int) (result *content.ContentRe
 		}
 	}()
 	count := 0
-	for item := new(ResultItem); count < max && items.NextRecord(item) == nil; item = new(ResultItem) {
-		writer.Write(*item)
-		count++
+	for item := new(ResultItem); items.NextRecord(item) == nil; item = new(ResultItem) {
+		// Read the reader to its end, so that its reading goroutine can finish.
+		if count < max {
+			writer.Write(*item)
+			count++
+		}
 	}
 	if err = items.GetError(); err != nil {
 		return nil, err
