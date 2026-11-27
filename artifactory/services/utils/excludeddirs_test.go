@@ -219,3 +219,25 @@ func TestPlaceholderDetection(t *testing.T) {
 	assert.False(t, hasPlaceholders("repo/a/(*)", "dst/"))
 	assert.True(t, hasPlaceholders("repo/a/(*)", "dst/{1}"))
 }
+
+func TestLimitItems(t *testing.T) {
+	tests := []struct {
+		name     string
+		limit    int
+		expected []string
+	}{
+		{"limit below length", 2, []string{"a/1.txt", "a/2.txt"}},
+		{"limit equal to length", 3, []string{"a/1.txt", "a/2.txt", "a/3.txt"}},
+		{"limit above length", 10, []string{"a/1.txt", "a/2.txt", "a/3.txt"}},
+		{"limit one", 1, []string{"a/1.txt"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			reader := exReader(t, exItem(File, "a", "1.txt"), exItem(File, "a", "2.txt"), exItem(File, "a", "3.txt"))
+			result, err := limitItems(reader, test.limit)
+			assert.NoError(t, err)
+			defer func() { assert.NoError(t, result.Close()) }()
+			assert.Equal(t, test.expected, exNames(t, result))
+		})
+	}
+}

@@ -56,7 +56,53 @@ func RemoveDirsHoldingExcludedItems(params *CommonParams, flags CommonConf, cand
 		}
 		return nil, err
 	}
+	if params.Limit > 0 {
+		// The searched files are not cut by the limit, so cut the final list once. The command never handles more than the limit.
+		return limitItems(result, params.Limit)
+	}
 	return result, nil
+}
+
+// limitItems returns the first limit items of the reader. It closes the reader.
+func limitItems(items *content.ContentReader, limit int) (result *content.ContentReader, err error) {
+	defer func() {
+		err = errors.Join(err, items.Close())
+		if err != nil && result != nil {
+			err = errors.Join(err, result.Close())
+			result = nil
+		}
+	}()
+	return copyItems(items, limit)
+}
+
+// copyItems writes the first max items of the reader to a new reader.
+func copyItems(items *content.ContentReader, max int) (result *content.ContentReader, err error) {
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	closed := false
+	defer func() {
+		if err != nil {
+			err = errors.Join(err, discardWriter(writer, closed))
+		}
+	}()
+	count := 0
+	for item := new(ResultItem); count < max && items.NextRecord(item) == nil; item = new(ResultItem) {
+		writer.Write(*item)
+		count++
+	}
+	if err = items.GetError(); err != nil {
+		return nil, err
+	}
+	closed = true
+	if err = writer.Close(); err != nil {
+		return nil, err
+	}
+	if writer.GetFilePath() == "" {
+		return content.NewEmptyContentReader(content.DefaultKey), nil
+	}
+	return content.NewContentReader(writer.GetFilePath(), content.DefaultKey), nil
 }
 
 // dropDirsHoldingItems returns candidates without the folders that contain at least one of the items,
