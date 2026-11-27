@@ -253,9 +253,11 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 }
 
 func getSortedArtifactsToNotDelete(specFile *utils.CommonParams, ds *DeleteService) (*content.ContentReader, error) {
-	specFile.Props = specFile.ExcludeProps
-	specFile.ExcludeProps = ""
-	tempResults, err := utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
+	// Work on a copy: the caller's Props and ExcludeProps must stay as they are, because they are used again later.
+	notToDeleteParams := *specFile
+	notToDeleteParams.Props = specFile.ExcludeProps
+	notToDeleteParams.ExcludeProps = ""
+	tempResults, err := utils.SearchBySpecWithPattern(&notToDeleteParams, ds, utils.NONE)
 	if err != nil {
 		return nil, err
 	}
