@@ -58,7 +58,8 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 			if candidateDirToBeDeleted.Name == "." {
 				continue
 			}
-			candidateDirToBeDeletedPath = candidateDirToBeDeleted.GetItemRelativePath()
+			// A top level folder has no trailing slash, so "repo/a" would wrongly be a prefix of "repo/ab/".
+			candidateDirToBeDeletedPath = strings.TrimSuffix(candidateDirToBeDeleted.GetItemRelativePath(), "/") + "/"
 		}
 		// Fetch the next 'artifactNotToBeDelete'.
 		if artifactNotToBeDeleted == nil {
@@ -105,8 +106,10 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 			if candidateType == Folder && candidate.Name == "." {
 				continue
 			}
-			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())
-			paths[candidate.GetItemRelativePath()] = *candidate
+			// The sort key (folders end with "/") must match the order used by the merge and prefix checks.
+			sortKey := candidate.GetSortKey()
+			pathsKeys = append(pathsKeys, sortKey)
+			paths[sortKey] = *candidate
 			if len(pathsKeys) == utils.MaxBufferSize {
 				sortedCandidateDirsFile, err := content.SortAndSaveBufferToFile(paths, pathsKeys, true)
 				if err != nil {
