@@ -4,6 +4,7 @@ import (
 	"sort"
 	"testing"
 
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/stretchr/testify/assert"
 )
@@ -78,7 +79,7 @@ func TestDropDirsHoldingItems(t *testing.T) {
 				assert.NoError(t, candidates.Close())
 				assert.NoError(t, excluded.Close())
 			}()
-			result, err := dropDirsHoldingItems(candidates, excluded)
+			result, _, err := dropDirsHoldingItems(candidates, excluded)
 			assert.NoError(t, err)
 			defer func() { assert.NoError(t, result.Close()) }()
 			assert.Equal(t, test.expected, exNames(t, result))
@@ -117,4 +118,104 @@ func TestExcludedItemsParamsSearchesNestedItemsWhenNotRecursive(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, body, `{"path":{"$match":"a"}}`)
 	assert.Contains(t, body, `{"name":{"$match":"keep.txt"}}`)
+}
+
+func TestExcludedItemsParamsIgnoresNameOfSourcePattern(t *testing.T) {
+	params := CommonParams{Pattern: "repo/*-release", Exclusions: []string{"repo/a-release/keep.txt"}}
+	excludedParams := excludedItemsParams(&params)
+	assert.Equal(t, "repo/*", excludedParams.Pattern)
+	// The caller's spec is not changed.
+	assert.Equal(t, "repo/*-release", params.Pattern)
+
+	body, err := CreateAqlBodyForSpecWithPattern(&excludedParams)
+	assert.NoError(t, err)
+	// The source part of the query matches every item of the repository.
+	assert.Contains(t, body, `"path":{"$match":"*"},"name":{"$match":"*"}`)
+	assert.Contains(t, body, `{"name":{"$match":"keep.txt"}}`)
+}
+
+func TestExcludedOnlyQueryRejectsBundle(t *testing.T) {
+	params := CommonParams{Pattern: "repo/*", Exclusions: []string{"*/*four*"}, ExcludedOnly: true, Bundle: "name/1"}
+	_, err := CreateAqlBodyForSpecWithPattern(&params)
+	assert.Error(t, err)
+}
+
+func TestDropDirsHoldingItemsReturnsDirsToExpand(t *testing.T) {
+	// repo/a/sub holds an excluded file, and so does repo/a/sub/sub, a folder inside it.
+	// repo/a/gone is an excluded folder, and repo/a/other holds nothing excluded.
+	candidates := exReader(t, exItem(Folder, "a", "sub"), exItem(Folder, "a/sub", "sub"), exItem(Folder, "a", "gone"),
+		exItem(Folder, "a", "other"), exItem(Folder, ".", "a"))
+	excluded := exReader(t, exItem(File, "a/sub", "four.txt"), exItem(File, "a/sub/sub", "four.txt"), exItem(Folder, "a", "gone"))
+	defer func() {
+		assert.NoError(t, candidates.Close())
+		assert.NoError(t, excluded.Close())
+	}()
+	result, dirs, err := dropDirsHoldingItems(candidates, excluded)
+	assert.NoError(t, err)
+	defer func() { assert.NoError(t, result.Close()) }()
+	assert.Equal(t, []string{"a/other"}, exNames(t, result))
+	// repo/a is a holder too, and it contains all the others, so only it is searched again.
+	assert.Equal(t, []string{"repo/a"}, dirs)
+}
+
+func TestDropDirsHoldingItemsKeepsRootFolderItem(t *testing.T) {
+	root := ResultItem{Repo: "repo", Path: ".", Name: ".", Type: string(Folder)}
+	candidates, excluded := exReader(t, root, exItem(Folder, "a", "sub")), exReader(t, exItem(File, "a/sub", "four.txt"))
+	defer func() {
+		assert.NoError(t, candidates.Close())
+		assert.NoError(t, excluded.Close())
+	}()
+	result, _, err := dropDirsHoldingItems(candidates, excluded)
+	assert.NoError(t, err)
+	defer func() { assert.NoError(t, result.Close()) }()
+	assert.Equal(t, []string{"./."}, exNames(t, result))
+}
+
+func TestCollectItemDirs(t *testing.T) {
+	items := exReader(t, exItem(File, "a/sub", "four.txt"), exItem(Folder, "b", "gone"), exItem(File, ".", "top.txt"))
+	defer func() { assert.NoError(t, items.Close()) }()
+	holders, itemDirs, err := collectItemDirs(items)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]bool{"repo/a/sub": true, "repo/a": true, "repo/b": true}, holders)
+	assert.Equal(t, map[string]bool{"repo/b/gone": true}, itemDirs)
+}
+
+func TestSortWithoutDuplicates(t *testing.T) {
+	items := exReader(t, exItem(File, "a", "two.txt"), exItem(File, "a", "one.txt"), exItem(File, "a", "two.txt"))
+	defer func() { assert.NoError(t, items.Close()) }()
+	result, err := sortWithoutDuplicates(items)
+	assert.NoError(t, err)
+	defer func() { assert.NoError(t, result.Close()) }()
+	assert.Equal(t, []string{"a/one.txt", "a/two.txt"}, exNames(t, result))
+}
+
+func TestRepositoryPattern(t *testing.T) {
+	tests := map[string]string{
+		"repo/a/*":     "repo/*",
+		"repo/*-rel":   "repo/*",
+		"(repo)/(*)/b": "repo/*",
+		"/repo/a":      "repo/*",
+		"":             "*/*",
+		"repo":         "repo/*",
+	}
+	for pattern, expected := range tests {
+		assert.Equal(t, expected, repositoryPattern(pattern), pattern)
+	}
+}
+
+func TestExcludedItemsParamsClearsArchiveEntries(t *testing.T) {
+	params := CommonParams{Pattern: "repo/a", ArchiveEntries: "*.class"}
+	assert.Empty(t, excludedItemsParams(&params).ArchiveEntries)
+	assert.Equal(t, "*.class", params.ArchiveEntries)
+}
+
+func TestPlaceholderDetection(t *testing.T) {
+	// The check used by RemoveDirsHoldingExcludedItems: only a parenthesis with a matching {n} in the target counts.
+	hasPlaceholders := func(pattern, target string) bool {
+		return clientutils.RemovePlaceholderParentheses(pattern, target) != pattern
+	}
+	assert.False(t, hasPlaceholders("repo/a/*", "dst/"))
+	assert.False(t, hasPlaceholders("repo/a/*", ""))
+	assert.False(t, hasPlaceholders("repo/a/(*)", "dst/"))
+	assert.True(t, hasPlaceholders("repo/a/(*)", "dst/{1}"))
 }

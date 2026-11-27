@@ -410,6 +410,10 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 	}
 
 	if params.ExcludedOnly {
+		// The excluded-only query uses a top-level "$and", which would clash with the one of the bundle query.
+		if params.Bundle != "" {
+			return "", errorutils.CheckErrorf("the excluded-only search cannot be combined with a release bundle")
+		}
 		return buildExcludedOnlyQueryPart(excludeTriples, useLocalPath), nil
 	}
 
